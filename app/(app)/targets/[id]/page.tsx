@@ -69,21 +69,21 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
             <Link href="/targets">
-              <ArrowLeft /> Back to targets
+              <ArrowLeft className="size-4 mr-1" /> Back to targets
             </Link>
           </Button>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight">@{target.username}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">@{target.username}</h1>
             <TargetStatusBadge status={target.status} />
           </div>
           {target.errorMessage && <p className="mt-1 text-sm text-destructive">{target.errorMessage}</p>}
         </div>
-        <Button variant="outline" onClick={remove}>
-          <Trash2 /> Delete target
+        <Button variant="outline" size="sm" onClick={remove} className="self-start sm:self-auto text-destructive hover:bg-destructive/10">
+          <Trash2 className="size-4 mr-1.5" /> Delete target
         </Button>
       </div>
 

@@ -80,67 +80,119 @@ export default function TargetsPage() {
               onAction={() => router.push("/targets/new")}
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last checked</TableHead>
-                  <TableHead>Events</TableHead>
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile View */}
+              <div className="divide-y md:hidden">
                 {targets.map((target) => (
-                  <TableRow key={target.id}>
-                    <TableCell>
+                  <div key={target.id} className="flex items-center justify-between p-4">
+                    <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Link href={`/targets/${target.id}`} className="font-medium hover:underline">
+                        <Link href={`/targets/${target.id}`} className="font-semibold text-sm hover:underline">
                           @{target.username}
                         </Link>
                         {target.monitor?.engineType === "STEALTH_SCRAPER" && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+                          <Badge variant="outline" className="text-[10px] px-1 py-0">
                             Stealth
                           </Badge>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <TargetStatusBadge status={target.status} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {target.lastCheckedAt
-                        ? formatDistanceToNow(new Date(target.lastCheckedAt), { addSuffix: true })
-                        : "Never"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{target._count?.events ?? 0}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" disabled={busyId === target.id}>
-                            <MoreVertical className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {target.monitor?.active ? (
-                            <DropdownMenuItem onSelect={() => togglePause(target.id, false)}>
-                              <Pause /> Pause
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem onSelect={() => togglePause(target.id, true)}>
-                              <Play /> Resume
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem variant="destructive" onSelect={() => remove(target.id)}>
-                            <Trash2 /> Delete
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <TargetStatusBadge status={target.status} />
+                        <span>·</span>
+                        <span>{target._count?.events ?? 0} events</span>
+                      </div>
+                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" disabled={busyId === target.id} className="size-8">
+                          <MoreVertical className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {target.monitor?.active ? (
+                          <DropdownMenuItem onSelect={() => togglePause(target.id, false)}>
+                            <Pause /> Pause
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                        ) : (
+                          <DropdownMenuItem onSelect={() => togglePause(target.id, true)}>
+                            <Play /> Resume
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem variant="destructive" onSelect={() => remove(target.id)}>
+                          <Trash2 /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Account</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last checked</TableHead>
+                      <TableHead>Events</TableHead>
+                      <TableHead className="w-10" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {targets.map((target) => (
+                      <TableRow key={target.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Link href={`/targets/${target.id}`} className="font-medium hover:underline">
+                              @{target.username}
+                            </Link>
+                            {target.monitor?.engineType === "STEALTH_SCRAPER" && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+                                Stealth
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <TargetStatusBadge status={target.status} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {target.lastCheckedAt
+                            ? formatDistanceToNow(new Date(target.lastCheckedAt), { addSuffix: true })
+                            : "Never"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{target._count?.events ?? 0}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" disabled={busyId === target.id}>
+                                <MoreVertical className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {target.monitor?.active ? (
+                                <DropdownMenuItem onSelect={() => togglePause(target.id, false)}>
+                                  <Pause /> Pause
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onSelect={() => togglePause(target.id, true)}>
+                                  <Play /> Resume
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem variant="destructive" onSelect={() => remove(target.id)}>
+                                <Trash2 /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

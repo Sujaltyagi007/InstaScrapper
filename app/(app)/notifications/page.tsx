@@ -91,11 +91,11 @@ export default function NotificationsPage() {
           ) : (
             <ul className="divide-y">
               {channels.map((channel) => (
-                <li key={channel.id} className="flex items-center justify-between gap-3 py-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{channel.name}</p>
-                      <Badge variant="outline">{PROVIDER_LABELS[channel.provider]}</Badge>
+                <li key={channel.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:px-6">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-sm">{channel.name}</p>
+                      <Badge variant="outline" className="text-[11px] font-normal">{PROVIDER_LABELS[channel.provider]}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {channel.eventTypeFilter.length === 0
@@ -104,15 +104,18 @@ export default function NotificationsPage() {
                       {channel.cooldownSeconds > 0 && ` · ${channel.cooldownSeconds}s cooldown`}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={channel.enabled}
-                      disabled={busyId === channel.id}
-                      onCheckedChange={(v) => toggleEnabled(channel.id, v)}
-                    />
+                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground sm:hidden">Enabled</span>
+                      <Switch
+                        checked={channel.enabled}
+                        disabled={busyId === channel.id}
+                        onCheckedChange={(v) => toggleEnabled(channel.id, v)}
+                      />
+                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" disabled={busyId === channel.id}>
+                        <Button variant="ghost" size="icon" disabled={busyId === channel.id} className="size-8">
                           <MoreVertical className="size-4" />
                         </Button>
                       </DropdownMenuTrigger>

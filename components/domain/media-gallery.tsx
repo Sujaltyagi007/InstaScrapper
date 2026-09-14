@@ -76,7 +76,7 @@ export function MediaGallery({ media, username }: MediaGalleryProps) {
               </div>
 
               {/* Caption Preview Gradient */}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 pt-6 text-white opacity-0 transition group-hover:opacity-100">
+              <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-2.5 pt-6 text-white opacity-0 transition group-hover:opacity-100">
                 <p className="line-clamp-2 text-xs font-normal leading-snug">
                   {item.caption || "No caption"}
                 </p>
@@ -91,24 +91,23 @@ export function MediaGallery({ media, username }: MediaGalleryProps) {
         })}
       </div>
 
-      {/* Lightbox / Detail Dialog */}
       <Dialog open={Boolean(selectedItem)} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <DialogContent className="max-w-2xl overflow-hidden p-0 gap-0">
           {selectedItem && (
             <div>
-              <div className="relative bg-black flex items-center justify-center max-h-[480px] overflow-hidden">
+              <div className="relative bg-black flex items-center justify-center max-h-120 overflow-hidden">
                 {selectedItem.videoUrl ? (
                   <video
                     src={selectedItem.storageUrl || selectedItem.videoUrl}
                     controls
                     autoPlay
-                    className="max-h-[480px] w-full object-contain"
+                    className="max-h-120 w-full object-contain"
                   />
                 ) : selectedItem.storageUrl || selectedItem.mediaUrl ? (
                   <img
                     src={selectedItem.storageUrl || selectedItem.mediaUrl || ""}
                     alt={selectedItem.caption || "Instagram media"}
-                    className="max-h-[480px] w-full object-contain"
+                    className="max-h-120 w-full object-contain"
                   />
                 ) : null}
               </div>
