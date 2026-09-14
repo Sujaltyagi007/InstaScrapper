@@ -1,0 +1,364 @@
+generator client {
+  provider = "prisma-client"
+  output = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  timezone      String    @default("UTC")
+  retentionDays Int       @default(90)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  metaConnections      MetaConnection[]
+  instagramSessions    InstagramSession[]
+  targets              Target[]
+  notificationChannels NotificationChannel[]
+  authRateLimits       AuthRateLimit[]
+
+  @@map("users")
+}
+
+enum MetaConnectionStatus {
+  ACTIVE
+  REAUTH_REQUIRED
+  REVOKED
+  ERROR
+}
+
+model MetaConnection {
+  id                   String               @id @default(cuid())
+  userId               String
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider             String               @default("meta")
+  externalUserId       String
+  accountType          String?
+  encryptedAccessToken String
+  encryptedTokenIv     String
+  scopes               String[]
+  status               MetaConnectionStatus @default(ACTIVE)
+  expiresAt            DateTime?
+  lastVerifiedAt       DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([userId])
+  @@map("meta_connections")
+}
+
+enum TargetAccountType {
+  BUSINESS
+  CREATOR
+  PERSONAL
+  UNKNOWN
+}
+
+enum TargetEligibility {
+  SUPPORTED
+  PARTIALLY_SUPPORTED
+  UNSUPPORTED
+  PRIVATE_UNAVAILABLE
+  TEMPORARILY_UNAVAILABLE
+}
+
+enum TargetStatus {
+  DISCOVERED
+  ACTIVE
+  PAUSED
+  RATE_LIMITED
+  BACKOFF
+  AUTH_ERROR
+  REAUTH_REQUIRED
+  NOT_FOUND
+  UNAVAILABLE
+  UNSUPPORTED
+  INVALID
+}
+
+model Target {
+  id                  String            @id @default(cuid())
+  userId              String
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username            String
+  normalizedUsername  String
+  externalId          String?
+  accountType         TargetAccountType @default(UNKNOWN)
+  eligibility         TargetEligibility @default(UNSUPPORTED)
+  status              TargetStatus      @default(DISCOVERED)
+  errorCode           String?
+  errorMessage        String?
+  nextRunAt           DateTime?
+  lastCheckedAt       DateTime?
+  lastSuccessAt       DateTime?
+  consecutiveFailures Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  monitor   Monitor?
+  snapshots TargetSnapshot[]
+  media     Media[]
+  events    Event[]
+  jobs      Job[]
+
+  @@unique([userId, normalizedUsername])
+  @@index([userId])
+  @@index([status, nextRunAt])
+  @@map("targets")
+}
+
+model InstagramSession {
+  id                   String    @id @default(cuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username             String
+  authMethod           String    @default("COOKIE_IMPORT")
+  encryptedCookies     String
+  encryptedCookiesIv   String
+  userAgent            String?
+  impersonateTarget    String    @default("auto")
+  proxyUrl             String?
+  status               String    @default("ACTIVE")
+  lastTestedAt         DateTime?
+  lastSuccessAt        DateTime?
+  lastErrorMessage     String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  monitors             Monitor[]
+
+  @@index([userId])
+  @@map("instagram_sessions")
+}
+
+model Monitor {
+  id                     String            @id @default(cuid())
+  targetId               String            @unique
+  target                 Target            @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  userId                 String
+  engineType             String            @default("STEALTH_SCRAPER")
+  watchNewMedia          Boolean           @default(true)
+  watchProfile           Boolean           @default(true)
+  watchFollowerCount     Boolean           @default(false)
+  watchFollowingCount    Boolean           @default(false)
+  watchStories           Boolean           @default(true)
+  watchReels             Boolean           @default(true)
+  watchFollowerChurn     Boolean           @default(false)
+  watchCollabPosts       Boolean           @default(true)
+  jitterEnabled          Boolean           @default(true)
+  humanSimEnabled        Boolean           @default(false)
+  restrictedHoursEnabled Boolean           @default(false)
+  restrictedHoursStart   Int               @default(8)
+  restrictedHoursEnd     Int               @default(23)
+  instagramSessionId     String?
+  instagramSession       InstagramSession? @relation(fields: [instagramSessionId], references: [id], onDelete: SetNull)
+  followerThreshold      Int?
+  intervalSeconds        Int               @default(5400)
+  active                 Boolean           @default(true)
+  notificationChannelIds String[]
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  @@index([instagramSessionId])
+  @@map("monitors")
+}
+
+model TargetSnapshot {
+  id                   String    @id @default(cuid())
+  targetId             String
+  target               Target    @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  capturedAt           DateTime  @default(now())
+  username             String
+  name                 String?
+  biography            String?
+  website              String?
+  profilePictureUrl         String?
+  profilePictureStorageUrl  String?
+  profilePictureStorageId   String?
+  followersCount            Int?
+  followsCount              Int?
+  mediaCount                Int?
+  reelsCount                Int?
+  hasStory                  Boolean   @default(false)
+  storiesCount              Int?
+  latestMediaId             String?
+  latestMediaTimestamp      DateTime?
+  followersListHash         String?
+  followingListHash         String?
+  rawHash                   String
+
+  @@index([targetId, capturedAt])
+  @@map("target_snapshots")
+}
+
+model Media {
+  id              String    @id @default(cuid())
+  targetId        String
+  target          Target    @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  externalMediaId String
+  mediaType       String
+  permalink       String?
+  timestamp       DateTime?
+  caption         String?
+  mediaUrl        String?
+  videoUrl        String?
+  storageUrl      String?
+  storageFileId   String?
+  isStory         Boolean   @default(false)
+  isCollab        Boolean   @default(false)
+  collaborators   String[]  @default([])
+  firstSeenAt     DateTime  @default(now())
+
+  @@unique([targetId, externalMediaId])
+  @@index([targetId])
+  @@map("media")
+}
+
+enum EventType {
+  NEW_MEDIA
+  MEDIA_UPDATED
+  PROFILE_CHANGED
+  FOLLOWER_COUNT_CHANGED
+  FOLLOWING_COUNT_CHANGED
+  NEW_STORY
+  NEW_REEL
+  FOLLOWER_CHURN
+  COLLAB_POST_LEAKED
+  ACCOUNT_UNAVAILABLE
+  ACCOUNT_RENAMED
+  RATE_LIMITED
+  SESSION_FLAGGED
+}
+
+enum EventStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  targetId    String
+  target      Target      @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  userId      String
+  type        EventType
+  fingerprint String
+  before      Json?
+  after       Json?
+  detectedAt  DateTime    @default(now())
+  processedAt DateTime?
+  status      EventStatus @default(PENDING)
+
+  notifications Notification[]
+
+  @@unique([targetId, fingerprint])
+  @@index([userId, detectedAt])
+  @@index([targetId, detectedAt])
+  @@map("events")
+}
+
+enum NotificationProvider {
+  DISCORD
+  NTFY
+  WEBHOOK
+}
+
+model NotificationChannel {
+  id                String               @id @default(cuid())
+  userId            String
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  provider          NotificationProvider
+  encryptedConfig   String
+  encryptedConfigIv String
+  eventTypeFilter   EventType[]
+  cooldownSeconds   Int                  @default(0)
+  enabled           Boolean              @default(true)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  notifications Notification[]
+
+  @@index([userId])
+  @@map("notification_channels")
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  RETRYING
+}
+
+model Notification {
+  id            String               @id @default(cuid())
+  eventId       String
+  event         Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  channelId     String
+  channel       NotificationChannel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  provider      NotificationProvider
+  status        NotificationStatus   @default(PENDING)
+  attempts      Int                  @default(0)
+  nextAttemptAt DateTime?
+  sentAt        DateTime?
+  error         String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@unique([eventId, channelId])
+  @@index([status, nextAttemptAt])
+  @@index([channelId])
+  @@map("notifications")
+}
+
+enum JobType {
+  TARGET_CHECK
+  NOTIFICATION_DISPATCH
+  RETENTION_CLEANUP
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model Job {
+  id            String    @id @default(cuid())
+  type          JobType
+  targetId      String?
+  target        Target?   @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  status        JobStatus @default(QUEUED)
+  attempts      Int       @default(0)
+  runAt         DateTime  @default(now())
+  lockedAt      DateTime?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  lastError     String?
+  resultSummary String?
+
+  @@index([type, status, runAt])
+  @@index([targetId])
+  @@map("jobs")
+}
+
+model AuthRateLimit {
+  id           String    @id @default(cuid())
+  key          String
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempts     Int       @default(1)
+  windowStart  DateTime  @default(now())
+  blockedUntil DateTime?
+
+  @@unique([key])
+  @@map("auth_rate_limits")
+}

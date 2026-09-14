@@ -1,0 +1,191 @@
+import { prisma } from "@/lib/prisma";
+import { NotFoundError } from "@/lib/errors";
+import { getMetaProvider } from "@/lib/meta/provider-factory";
+import { toPrismaAccountType, toPrismaEligibility, isMonitorable } from "@/lib/meta/capability.service";
+import type { TargetResolution } from "@/lib/meta/types";
+
+export function normalizeUsername(username: string): string {
+  return username.trim().replace(/^@/, "").toLowerCase();
+}
+
+const USERNAME_PATTERN = /^[a-z0-9._]{1,30}$/;
+
+export function validateUsernameFormat(username: string): { valid: boolean; reason?: string } {
+  const normalized = normalizeUsername(username);
+  if (!normalized) return { valid: false, reason: "Username is required." };
+  if (!USERNAME_PATTERN.test(normalized)) {
+    return { valid: false, reason: "Usernames may only contain letters, numbers, periods, and underscores." };
+  }
+  return { valid: true };
+}
+
+/** Phase: "Backend resolves and validates the target" (plan section 1, step 4). */
+export async function resolveTargetUsername(username: string): Promise<TargetResolution> {
+  const format = validateUsernameFormat(username);
+  if (!format.valid) {
+    return {
+      username: normalizeUsername(username),
+      externalId: null,
+      accountType: "UNKNOWN",
+      eligibility: "UNSUPPORTED",
+      capabilities: [],
+      errorCode: "INVALID_USERNAME",
+      errorMessage: format.reason,
+    };
+  }
+
+  const provider = getMetaProvider();
+  return provider.resolveTarget(normalizeUsername(username));
+}
+
+const MIN_INTERVAL_SECONDS = 300; // server-enforced safe minimum (plan section 14)
+
+export function clampIntervalSeconds(requested: number): number {
+  return Math.max(MIN_INTERVAL_SECONDS, Math.floor(requested));
+}
+export function nextRunAtFromInterval(intervalSeconds: number): Date {
+  const stagger = Math.floor(Math.random() * 60_000);
+  return new Date(Date.now() + intervalSeconds * 1000 + stagger);
+}
+
+export async function createTarget(params: {
+  userId: string;
+  username: string;
+  resolution: TargetResolution;
+  watchNewMedia: boolean;
+  watchProfile: boolean;
+  watchFollowerCount: boolean;
+  watchFollowingCount: boolean;
+  watchStories?: boolean;
+  watchReels?: boolean;
+  watchFollowerChurn?: boolean;
+  watchCollabPosts?: boolean;
+  jitterEnabled?: boolean;
+  humanSimEnabled?: boolean;
+  restrictedHoursEnabled?: boolean;
+  restrictedHoursStart?: number;
+  restrictedHoursEnd?: number;
+  instagramSessionId?: string | null;
+  engineType?: string;
+  followerThreshold?: number;
+  intervalSeconds: number;
+  notificationChannelIds: string[];
+}) {
+  const normalized = normalizeUsername(params.username);
+  const monitorable = isMonitorable(params.resolution);
+  const interval = clampIntervalSeconds(params.intervalSeconds);
+
+  return prisma.target.create({
+    data: {
+      userId: params.userId,
+      username: params.resolution.username,
+      normalizedUsername: normalized,
+      externalId: params.resolution.externalId,
+      accountType: toPrismaAccountType(params.resolution.accountType),
+      eligibility: toPrismaEligibility(params.resolution.eligibility),
+      status: monitorable ? "ACTIVE" : "UNSUPPORTED",
+      errorCode: params.resolution.errorCode,
+      errorMessage: params.resolution.errorMessage,
+      nextRunAt: monitorable ? nextRunAtFromInterval(interval) : null,
+      monitor: {
+        create: {
+          userId: params.userId,
+          engineType: params.engineType ?? "STEALTH_SCRAPER",
+          watchNewMedia: params.watchNewMedia,
+          watchProfile: params.watchProfile,
+          watchFollowerCount: params.watchFollowerCount,
+          watchFollowingCount: params.watchFollowingCount,
+          watchStories: params.watchStories ?? true,
+          watchReels: params.watchReels ?? true,
+          watchFollowerChurn: params.watchFollowerChurn ?? false,
+          watchCollabPosts: params.watchCollabPosts ?? true,
+          jitterEnabled: params.jitterEnabled ?? true,
+          humanSimEnabled: params.humanSimEnabled ?? false,
+          restrictedHoursEnabled: params.restrictedHoursEnabled ?? false,
+          restrictedHoursStart: params.restrictedHoursStart ?? 8,
+          restrictedHoursEnd: params.restrictedHoursEnd ?? 23,
+          instagramSessionId: params.instagramSessionId || null,
+          followerThreshold: params.followerThreshold,
+          intervalSeconds: interval,
+          active: monitorable,
+          notificationChannelIds: params.notificationChannelIds,
+        },
+      },
+    },
+    include: { monitor: true },
+  });
+}
+
+export async function listTargets(userId: string) {
+  return prisma.target.findMany({
+    where: { userId },
+    include: { monitor: true, _count: { select: { events: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function getTargetDetail(userId: string, targetId: string) {
+  return prisma.target.findFirst({
+    where: { id: targetId, userId },
+    include: {
+      monitor: true,
+      snapshots: { orderBy: { capturedAt: "desc" }, take: 1 },
+      events: { orderBy: { detectedAt: "desc" }, take: 20 },
+      media: { orderBy: [{ timestamp: "desc" }, { firstSeenAt: "desc" }], take: 24 },
+    },
+  });
+}
+
+export async function updateTargetMonitor(
+  userId: string,
+  targetId: string,
+  updates: Partial<{
+    watchNewMedia: boolean;
+    watchProfile: boolean;
+    watchFollowerCount: boolean;
+    watchFollowingCount: boolean;
+    watchStories: boolean;
+    watchReels: boolean;
+    watchFollowerChurn: boolean;
+    watchCollabPosts: boolean;
+    jitterEnabled: boolean;
+    humanSimEnabled: boolean;
+    restrictedHoursEnabled: boolean;
+    restrictedHoursStart: number;
+    restrictedHoursEnd: number;
+    instagramSessionId: string | null;
+    engineType: string;
+    followerThreshold: number | null;
+    intervalSeconds: number;
+    active: boolean;
+    notificationChannelIds: string[];
+  }>
+) {
+  const target = await prisma.target.findFirst({ where: { id: targetId, userId } });
+  if (!target) throw new NotFoundError("Target not found.");
+
+  const data = { ...updates };
+  if (data.intervalSeconds != null) {
+    data.intervalSeconds = clampIntervalSeconds(data.intervalSeconds);
+  }
+
+  const monitor = await prisma.monitor.update({ where: { targetId }, data });
+
+  // Pausing/resuming a target should be reflected in its status immediately.
+  if (updates.active === false) {
+    await prisma.target.update({ where: { id: targetId }, data: { status: "PAUSED", nextRunAt: null } });
+  } else if (updates.active === true && target.status === "PAUSED") {
+    await prisma.target.update({
+      where: { id: targetId },
+      data: { status: "ACTIVE", nextRunAt: nextRunAtFromInterval(monitor.intervalSeconds) },
+    });
+  }
+
+  return monitor;
+}
+
+export async function deleteTarget(userId: string, targetId: string) {
+  const target = await prisma.target.findFirst({ where: { id: targetId, userId } });
+  if (!target) throw new NotFoundError("Target not found.");
+  await prisma.target.delete({ where: { id: targetId } });
+}
