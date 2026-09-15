@@ -1,14 +1,8 @@
 import path from "path";
 import { randomUUID, createHash } from "crypto";
-import { createTLSClient } from "@dryft/tlsclient";
 import { Capability } from "./types";
 import type {
-  TargetResolution,
-  TargetFetchResult,
-  StealthSessionConfig,
-  StealthFetchOptions,
-  NormalizedMediaItem,
-  CapabilityCheck,
+  TargetResolution, TargetFetchResult, StealthSessionConfig, StealthFetchOptions, NormalizedMediaItem, CapabilityCheck,
 } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -27,8 +21,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 const CHROME_TLS_IDENTIFIER = "chrome_120";
-const CHROME_USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const CHROME_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 const WEB_APP_ID = "936619743392459"; // Instagram's own web app id
 
 // ---------------------------------------------------------------------------
@@ -222,12 +215,14 @@ function resolveTlsLibPath(): string {
 // Client is stateless aside from tlsLibPath/impersonation target, and creating
 // one spins up a workerpool — reuse a single instance per (identifier) rather
 // than paying that cost on every request.
-const tlsClientCache = new Map<string, ReturnType<typeof createTLSClient>>();
+const tlsClientCache = new Map<string, any>();
 
 function getTlsClient(tlsClientIdentifier: string, proxy?: string) {
   const cacheKey = `${tlsClientIdentifier}::${proxy ?? ""}`;
   let client = tlsClientCache.get(cacheKey);
   if (!client) {
+    // Dynamically require to avoid native addon crashes during Next.js build-time route evaluation
+    const { createTLSClient } = require("@dryft/tlsclient");
     client = createTLSClient({
       tlsClientIdentifier,
       proxy,

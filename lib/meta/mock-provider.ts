@@ -27,10 +27,7 @@ function hashToInt(input: string): number {
 }
 
 // Username prefixes let you exercise every classification path deliberately.
-const PREFIX_RULES: Array<{
-  prefix: string;
-  build: (username: string) => TargetResolution;
-}> = [
+const PREFIX_RULES: Array<{ prefix: string; build: (username: string) => TargetResolution }> = [
   {
     prefix: "private_",
     build: (username) => ({
