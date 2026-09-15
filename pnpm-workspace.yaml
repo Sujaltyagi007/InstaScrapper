@@ -1,5 +1,5 @@
 allowBuilds:
-  '@dryft/tlsclient': set this to true or false
+  '@dryft/tlsclient': false
   '@prisma/engines': false
   prisma: false
   sharp: false
