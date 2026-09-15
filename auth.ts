@@ -4,11 +4,17 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validation/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { authConfig } from "@/auth.config";
+
+const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+if (!nextAuthSecret) {
+  throw new Error("NEXTAUTH_SECRET must be set.");
+}
 
 export const authOptions: NextAuthOptions = {
   ...authConfig,
-  secret: process.env.NEXTAUTH_SECRET || "",
+  secret: nextAuthSecret,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -20,9 +26,13 @@ export const authOptions: NextAuthOptions = {
         const parsed = loginSchema.safeParse(rawCredentials);
         if (!parsed.success) return null;
         const { email, password } = parsed.data;
+        const normalizedEmail = email.toLowerCase();
+
+        const rate = await checkRateLimit(`login:${normalizedEmail}`);
+        if (!rate.allowed) return null;
 
         const user = await prisma.user.findUnique({
-          where: { email: email.toLowerCase() },
+          where: { email: normalizedEmail },
         });
         if (!user) return null;
 

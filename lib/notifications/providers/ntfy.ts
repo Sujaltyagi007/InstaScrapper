@@ -1,7 +1,10 @@
+import { assertPublicHttpUrl } from "@/lib/security/ssrf";
 import type { NtfyConfig, NotificationMessage } from "../types";
 
 export async function sendNtfy(config: NtfyConfig, message: NotificationMessage): Promise<void> {
   const url = `${config.serverUrl.replace(/\/$/, "")}/${config.topic}`;
+  await assertPublicHttpUrl(url);
+
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -11,6 +14,7 @@ export async function sendNtfy(config: NtfyConfig, message: NotificationMessage)
       ...(message.url ? { Click: message.url } : {}),
     },
     body: message.body,
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) {
     throw new Error(`ntfy responded ${res.status}: ${await safeText(res)}`);

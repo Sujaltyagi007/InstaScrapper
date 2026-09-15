@@ -1419,6 +1419,7 @@ export const InstagramSessionScalarFieldEnum = {
   encryptedCookies: 'encryptedCookies',
   encryptedCookiesIv: 'encryptedCookiesIv',
   userAgent: 'userAgent',
+  deviceId: 'deviceId',
   impersonateTarget: 'impersonateTarget',
   proxyUrl: 'proxyUrl',
   status: 'status',

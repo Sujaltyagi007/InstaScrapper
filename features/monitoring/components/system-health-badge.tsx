@@ -16,7 +16,7 @@ interface HealthData {
   };
 }
 
-export function SystemHealthBadge() {
+export function SystemHealthBadge({ direction = "up" }: { direction?: "up" | "down" } = {}) {
   // Optimistic initial state: assumes healthy immediately to avoid layout flicker
   const [data, setData] = useState<HealthData>({
     status: "healthy",
@@ -116,7 +116,12 @@ export function SystemHealthBadge() {
       </button>
 
       {showDetails && (
-        <div className="absolute bottom-full left-0 mb-2 w-64 rounded-lg border bg-popover p-3 text-popover-foreground shadow-xl z-50 animate-in fade-in-0 zoom-in-95">
+        <div 
+          className={cn(
+            "absolute left-0 w-64 rounded-lg border bg-popover p-3 text-popover-foreground shadow-xl z-50 animate-in fade-in-0 zoom-in-95",
+            direction === "up" ? "bottom-full mb-2" : "top-full mt-2"
+          )}
+        >
           <div className="flex items-center justify-between pb-2 border-b mb-2">
             <div className="flex items-center gap-1.5 font-medium text-xs">
               <Activity className="size-3.5 text-primary" />

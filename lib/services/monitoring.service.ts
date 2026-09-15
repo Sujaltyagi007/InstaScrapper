@@ -33,7 +33,17 @@ export async function runDueTargetChecks(limit = 20) {
 
   const results = [];
   for (const target of due) {
-    results.push(await processTarget(target.id));
+    try {
+      results.push(await processTarget(target.id));
+    } catch (err) {
+      // processTarget already records the failure (job + pushed-out nextRunAt) before
+      // re-throwing; catching here just keeps one bad target from aborting the rest of the batch.
+      results.push({
+        targetId: target.id,
+        outcome: "ERROR" as const,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
   return { checked: results.length, results };
 }
@@ -97,6 +107,7 @@ export async function processTarget(targetId: string) {
 
     let sessionConfig = null;
     let accessToken = "";
+    let usedSessionId: string | null = null;
 
     if (isStealth) {
       // Find session: monitor-specific session or user's active session
@@ -109,6 +120,7 @@ export async function processTarget(targetId: string) {
       }
 
       if (sessionRecord) {
+        usedSessionId = sessionRecord.id;
         try {
           const decryptedCookiesJson = decryptSecret({
             ciphertext: sessionRecord.encryptedCookies,
@@ -118,6 +130,7 @@ export async function processTarget(targetId: string) {
             username: sessionRecord.username,
             cookies: JSON.parse(decryptedCookiesJson),
             userAgent: sessionRecord.userAgent,
+            deviceId: sessionRecord.deviceId,
             proxyUrl: sessionRecord.proxyUrl,
             impersonateTarget: sessionRecord.impersonateTarget,
           };
@@ -165,10 +178,10 @@ export async function processTarget(targetId: string) {
     });
 
     if (!fetchResult.ok) {
-      return await handleFailedFetch(target as TargetWithActiveMonitor, fetchResult, job.id);
+      return await handleFailedFetch(target as TargetWithActiveMonitor, fetchResult, job.id, usedSessionId);
     }
 
-    return await handleSuccessfulFetch(target as TargetWithActiveMonitor, fetchResult, job.id);
+    return await handleSuccessfulFetch(target as TargetWithActiveMonitor, fetchResult, job.id, usedSessionId);
   } catch (err) {
     await finishJob(job.id, "FAILED", err instanceof Error ? err.message : String(err));
     // Best-effort: push the target's next attempt out so a persistent bug doesn't hot-loop the scheduler.
@@ -190,15 +203,16 @@ async function handleFailedFetch(
     | "sessionFlagged"
     | "errorMessage"
   >,
-  jobId: string
+  jobId: string,
+  usedSessionId: string | null = null
 ) {
   const now = new Date();
 
   if (fetchResult.sessionFlagged) {
-    if (target.monitor.instagramSessionId) {
+    if (usedSessionId) {
       await prisma.instagramSession
         .update({
-          where: { id: target.monitor.instagramSessionId },
+          where: { id: usedSessionId },
           data: {
             status: "FLAGGED",
             lastErrorMessage: fetchResult.errorMessage ?? "Flagged by Instagram",
@@ -326,7 +340,8 @@ async function recordRateLimitEvent(targetId: string, userId: string) {
 async function handleSuccessfulFetch(
   target: TargetWithActiveMonitor,
   fetchResult: TargetFetchResult,
-  jobId: string
+  jobId: string,
+  usedSessionId: string | null = null
 ) {
   const now = new Date();
   const profile = fetchResult.profile!;
@@ -530,6 +545,13 @@ async function handleSuccessfulFetch(
   });
 
   const nextRunAt = calculateNextRunAt(target.monitor);
+
+  if (fetchResult.deviceId && usedSessionId) {
+    await prisma.instagramSession.update({
+      where: { id: usedSessionId },
+      data: { deviceId: fetchResult.deviceId },
+    }).catch(() => undefined);
+  }
 
   await prisma.target.update({
     where: { id: target.id },

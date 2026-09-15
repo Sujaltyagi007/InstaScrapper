@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { NotFoundError } from "@/lib/errors";
+import { UnsafeUrlError } from "@/lib/security/ssrf";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -22,6 +23,9 @@ export function jsonError(err: unknown) {
   }
   if (err instanceof NotFoundError) {
     return NextResponse.json({ error: err.message }, { status: 404 });
+  }
+  if (err instanceof UnsafeUrlError) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
   console.error(err);
   return NextResponse.json({ error: "Internal server error." }, { status: 500 });

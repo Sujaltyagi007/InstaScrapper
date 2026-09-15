@@ -32,6 +32,7 @@ export type InstagramSessionMinAggregateOutputType = {
   encryptedCookies: string | null
   encryptedCookiesIv: string | null
   userAgent: string | null
+  deviceId: string | null
   impersonateTarget: string | null
   proxyUrl: string | null
   status: string | null
@@ -50,6 +51,7 @@ export type InstagramSessionMaxAggregateOutputType = {
   encryptedCookies: string | null
   encryptedCookiesIv: string | null
   userAgent: string | null
+  deviceId: string | null
   impersonateTarget: string | null
   proxyUrl: string | null
   status: string | null
@@ -68,6 +70,7 @@ export type InstagramSessionCountAggregateOutputType = {
   encryptedCookies: number
   encryptedCookiesIv: number
   userAgent: number
+  deviceId: number
   impersonateTarget: number
   proxyUrl: number
   status: number
@@ -88,6 +91,7 @@ export type InstagramSessionMinAggregateInputType = {
   encryptedCookies?: true
   encryptedCookiesIv?: true
   userAgent?: true
+  deviceId?: true
   impersonateTarget?: true
   proxyUrl?: true
   status?: true
@@ -106,6 +110,7 @@ export type InstagramSessionMaxAggregateInputType = {
   encryptedCookies?: true
   encryptedCookiesIv?: true
   userAgent?: true
+  deviceId?: true
   impersonateTarget?: true
   proxyUrl?: true
   status?: true
@@ -124,6 +129,7 @@ export type InstagramSessionCountAggregateInputType = {
   encryptedCookies?: true
   encryptedCookiesIv?: true
   userAgent?: true
+  deviceId?: true
   impersonateTarget?: true
   proxyUrl?: true
   status?: true
@@ -215,6 +221,7 @@ export type InstagramSessionGroupByOutputType = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent: string | null
+  deviceId: string | null
   impersonateTarget: string
   proxyUrl: string | null
   status: string
@@ -254,6 +261,7 @@ export type InstagramSessionWhereInput = {
   encryptedCookies?: Prisma.StringFilter<"InstagramSession"> | string
   encryptedCookiesIv?: Prisma.StringFilter<"InstagramSession"> | string
   userAgent?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  deviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   impersonateTarget?: Prisma.StringFilter<"InstagramSession"> | string
   proxyUrl?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   status?: Prisma.StringFilter<"InstagramSession"> | string
@@ -274,6 +282,7 @@ export type InstagramSessionOrderByWithRelationInput = {
   encryptedCookies?: Prisma.SortOrder
   encryptedCookiesIv?: Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
+  deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -297,6 +306,7 @@ export type InstagramSessionWhereUniqueInput = Prisma.AtLeast<{
   encryptedCookies?: Prisma.StringFilter<"InstagramSession"> | string
   encryptedCookiesIv?: Prisma.StringFilter<"InstagramSession"> | string
   userAgent?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  deviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   impersonateTarget?: Prisma.StringFilter<"InstagramSession"> | string
   proxyUrl?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   status?: Prisma.StringFilter<"InstagramSession"> | string
@@ -317,6 +327,7 @@ export type InstagramSessionOrderByWithAggregationInput = {
   encryptedCookies?: Prisma.SortOrder
   encryptedCookiesIv?: Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
+  deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -341,6 +352,7 @@ export type InstagramSessionScalarWhereWithAggregatesInput = {
   encryptedCookies?: Prisma.StringWithAggregatesFilter<"InstagramSession"> | string
   encryptedCookiesIv?: Prisma.StringWithAggregatesFilter<"InstagramSession"> | string
   userAgent?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
+  deviceId?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
   impersonateTarget?: Prisma.StringWithAggregatesFilter<"InstagramSession"> | string
   proxyUrl?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"InstagramSession"> | string
@@ -358,6 +370,7 @@ export type InstagramSessionCreateInput = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent?: string | null
+  deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
   status?: string
@@ -378,6 +391,7 @@ export type InstagramSessionUncheckedCreateInput = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent?: string | null
+  deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
   status?: string
@@ -396,6 +410,7 @@ export type InstagramSessionUpdateInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -416,6 +431,7 @@ export type InstagramSessionUncheckedUpdateInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -435,6 +451,7 @@ export type InstagramSessionCreateManyInput = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent?: string | null
+  deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
   status?: string
@@ -452,6 +469,7 @@ export type InstagramSessionUpdateManyMutationInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -470,6 +488,7 @@ export type InstagramSessionUncheckedUpdateManyInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -498,6 +517,7 @@ export type InstagramSessionCountOrderByAggregateInput = {
   encryptedCookies?: Prisma.SortOrder
   encryptedCookiesIv?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  deviceId?: Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -516,6 +536,7 @@ export type InstagramSessionMaxOrderByAggregateInput = {
   encryptedCookies?: Prisma.SortOrder
   encryptedCookiesIv?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  deviceId?: Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -534,6 +555,7 @@ export type InstagramSessionMinOrderByAggregateInput = {
   encryptedCookies?: Prisma.SortOrder
   encryptedCookiesIv?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  deviceId?: Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -614,6 +636,7 @@ export type InstagramSessionCreateWithoutUserInput = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent?: string | null
+  deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
   status?: string
@@ -632,6 +655,7 @@ export type InstagramSessionUncheckedCreateWithoutUserInput = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent?: string | null
+  deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
   status?: string
@@ -680,6 +704,7 @@ export type InstagramSessionScalarWhereInput = {
   encryptedCookies?: Prisma.StringFilter<"InstagramSession"> | string
   encryptedCookiesIv?: Prisma.StringFilter<"InstagramSession"> | string
   userAgent?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  deviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   impersonateTarget?: Prisma.StringFilter<"InstagramSession"> | string
   proxyUrl?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   status?: Prisma.StringFilter<"InstagramSession"> | string
@@ -697,6 +722,7 @@ export type InstagramSessionCreateWithoutMonitorsInput = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent?: string | null
+  deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
   status?: string
@@ -716,6 +742,7 @@ export type InstagramSessionUncheckedCreateWithoutMonitorsInput = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent?: string | null
+  deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
   status?: string
@@ -749,6 +776,7 @@ export type InstagramSessionUpdateWithoutMonitorsInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -768,6 +796,7 @@ export type InstagramSessionUncheckedUpdateWithoutMonitorsInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -785,6 +814,7 @@ export type InstagramSessionCreateManyUserInput = {
   encryptedCookies: string
   encryptedCookiesIv: string
   userAgent?: string | null
+  deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
   status?: string
@@ -802,6 +832,7 @@ export type InstagramSessionUpdateWithoutUserInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -820,6 +851,7 @@ export type InstagramSessionUncheckedUpdateWithoutUserInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -838,6 +870,7 @@ export type InstagramSessionUncheckedUpdateManyWithoutUserInput = {
   encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -887,6 +920,7 @@ export type InstagramSessionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   encryptedCookies?: boolean
   encryptedCookiesIv?: boolean
   userAgent?: boolean
+  deviceId?: boolean
   impersonateTarget?: boolean
   proxyUrl?: boolean
   status?: boolean
@@ -908,6 +942,7 @@ export type InstagramSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   encryptedCookies?: boolean
   encryptedCookiesIv?: boolean
   userAgent?: boolean
+  deviceId?: boolean
   impersonateTarget?: boolean
   proxyUrl?: boolean
   status?: boolean
@@ -927,6 +962,7 @@ export type InstagramSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   encryptedCookies?: boolean
   encryptedCookiesIv?: boolean
   userAgent?: boolean
+  deviceId?: boolean
   impersonateTarget?: boolean
   proxyUrl?: boolean
   status?: boolean
@@ -946,6 +982,7 @@ export type InstagramSessionSelectScalar = {
   encryptedCookies?: boolean
   encryptedCookiesIv?: boolean
   userAgent?: boolean
+  deviceId?: boolean
   impersonateTarget?: boolean
   proxyUrl?: boolean
   status?: boolean
@@ -956,7 +993,7 @@ export type InstagramSessionSelectScalar = {
   updatedAt?: boolean
 }
 
-export type InstagramSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "authMethod" | "encryptedCookies" | "encryptedCookiesIv" | "userAgent" | "impersonateTarget" | "proxyUrl" | "status" | "lastTestedAt" | "lastSuccessAt" | "lastErrorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["instagramSession"]>
+export type InstagramSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "authMethod" | "encryptedCookies" | "encryptedCookiesIv" | "userAgent" | "deviceId" | "impersonateTarget" | "proxyUrl" | "status" | "lastTestedAt" | "lastSuccessAt" | "lastErrorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["instagramSession"]>
 export type InstagramSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   monitors?: boolean | Prisma.InstagramSession$monitorsArgs<ExtArgs>
@@ -983,6 +1020,7 @@ export type $InstagramSessionPayload<ExtArgs extends runtime.Types.Extensions.In
     encryptedCookies: string
     encryptedCookiesIv: string
     userAgent: string | null
+    deviceId: string | null
     impersonateTarget: string
     proxyUrl: string | null
     status: string
@@ -1423,6 +1461,7 @@ export interface InstagramSessionFieldRefs {
   readonly encryptedCookies: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly encryptedCookiesIv: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly userAgent: Prisma.FieldRef<"InstagramSession", 'String'>
+  readonly deviceId: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly impersonateTarget: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly proxyUrl: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly status: Prisma.FieldRef<"InstagramSession", 'String'>

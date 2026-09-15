@@ -38,6 +38,15 @@ export async function resolveTargetUsername(username: string): Promise<TargetRes
   return provider.resolveTarget(normalizeUsername(username));
 }
 
+async function assertOwnsInstagramSession(userId: string, instagramSessionId: string | null | undefined) {
+  if (!instagramSessionId) return;
+  const owned = await prisma.instagramSession.findFirst({
+    where: { id: instagramSessionId, userId },
+    select: { id: true },
+  });
+  if (!owned) throw new NotFoundError("Instagram session not found.");
+}
+
 const MIN_INTERVAL_SECONDS = 300; // server-enforced safe minimum (plan section 14)
 
 export function clampIntervalSeconds(requested: number): number {
@@ -74,6 +83,8 @@ export async function createTarget(params: {
   const normalized = normalizeUsername(params.username);
   const monitorable = isMonitorable(params.resolution);
   const interval = clampIntervalSeconds(params.intervalSeconds);
+
+  await assertOwnsInstagramSession(params.userId, params.instagramSessionId);
 
   return prisma.target.create({
     data: {
@@ -164,6 +175,10 @@ export async function updateTargetMonitor(
   const target = await prisma.target.findFirst({ where: { id: targetId, userId } });
   if (!target) throw new NotFoundError("Target not found.");
 
+  if (updates.instagramSessionId !== undefined) {
+    await assertOwnsInstagramSession(userId, updates.instagramSessionId);
+  }
+
   const data = { ...updates };
   if (data.intervalSeconds != null) {
     data.intervalSeconds = clampIntervalSeconds(data.intervalSeconds);
@@ -177,7 +192,12 @@ export async function updateTargetMonitor(
   } else if (updates.active === true && target.status === "PAUSED") {
     await prisma.target.update({
       where: { id: targetId },
-      data: { status: "ACTIVE", nextRunAt: nextRunAtFromInterval(monitor.intervalSeconds) },
+      data: {
+        status: "ACTIVE",
+        errorCode: null,
+        errorMessage: null,
+        nextRunAt: nextRunAtFromInterval(monitor.intervalSeconds),
+      },
     });
   }
 
@@ -188,4 +208,16 @@ export async function deleteTarget(userId: string, targetId: string) {
   const target = await prisma.target.findFirst({ where: { id: targetId, userId } });
   if (!target) throw new NotFoundError("Target not found.");
   await prisma.target.delete({ where: { id: targetId } });
+}
+
+export async function bulkSetTargetsActive(userId: string, targetIds: string[], active: boolean) {
+  const results = await Promise.allSettled(
+    targetIds.map((id) => updateTargetMonitor(userId, id, { active }))
+  );
+  return { count: results.filter((r) => r.status === "fulfilled").length, total: targetIds.length };
+}
+
+export async function bulkDeleteTargets(userId: string, targetIds: string[]) {
+  const result = await prisma.target.deleteMany({ where: { id: { in: targetIds }, userId } });
+  return { count: result.count, total: targetIds.length };
 }

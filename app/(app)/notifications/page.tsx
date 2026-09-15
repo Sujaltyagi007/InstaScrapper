@@ -6,10 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useNotificationChannels } from "@/hooks/use-notification-channels";
-import { LoadingState } from "@/components/domain/loading-state";
-import { EmptyState } from "@/components/domain/empty-state";
-import { CreateChannelDialog } from "@/components/domain/create-channel-dialog";
+import { useNotificationChannels } from "@/features/notifications/hooks/use-notification-channels";
+import { LoadingState } from "@/components/common/loading-state";
+import { EmptyState } from "@/components/common/empty-state";
+import { CreateChannelDialog } from "@/features/notifications/components/create-channel-dialog";
 import { apiFetch } from "@/lib/fetcher";
 import { toast } from "sonner";
 

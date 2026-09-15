@@ -1,0 +1,71 @@
+name: Cron trigger (external, bypasses Vercel Hobby daily-only cron)
+
+# Vercel Hobby's own Cron only allows once-daily schedules (see vercel.json,
+# which stays as a once-a-day fallback). GitHub Actions has no such limit, so
+# this workflow pings the deployed cron endpoints on a real schedule instead:
+#   - /api/cron/monitor  every 5 minutes (matches MIN_INTERVAL_SECONDS in
+#     lib/services/target.service.ts — pinging more often than that would
+#     just be a no-op, since runDueTargetChecks only processes targets whose
+#     nextRunAt has actually passed)
+#   - /api/cron/notify and /api/cron/cleanup once a day, same as before
+#
+# Requires two repo secrets (Settings > Secrets and variables > Actions):
+#   APP_URL      the deployed app's base URL, e.g. https://your-app.vercel.app
+#   CRON_SECRET  same value as the CRON_SECRET env var set in Vercel
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # monitor
+    - cron: "10 0 * * *"    # notify
+    - cron: "20 0 * * *"    # cleanup
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which cron endpoint to call"
+        required: true
+        default: monitor
+        type: choice
+        options:
+          - monitor
+          - notify
+          - cleanup
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine which endpoint to call
+        id: pick
+        run: |
+          if [ -n "${{ inputs.target }}" ]; then
+            echo "path=/api/cron/${{ inputs.target }}" >> "$GITHUB_OUTPUT"
+          else
+            case "${{ github.event.schedule }}" in
+              "*/5 * * * *") echo "path=/api/cron/monitor" >> "$GITHUB_OUTPUT" ;;
+              "10 0 * * *")  echo "path=/api/cron/notify" >> "$GITHUB_OUTPUT" ;;
+              "20 0 * * *")  echo "path=/api/cron/cleanup" >> "$GITHUB_OUTPUT" ;;
+            esac
+          fi
+
+      - name: Call cron endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::APP_URL and/or CRON_SECRET repo secrets are not set. See the comment at the top of this workflow file."
+            exit 1
+          fi
+          url="${APP_URL%/}${{ steps.pick.outputs.path }}"
+          echo "Calling $url"
+          status=$(curl -s -o /tmp/response.txt -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 60 \
+            "$url")
+          echo "HTTP status: $status"
+          cat /tmp/response.txt
+          echo
+          if [ "$status" -ge 400 ]; then
+            echo "::error::Cron endpoint returned HTTP $status"
+            exit 1
+          fi

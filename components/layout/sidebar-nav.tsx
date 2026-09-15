@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Target, Bell, Settings, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
-import { SystemHealthBadge } from "@/components/domain/system-health-badge";
+import { SystemHealthBadge } from "@/features/monitoring/components/system-health-badge";
+import { ThemeToggle } from "@/components/common/theme-toggle";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -46,6 +47,10 @@ export function SidebarNav() {
 
       <div className="pt-3 border-t space-y-2">
         <SystemHealthBadge />
+        <div className="flex items-center justify-between px-3">
+          <span className="text-sm font-medium text-muted-foreground">Theme</span>
+          <ThemeToggle />
+        </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"

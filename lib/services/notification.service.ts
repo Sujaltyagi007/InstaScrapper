@@ -98,13 +98,14 @@ export async function enqueueNotificationsForEvent(eventId: string) {
       const recent = await prisma.notification.findFirst({
         where: {
           channelId: channel.id,
-          status: "SENT",
           event: { targetId: event.targetId },
-          sentAt: { gte: new Date(Date.now() - channel.cooldownSeconds * 1000) },
+          OR: [
+            { status: "SENT", sentAt: { gte: new Date(Date.now() - channel.cooldownSeconds * 1000) } },
+            { status: { in: ["PENDING", "RETRYING"] } },
+          ],
         },
-        orderBy: { sentAt: "desc" },
       });
-      if (recent) continue; // still in cooldown for this target/channel
+      if (recent) continue; // still in cooldown, or an earlier notification for this target/channel hasn't gone out yet
     }
 
     await prisma.notification.upsert({

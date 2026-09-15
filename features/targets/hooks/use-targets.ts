@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/fetcher";
 import type { TargetWithMonitor } from "@/types/domain";
+import { getTargets } from "../api/target.api";
 
 export function useTargets() {
   const [targets, setTargets] = useState<TargetWithMonitor[] | null>(null);
@@ -13,7 +13,7 @@ export function useTargets() {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiFetch<{ targets: TargetWithMonitor[] }>("/api/targets");
+      const data = await getTargets();
       setTargets(data.targets);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load targets.");

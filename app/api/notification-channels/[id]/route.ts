@@ -30,9 +30,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       data.encryptedConfigIv = encryptedConfigIv;
     }
 
-    const channel = await prisma.notificationChannel.update({
-      where: { id },
-      data,
+    await prisma.notificationChannel.updateMany({ where: { id, userId }, data });
+    const channel = await prisma.notificationChannel.findFirst({
+      where: { id, userId },
       select: { id: true, name: true, provider: true, eventTypeFilter: true, cooldownSeconds: true, enabled: true },
     });
 
@@ -48,7 +48,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const existing = await prisma.notificationChannel.findFirst({ where: { id, userId } });
     if (!existing) throw new ApiError(404, "Notification channel not found.");
-    await prisma.notificationChannel.delete({ where: { id } });
+    await prisma.notificationChannel.deleteMany({ where: { id, userId } });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return jsonError(err);

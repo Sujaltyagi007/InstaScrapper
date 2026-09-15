@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/monitor",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/notify",
+      "schedule": "10 0 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "20 0 * * *"
+    }
+  ]
+}

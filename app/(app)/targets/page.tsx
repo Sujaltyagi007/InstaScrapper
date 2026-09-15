@@ -1,25 +1,87 @@
 "use client";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { useTargets } from "@/hooks/use-targets";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useTargets } from "@/features/targets/hooks/use-targets";
 import { Card, CardContent } from "@/components/ui/card";
-import { EmptyState } from "@/components/domain/empty-state";
-import { LoadingState } from "@/components/domain/loading-state";
-import { TargetStatusBadge } from "@/components/domain/target-status-badge";
-import { Plus, Radar, MoreVertical, Pause, Play, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/common/empty-state";
+import { LoadingState } from "@/components/common/loading-state";
+import { TargetStatusBadge } from "@/features/targets/components/target-status-badge";
+import { Plus, Radar, MoreVertical, Pause, Play, Trash2, Search, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const ATTENTION_STATUSES = new Set([
+  "RATE_LIMITED",
+  "BACKOFF",
+  "AUTH_ERROR",
+  "REAUTH_REQUIRED",
+  "NOT_FOUND",
+  "UNAVAILABLE",
+  "UNSUPPORTED",
+  "INVALID",
+]);
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "PAUSED", label: "Paused" },
+  { value: "attention", label: "Needs attention" },
+  { value: "DISCOVERED", label: "Discovered" },
+];
 
 export default function TargetsPage() {
   const router = useRouter();
   const { targets, loading, error, refresh } = useTargets();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const filteredTargets = useMemo(() => {
+    if (!targets) return [];
+    const q = query.trim().toLowerCase();
+    return targets.filter((target) => {
+      const matchesQuery = !q || target.username.toLowerCase().includes(q);
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "attention" ? ATTENTION_STATUSES.has(target.status) : target.status === statusFilter);
+      return matchesQuery && matchesStatus;
+    });
+  }, [targets, query, statusFilter]);
+
+  const allVisibleSelected = filteredTargets.length > 0 && filteredTargets.every((t) => selected.has(t.id));
+  const someVisibleSelected = filteredTargets.some((t) => selected.has(t.id));
+
+  function toggleOne(targetId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(targetId)) next.delete(targetId);
+      else next.add(targetId);
+      return next;
+    });
+  }
+
+  function toggleAllVisible() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        filteredTargets.forEach((t) => next.delete(t.id));
+      } else {
+        filteredTargets.forEach((t) => next.add(t.id));
+      }
+      return next;
+    });
+  }
 
   async function togglePause(targetId: string, active: boolean) {
     setBusyId(targetId);
@@ -51,6 +113,33 @@ export default function TargetsPage() {
     }
   }
 
+  async function bulkAction(action: "pause" | "resume" | "delete") {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (action === "delete" && !confirm(`Delete ${ids.length} target${ids.length > 1 ? "s" : ""} and all their history? This cannot be undone.`)) {
+      return;
+    }
+    setBulkBusy(true);
+    try {
+      const data = await apiFetch<{ count: number; total: number }>("/api/targets/bulk", {
+        method: "POST",
+        body: JSON.stringify({ ids, action }),
+      });
+      const verb = action === "delete" ? "deleted" : action === "pause" ? "paused" : "resumed";
+      if (data.count < data.total) {
+        toast.warning(`${data.count} of ${data.total} target${data.total === 1 ? "" : "s"} ${verb}; the rest failed.`);
+      } else {
+        toast.success(`${data.count} target${data.count === 1 ? "" : "s"} ${verb}.`);
+      }
+      setSelected(new Set());
+      refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -64,6 +153,52 @@ export default function TargetsPage() {
           </Link>
         </Button>
       </div>
+
+      {targets && targets.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-50">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by username…"
+              className="pl-8"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-45">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTERS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-4 py-2">
+          <span className="text-sm font-medium">{selected.size} selected</span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkAction("pause")}>
+              <Pause /> Pause
+            </Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkAction("resume")}>
+              <Play /> Resume
+            </Button>
+            <Button size="sm" variant="destructive" disabled={bulkBusy} onClick={() => bulkAction("delete")}>
+              <Trash2 /> Delete
+            </Button>
+            <Button size="sm" variant="ghost" disabled={bulkBusy} onClick={() => setSelected(new Set())}>
+              <X /> Clear
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardContent className="px-0 sm:px-6">
@@ -79,51 +214,60 @@ export default function TargetsPage() {
               actionLabel="Add target"
               onAction={() => router.push("/targets/new")}
             />
+          ) : filteredTargets.length === 0 ? (
+            <p className="p-6 text-sm text-muted-foreground">No targets match your search or filter.</p>
           ) : (
             <>
               {/* Mobile View */}
               <div className="divide-y md:hidden">
-                {targets.map((target) => (
-                  <div key={target.id} className="flex items-center justify-between p-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Link href={`/targets/${target.id}`} className="font-semibold text-sm hover:underline">
-                          @{target.username}
-                        </Link>
-                        {target.monitor?.engineType === "STEALTH_SCRAPER" && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0">
-                            Stealth
-                          </Badge>
-                        )}
+                {filteredTargets.map((target) => (
+                  <div key={target.id} className="flex items-center gap-3 p-4">
+                    <Checkbox checked={selected.has(target.id)} onCheckedChange={() => toggleOne(target.id)} />
+                    <div className="flex flex-1 items-center justify-between gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Link href={`/targets/${target.id}`} className="font-semibold text-sm hover:underline">
+                            @{target.username}
+                          </Link>
+                          {target.monitor?.engineType === "STEALTH_SCRAPER" && (
+                            <Badge variant="outline" className="text-[10px] px-1 py-0">
+                              Stealth
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <TargetStatusBadge
+                            status={target.status}
+                            nextRunAt={target.nextRunAt}
+                            errorMessage={target.errorMessage}
+                          />
+                          <span>·</span>
+                          <span>{target._count?.events ?? 0} events</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <TargetStatusBadge status={target.status} />
-                        <span>·</span>
-                        <span>{target._count?.events ?? 0} events</span>
-                      </div>
-                    </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" disabled={busyId === target.id} className="size-8">
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {target.monitor?.active ? (
-                          <DropdownMenuItem onSelect={() => togglePause(target.id, false)}>
-                            <Pause /> Pause
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" disabled={busyId === target.id} className="size-8">
+                            <MoreVertical className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {target.monitor?.active ? (
+                            <DropdownMenuItem onSelect={() => togglePause(target.id, false)}>
+                              <Pause /> Pause
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onSelect={() => togglePause(target.id, true)}>
+                              <Play /> Resume
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem variant="destructive" onSelect={() => remove(target.id)}>
+                            <Trash2 /> Delete
                           </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onSelect={() => togglePause(target.id, true)}>
-                            <Play /> Resume
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem variant="destructive" onSelect={() => remove(target.id)}>
-                          <Trash2 /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -133,6 +277,12 @@ export default function TargetsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                          onCheckedChange={toggleAllVisible}
+                        />
+                      </TableHead>
                       <TableHead>Account</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Last checked</TableHead>
@@ -141,8 +291,11 @@ export default function TargetsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {targets.map((target) => (
+                    {filteredTargets.map((target) => (
                       <TableRow key={target.id}>
+                        <TableCell>
+                          <Checkbox checked={selected.has(target.id)} onCheckedChange={() => toggleOne(target.id)} />
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Link href={`/targets/${target.id}`} className="font-medium hover:underline">
@@ -156,7 +309,11 @@ export default function TargetsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <TargetStatusBadge status={target.status} />
+                          <TargetStatusBadge
+                            status={target.status}
+                            nextRunAt={target.nextRunAt}
+                            errorMessage={target.errorMessage}
+                          />
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {target.lastCheckedAt

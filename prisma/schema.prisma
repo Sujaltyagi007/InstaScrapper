@@ -123,6 +123,7 @@ model InstagramSession {
   encryptedCookies     String
   encryptedCookiesIv   String
   userAgent            String?
+  deviceId             String?
   impersonateTarget    String    @default("auto")
   proxyUrl             String?
   status               String    @default("ACTIVE")

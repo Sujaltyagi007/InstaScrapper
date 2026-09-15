@@ -10,10 +10,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSettings, type UserSettings } from "@/hooks/use-settings";
-import { useJobs } from "@/hooks/use-jobs";
-import { useSessions } from "@/hooks/use-sessions";
-import { AddSessionDialog } from "@/components/domain/add-session-dialog";
-import { LoadingState } from "@/components/domain/loading-state";
+import { useJobs } from "@/features/monitoring/hooks/use-jobs";
+import { useSessions } from "@/features/sessions/hooks/use-sessions";
+import { AddSessionDialog } from "@/features/sessions/components/add-session-dialog";
+import { LoadingState } from "@/components/common/loading-state";
 import { apiFetch } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -88,14 +88,14 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <CardTitle>Instagram Sessions & Stealth Engine</CardTitle>
               <CardDescription>
                 Bypass bot detection with browser TLS (JA3/JA4) impersonation, session reuse, and automatic checkpoint health probing.
               </CardDescription>
             </div>
-            <Button onClick={() => setAddSessionOpen(true)} size="sm">
+            <Button onClick={() => setAddSessionOpen(true)} size="sm" className="w-fit">
               <Plus className="size-4 mr-1.5" /> Connect Session
             </Button>
           </div>
@@ -125,7 +125,7 @@ export default function SettingsPage() {
                   className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-4"
                 >
                   <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold text-sm">@{sess.username}</span>
                       <Badge
                         variant={
@@ -255,32 +255,34 @@ export default function SettingsPage() {
           ) : !jobs || jobs.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">No job runs recorded yet.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ran</TableHead>
-                  <TableHead>Summary</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {jobs.map((job) => (
-                  <TableRow key={job.id}>
-                    <TableCell>{job.type.replace(/_/g, " ")}</TableCell>
-                    <TableCell>{job.target ? `@${job.target.username}` : "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={JOB_STATUS_VARIANT[job.status]}>{job.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDistanceToNow(new Date(job.runAt), { addSuffix: true })}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{job.resultSummary ?? job.lastError ?? "—"}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Target</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ran</TableHead>
+                    <TableHead>Summary</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {jobs.map((job) => (
+                    <TableRow key={job.id}>
+                      <TableCell>{job.type.replace(/_/g, " ")}</TableCell>
+                      <TableCell>{job.target ? `@${job.target.username}` : "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={JOB_STATUS_VARIANT[job.status]}>{job.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDistanceToNow(new Date(job.runAt), { addSuffix: true })}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{job.resultSummary ?? job.lastError ?? "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
           <div className="p-6 pt-0">
             <Button variant="outline" size="sm" onClick={refreshJobs}>

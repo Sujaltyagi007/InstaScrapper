@@ -1,7 +1,3 @@
-// Domain types for the Meta/Instagram adapter layer. Nothing outside this
-// directory (controllers, services, workers) should know about Graph API
-// field names, versions, or error codes - see SKILL/plan section 12.
-
 export enum Capability {
   TARGET_LOOKUP_BY_USERNAME = "TARGET_LOOKUP_BY_USERNAME",
   TARGET_PUBLIC_PROFILE_FIELDS = "TARGET_PUBLIC_PROFILE_FIELDS",
@@ -93,6 +89,8 @@ export interface TargetFetchResult {
     followingRemoved?: string[];
   };
   errorMessage?: string;
+  anonymousMode?: boolean;
+  deviceId?: string;
 }
 
 export interface StealthFetchOptions {
@@ -109,14 +107,12 @@ export interface StealthSessionConfig {
   username: string;
   cookies: Record<string, string>;
   userAgent?: string | null;
+  
   impersonateTarget?: string;
   proxyUrl?: string | null;
+  deviceId?: string | null;
 }
 
-/**
- * Implemented by mock provider, Meta Graph API provider, or the Stealth
- * Scraper provider.
- */
 export interface MetaProvider {
   resolveTarget(username: string): Promise<TargetResolution>;
   fetchTargetData(params: {

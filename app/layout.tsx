@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppSessionProvider } from "@/components/providers/session-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -18,12 +19,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${outfit.variable} h-full antialiased`}>
+    <html lang="en" className={`${outfit.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <AppSessionProvider>
-          {children}
-          <Toaster position="top-right" />
-        </AppSessionProvider>
+        <ThemeProvider>
+          <AppSessionProvider>
+            {children}
+            <Toaster position="top-right" />
+          </AppSessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

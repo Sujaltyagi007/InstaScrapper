@@ -2,15 +2,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useTargets } from "@/hooks/use-targets";
-import { useEvents } from "@/hooks/use-events";
+import { useTargets } from "@/features/targets/hooks/use-targets";
+import { useEvents } from "@/features/monitoring/hooks/use-events";
 import { formatDistanceToNow } from "date-fns";
-import { EmptyState } from "@/components/domain/empty-state";
-import { LoadingState } from "@/components/domain/loading-state";
-import { EventTypeBadge } from "@/components/domain/event-type-badge";
-import { TargetStatusBadge } from "@/components/domain/target-status-badge";
+import { EmptyState } from "@/components/common/empty-state";
+import { LoadingState } from "@/components/common/loading-state";
+import { EventTypeBadge } from "@/features/monitoring/components/event-type-badge";
+import { TargetStatusBadge } from "@/features/targets/components/target-status-badge";
 import { Radar, Bell, AlertTriangle, Activity, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { SystemHealthBadge } from "@/features/monitoring/components/system-health-badge";
 
 export default function DashboardPage() {
   const { targets, loading: targetsLoading } = useTargets();
@@ -32,9 +33,14 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">An overview of everything you&apos;re monitoring.</p>
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">An overview of everything you&apos;re monitoring.</p>
+          </div>
+          <div className="hidden sm:block w-48 relative">
+            <SystemHealthBadge direction="down" />
+          </div>
         </div>
         <Button asChild>
           <Link href="/targets/new">

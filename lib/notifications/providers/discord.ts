@@ -1,6 +1,9 @@
+import { assertPublicHttpUrl } from "@/lib/security/ssrf";
 import type { DiscordConfig, NotificationMessage } from "../types";
 
 export async function sendDiscord(config: DiscordConfig, message: NotificationMessage): Promise<void> {
+  await assertPublicHttpUrl(config.webhookUrl);
+
   const res = await fetch(config.webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -15,6 +18,7 @@ export async function sendDiscord(config: DiscordConfig, message: NotificationMe
         },
       ],
     }),
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) {
     throw new Error(`Discord webhook responded ${res.status}: ${await safeText(res)}`);
