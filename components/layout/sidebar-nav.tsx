@@ -1,12 +1,11 @@
 "use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LayoutDashboard, Target, Bell, Settings, LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
-import { SystemHealthBadge } from "@/features/monitoring/components/system-health-badge";
+import { signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { LayoutDashboard, Target, Bell, Settings, LogOut } from "lucide-react";
+import { SystemHealthBadge } from "@/features/monitoring/components/system-health-badge";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -23,21 +22,9 @@ export function SidebarNav() {
       <nav className="flex flex-col gap-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const active =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
+            <Link key={item.href} href={item.href} className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors", active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
               <Icon className="size-4" />
               <span>{item.label}</span>
             </Link>
@@ -51,10 +38,7 @@ export function SidebarNav() {
           <span className="text-sm font-medium text-muted-foreground">Theme</span>
           <ThemeToggle />
         </div>
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
-        >
+        <button onClick={() => signOut({ callbackUrl: "/login" })} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-destructive">
           <LogOut className="size-4" />
           <span>Log out</span>
         </button>

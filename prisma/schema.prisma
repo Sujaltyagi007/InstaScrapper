@@ -132,10 +132,13 @@ model InstagramSession {
   lastErrorMessage     String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+  lastUsedAt           DateTime?
+  cooldownUntil        DateTime?
 
   monitors             Monitor[]
 
   @@index([userId])
+  @@index([userId, status, lastUsedAt])
   @@map("instagram_sessions")
 }
 
@@ -193,6 +196,8 @@ model TargetSnapshot {
   latestMediaTimestamp      DateTime?
   followersListHash         String?
   followingListHash         String?
+  followersListJson         Json?
+  followingListJson         Json?
   rawHash                   String
 
   @@index([targetId, capturedAt])

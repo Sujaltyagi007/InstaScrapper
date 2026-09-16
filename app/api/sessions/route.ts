@@ -41,10 +41,30 @@ export async function GET() {
         lastErrorMessage: true,
         createdAt: true,
         updatedAt: true,
+        lastUsedAt: true,
+        cooldownUntil: true,
       },
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json({ sessions });
+    const now = new Date();
+    const active = sessions.filter(s => s.status === "ACTIVE" && (!s.cooldownUntil || s.cooldownUntil < now)).length;
+    const cooling = sessions.filter(s => s.status === "ACTIVE" && s.cooldownUntil && s.cooldownUntil > now);
+    const flagged = sessions.filter(s => s.status === "FLAGGED").length;
+    
+    let nextAvailableAt = null;
+    if (cooling.length > 0) {
+      nextAvailableAt = cooling.map(s => s.cooldownUntil!).sort((a, b) => a.getTime() - b.getTime())[0];
+    }
+
+    const poolHealth = {
+      total: sessions.length,
+      active,
+      cooling: cooling.length,
+      flagged,
+      nextAvailableAt
+    };
+
+    return NextResponse.json({ sessions, poolHealth });
   } catch (err) {
     return jsonError(err);
   }

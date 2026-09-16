@@ -82,12 +82,6 @@ export interface TargetFetchResult {
   stories?: NormalizedMediaItem[];
   followersList?: string[];
   followingList?: string[];
-  churn?: {
-    followersAdded?: string[];
-    followersRemoved?: string[];
-    followingAdded?: string[];
-    followingRemoved?: string[];
-  };
   errorMessage?: string;
   anonymousMode?: boolean;
   deviceId?: string;
@@ -114,7 +108,7 @@ export interface StealthSessionConfig {
 }
 
 export interface MetaProvider {
-  resolveTarget(username: string): Promise<TargetResolution>;
+  resolveTarget(username: string, session?: StealthSessionConfig | null): Promise<TargetResolution>;
   fetchTargetData(params: {
     username: string;
     externalId: string | null;

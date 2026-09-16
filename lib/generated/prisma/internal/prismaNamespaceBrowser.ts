@@ -153,7 +153,9 @@ export const InstagramSessionScalarFieldEnum = {
   lastSuccessAt: 'lastSuccessAt',
   lastErrorMessage: 'lastErrorMessage',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  lastUsedAt: 'lastUsedAt',
+  cooldownUntil: 'cooldownUntil'
 } as const
 
 export type InstagramSessionScalarFieldEnum = (typeof InstagramSessionScalarFieldEnum)[keyof typeof InstagramSessionScalarFieldEnum]
@@ -210,6 +212,8 @@ export const TargetSnapshotScalarFieldEnum = {
   latestMediaTimestamp: 'latestMediaTimestamp',
   followersListHash: 'followersListHash',
   followingListHash: 'followingListHash',
+  followersListJson: 'followersListJson',
+  followingListJson: 'followingListJson',
   rawHash: 'rawHash'
 } as const
 

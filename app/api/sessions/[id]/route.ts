@@ -19,3 +19,26 @@ export async function DELETE(
     return jsonError(err);
   }
 }
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const userId = await requireUserId();
+    const { id } = await params;
+    const body = await req.json();
+
+    if (body.resetFlag) {
+      await prisma.instagramSession.updateMany({
+        where: { id, userId },
+        data: { status: "ACTIVE", cooldownUntil: null, lastErrorMessage: null },
+      });
+    } else if (body.status === "ACTIVE" || body.status === "PAUSED") {
+      await prisma.instagramSession.updateMany({
+        where: { id, userId },
+        data: { status: body.status },
+      });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return jsonError(err);
+  }
+}

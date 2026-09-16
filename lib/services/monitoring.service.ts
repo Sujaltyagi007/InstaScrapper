@@ -5,6 +5,7 @@ import { decryptSecret } from "@/lib/crypto";
 import { hashProfile, detectProfileChanges, findNewMedia } from "./diff.service";
 import { recordEvent } from "./event.service";
 import { nextRunAtFromInterval, clampIntervalSeconds } from "./target.service";
+import { pickSession, reportSessionOutcome } from "@/lib/meta/session-pool";
 import type { TargetFetchResult } from "@/lib/meta/types";
 import { uploadRemoteMediaToImageKit, isImageKitEnabled } from "@/lib/storage/imagekit";
 
@@ -110,33 +111,10 @@ export async function processTarget(targetId: string) {
     let usedSessionId: string | null = null;
 
     if (isStealth) {
-      // Find session: monitor-specific session or user's active session
-      let sessionRecord = target.monitor.instagramSession;
-      if (!sessionRecord) {
-        sessionRecord = await prisma.instagramSession.findFirst({
-          where: { userId: target.userId, status: "ACTIVE" },
-          orderBy: { updatedAt: "desc" },
-        });
-      }
-
-      if (sessionRecord) {
-        usedSessionId = sessionRecord.id;
-        try {
-          const decryptedCookiesJson = decryptSecret({
-            ciphertext: sessionRecord.encryptedCookies,
-            iv: sessionRecord.encryptedCookiesIv,
-          });
-          sessionConfig = {
-            username: sessionRecord.username,
-            cookies: JSON.parse(decryptedCookiesJson),
-            userAgent: sessionRecord.userAgent,
-            deviceId: sessionRecord.deviceId,
-            proxyUrl: sessionRecord.proxyUrl,
-            impersonateTarget: sessionRecord.impersonateTarget,
-          };
-        } catch {
-          // If cookies can't be decrypted, proceed without session (no-login)
-        }
+      const picked = await pickSession(target.userId, { pinnedSessionId: target.monitor.instagramSessionId });
+      if (picked) {
+        usedSessionId = picked.id;
+        sessionConfig = picked.config;
       }
     } else {
       // Official Meta Graph API mode requires active MetaConnection
@@ -210,27 +188,44 @@ async function handleFailedFetch(
 
   if (fetchResult.sessionFlagged) {
     if (usedSessionId) {
-      await prisma.instagramSession
-        .update({
-          where: { id: usedSessionId },
-          data: {
-            status: "FLAGGED",
-            lastErrorMessage: fetchResult.errorMessage ?? "Flagged by Instagram",
-          },
-        })
-        .catch(() => undefined);
+      await reportSessionOutcome(usedSessionId, { kind: "FLAGGED", message: fetchResult.errorMessage });
     }
-    await prisma.target.update({
-      where: { id: target.id },
-      data: {
-        status: "PAUSED",
-        consecutiveFailures: target.consecutiveFailures + 1,
-        lastCheckedAt: now,
-        errorCode: "SESSION_FLAGGED",
-        errorMessage: fetchResult.errorMessage ?? "Session account or IP is flagged by Instagram.",
-        nextRunAt: null,
+
+    const otherEligible = await prisma.instagramSession.count({
+      where: {
+        userId: target.userId,
+        status: "ACTIVE",
+        id: { not: usedSessionId ?? undefined },
+        OR: [{ cooldownUntil: null }, { cooldownUntil: { lt: now } }],
       },
     });
+
+    if (otherEligible > 0) {
+      await prisma.target.update({
+        where: { id: target.id },
+        data: {
+          status: "BACKOFF",
+          consecutiveFailures: target.consecutiveFailures + 1,
+          lastCheckedAt: now,
+          errorCode: "SESSION_FLAGGED",
+          errorMessage: fetchResult.errorMessage ?? "Session account or IP is flagged by Instagram.",
+          nextRunAt: new Date(now.getTime() + 5 * 60000), // Retry in 5 minutes with next pool session
+        },
+      });
+    } else {
+      await prisma.target.update({
+        where: { id: target.id },
+        data: {
+          status: "PAUSED",
+          consecutiveFailures: target.consecutiveFailures + 1,
+          lastCheckedAt: now,
+          errorCode: "SESSION_FLAGGED",
+          errorMessage: fetchResult.errorMessage ?? "Session account or IP is flagged by Instagram.",
+          nextRunAt: null,
+        },
+      });
+    }
+
     await recordEvent({
       targetId: target.id,
       userId: target.userId,
@@ -246,6 +241,9 @@ async function handleFailedFetch(
   }
 
   if (fetchResult.rateLimited) {
+    if (usedSessionId) {
+      await reportSessionOutcome(usedSessionId, { kind: "RATE_LIMITED", message: fetchResult.errorMessage });
+    }
     const failures = target.consecutiveFailures + 1;
     await prisma.target.update({
       where: { id: target.id },
@@ -395,6 +393,8 @@ async function handleSuccessfulFetch(
           storageUrl,
           storageFileId,
           isStory: false,
+          isCollab: item.isCollab ?? false,
+          collaborators: item.collaborators ?? [],
         },
       });
       if (previousSnapshot) {
@@ -412,6 +412,29 @@ async function handleSuccessfulFetch(
           },
         });
         eventsCreated++;
+
+        // Collab post — content leaked through a public co-author.
+        // instagram_monitor.py fires a dedicated alert for this because it
+        // means a private account's content is visible without following them.
+        if (item.isCollab && item.collaborators && item.collaborators.length > 0) {
+          await recordEvent({
+            targetId: target.id,
+            userId: target.userId,
+            change: {
+              type: "COLLAB_POST_LEAKED",
+              fingerprint: `collab_${target.id}_${item.externalMediaId}`,
+              before: null,
+              after: {
+                externalMediaId: item.externalMediaId,
+                permalink: item.permalink,
+                mediaType: item.mediaType,
+                collaborators: item.collaborators,
+                storageUrl,
+              } as unknown as Record<string, unknown>,
+            },
+          });
+          eventsCreated++;
+        }
       }
     }
   }
@@ -481,10 +504,27 @@ async function handleSuccessfulFetch(
     }
   }
 
-  // Follower churn
-  if (target.monitor.watchFollowerChurn && fetchResult.churn) {
-    const { followersAdded, followersRemoved } = fetchResult.churn;
-    if ((followersAdded && followersAdded.length > 0) || (followersRemoved && followersRemoved.length > 0)) {
+  // Follower & following churn — diffs the raw ID lists fetched this run
+  // against the lists stored on the previous snapshot (the bridge only
+  // returns lists at all when watchFollowerChurn is on and the session is
+  // authenticated; anonymous/unwatched runs skip this block entirely).
+  if (target.monitor.watchFollowerChurn && (fetchResult.followersList || fetchResult.followingList)) {
+    const prevFollowers = new Set((previousSnapshot?.followersListJson as string[] | null) ?? []);
+    const prevFollowing = new Set((previousSnapshot?.followingListJson as string[] | null) ?? []);
+    const currFollowers = fetchResult.followersList ?? [];
+    const currFollowing = fetchResult.followingList ?? [];
+    const currFollowersSet = new Set(currFollowers);
+    const currFollowingSet = new Set(currFollowing);
+
+    const followersAdded = currFollowers.filter((id) => !prevFollowers.has(id));
+    const followersRemoved = [...prevFollowers].filter((id) => !currFollowersSet.has(id));
+    const followingAdded = currFollowing.filter((id) => !prevFollowing.has(id));
+    const followingRemoved = [...prevFollowing].filter((id) => !currFollowingSet.has(id));
+
+    const hasChurn =
+      followersAdded.length > 0 || followersRemoved.length > 0 || followingAdded.length > 0 || followingRemoved.length > 0;
+
+    if (previousSnapshot && hasChurn) {
       await recordEvent({
         targetId: target.id,
         userId: target.userId,
@@ -492,7 +532,7 @@ async function handleSuccessfulFetch(
           type: "FOLLOWER_CHURN",
           fingerprint: `churn_${target.id}_${now.toISOString().slice(0, 13)}`,
           before: null,
-          after: { added: followersAdded, removed: followersRemoved },
+          after: { followersAdded, followersRemoved, followingAdded, followingRemoved },
         },
       });
       eventsCreated++;
@@ -540,17 +580,16 @@ async function handleSuccessfulFetch(
       storiesCount: profile.storiesCount ?? null,
       latestMediaId: media[0]?.externalMediaId ?? null,
       latestMediaTimestamp: media[0]?.timestamp ? new Date(media[0].timestamp) : null,
+      followersListJson: fetchResult.followersList ?? undefined,
+      followingListJson: fetchResult.followingList ?? undefined,
       rawHash,
     },
   });
 
   const nextRunAt = calculateNextRunAt(target.monitor);
 
-  if (fetchResult.deviceId && usedSessionId) {
-    await prisma.instagramSession.update({
-      where: { id: usedSessionId },
-      data: { deviceId: fetchResult.deviceId },
-    }).catch(() => undefined);
+  if (usedSessionId) {
+    await reportSessionOutcome(usedSessionId, { kind: "SUCCESS", deviceId: fetchResult.deviceId });
   }
 
   await prisma.target.update({

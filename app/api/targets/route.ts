@@ -9,6 +9,7 @@ import {
 } from "@/lib/services/target.service";
 import { isMonitorable, eligibilityMessage } from "@/lib/meta/capability.service";
 import { prisma } from "@/lib/prisma";
+import { peekSession } from "@/lib/meta/session-pool";
 
 export async function GET() {
   try {
@@ -38,7 +39,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "You're already monitoring this account." }, { status: 409 });
     }
 
-    const resolution = await resolveTargetUsername(parsed.data.username);
+    const picked = await peekSession(userId, { pinnedSessionId: parsed.data.instagramSessionId });
+    const sessionConfig = picked?.config ?? null;
+    const resolution = await resolveTargetUsername(parsed.data.username, sessionConfig);
     if (!isMonitorable(resolution)) {
       return NextResponse.json(
         { error: eligibilityMessage(resolution), resolution },

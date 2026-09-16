@@ -59,7 +59,21 @@ export function detectProfileChanges(
         after: null,
       });
     }
+
+    // Username rename — emitted as its own event type (ACCOUNT_RENAMED) to match
+    // instagram_monitor.py's separate rename detection, distinct from bio/pic changes.
+    const prevUsername = normalizeForCompare(previous.username);
+    const nextUsername = normalizeForCompare(next.username);
+    if (prevUsername && nextUsername && prevUsername !== nextUsername) {
+      changes.push({
+        type: "ACCOUNT_RENAMED",
+        fingerprint: `renamed_${previous.id}_${nextUsername}`,
+        before: { username: previous.username },
+        after: { username: next.username },
+      });
+    }
   }
+
 
   if (monitor.watchFollowerCount && previous.followersCount != null && next.followersCount != null) {
     const delta = Math.abs(next.followersCount - previous.followersCount);

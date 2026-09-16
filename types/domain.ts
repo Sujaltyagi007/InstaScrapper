@@ -1,12 +1,4 @@
-import type {
-  Target,
-  Monitor,
-  Event,
-  Media,
-  NotificationChannel,
-  Job,
-  TargetSnapshot,
-} from "@prisma/client";
+import type { Target, Monitor, Event, Media, NotificationChannel, Job, TargetSnapshot } from "@prisma/client";
 
 export type TargetWithMonitor = Target & { monitor: Monitor | null; _count?: { events: number } };
 

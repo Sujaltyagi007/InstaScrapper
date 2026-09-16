@@ -1427,7 +1427,9 @@ export const InstagramSessionScalarFieldEnum = {
   lastSuccessAt: 'lastSuccessAt',
   lastErrorMessage: 'lastErrorMessage',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  lastUsedAt: 'lastUsedAt',
+  cooldownUntil: 'cooldownUntil'
 } as const
 
 export type InstagramSessionScalarFieldEnum = (typeof InstagramSessionScalarFieldEnum)[keyof typeof InstagramSessionScalarFieldEnum]
@@ -1484,6 +1486,8 @@ export const TargetSnapshotScalarFieldEnum = {
   latestMediaTimestamp: 'latestMediaTimestamp',
   followersListHash: 'followersListHash',
   followingListHash: 'followingListHash',
+  followersListJson: 'followersListJson',
+  followingListJson: 'followingListJson',
   rawHash: 'rawHash'
 } as const
 
@@ -1743,20 +1747,6 @@ export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
- * Reference to a field of type 'EventType'
- */
-export type EnumEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EventType'>
-    
-
-
-/**
- * Reference to a field of type 'EventType[]'
- */
-export type ListEnumEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EventType[]'>
-    
-
-
-/**
  * Reference to a field of type 'Json'
  */
 export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
@@ -1767,6 +1757,20 @@ export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'J
  * Reference to a field of type 'QueryMode'
  */
 export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'EventType'
+ */
+export type EnumEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EventType'>
+    
+
+
+/**
+ * Reference to a field of type 'EventType[]'
+ */
+export type ListEnumEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EventType[]'>
     
 
 

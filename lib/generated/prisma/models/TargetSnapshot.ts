@@ -111,6 +111,8 @@ export type TargetSnapshotCountAggregateOutputType = {
   latestMediaTimestamp: number
   followersListHash: number
   followingListHash: number
+  followersListJson: number
+  followingListJson: number
   rawHash: number
   _all: number
 }
@@ -201,6 +203,8 @@ export type TargetSnapshotCountAggregateInputType = {
   latestMediaTimestamp?: true
   followersListHash?: true
   followingListHash?: true
+  followersListJson?: true
+  followingListJson?: true
   rawHash?: true
   _all?: true
 }
@@ -312,6 +316,8 @@ export type TargetSnapshotGroupByOutputType = {
   latestMediaTimestamp: Date | null
   followersListHash: string | null
   followingListHash: string | null
+  followersListJson: runtime.JsonValue | null
+  followingListJson: runtime.JsonValue | null
   rawHash: string
   _count: TargetSnapshotCountAggregateOutputType | null
   _avg: TargetSnapshotAvgAggregateOutputType | null
@@ -359,6 +365,8 @@ export type TargetSnapshotWhereInput = {
   latestMediaTimestamp?: Prisma.DateTimeNullableFilter<"TargetSnapshot"> | Date | string | null
   followersListHash?: Prisma.StringNullableFilter<"TargetSnapshot"> | string | null
   followingListHash?: Prisma.StringNullableFilter<"TargetSnapshot"> | string | null
+  followersListJson?: Prisma.JsonNullableFilter<"TargetSnapshot">
+  followingListJson?: Prisma.JsonNullableFilter<"TargetSnapshot">
   rawHash?: Prisma.StringFilter<"TargetSnapshot"> | string
   target?: Prisma.XOR<Prisma.TargetScalarRelationFilter, Prisma.TargetWhereInput>
 }
@@ -384,6 +392,8 @@ export type TargetSnapshotOrderByWithRelationInput = {
   latestMediaTimestamp?: Prisma.SortOrderInput | Prisma.SortOrder
   followersListHash?: Prisma.SortOrderInput | Prisma.SortOrder
   followingListHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  followersListJson?: Prisma.SortOrderInput | Prisma.SortOrder
+  followingListJson?: Prisma.SortOrderInput | Prisma.SortOrder
   rawHash?: Prisma.SortOrder
   target?: Prisma.TargetOrderByWithRelationInput
 }
@@ -412,6 +422,8 @@ export type TargetSnapshotWhereUniqueInput = Prisma.AtLeast<{
   latestMediaTimestamp?: Prisma.DateTimeNullableFilter<"TargetSnapshot"> | Date | string | null
   followersListHash?: Prisma.StringNullableFilter<"TargetSnapshot"> | string | null
   followingListHash?: Prisma.StringNullableFilter<"TargetSnapshot"> | string | null
+  followersListJson?: Prisma.JsonNullableFilter<"TargetSnapshot">
+  followingListJson?: Prisma.JsonNullableFilter<"TargetSnapshot">
   rawHash?: Prisma.StringFilter<"TargetSnapshot"> | string
   target?: Prisma.XOR<Prisma.TargetScalarRelationFilter, Prisma.TargetWhereInput>
 }, "id">
@@ -437,6 +449,8 @@ export type TargetSnapshotOrderByWithAggregationInput = {
   latestMediaTimestamp?: Prisma.SortOrderInput | Prisma.SortOrder
   followersListHash?: Prisma.SortOrderInput | Prisma.SortOrder
   followingListHash?: Prisma.SortOrderInput | Prisma.SortOrder
+  followersListJson?: Prisma.SortOrderInput | Prisma.SortOrder
+  followingListJson?: Prisma.SortOrderInput | Prisma.SortOrder
   rawHash?: Prisma.SortOrder
   _count?: Prisma.TargetSnapshotCountOrderByAggregateInput
   _avg?: Prisma.TargetSnapshotAvgOrderByAggregateInput
@@ -469,6 +483,8 @@ export type TargetSnapshotScalarWhereWithAggregatesInput = {
   latestMediaTimestamp?: Prisma.DateTimeNullableWithAggregatesFilter<"TargetSnapshot"> | Date | string | null
   followersListHash?: Prisma.StringNullableWithAggregatesFilter<"TargetSnapshot"> | string | null
   followingListHash?: Prisma.StringNullableWithAggregatesFilter<"TargetSnapshot"> | string | null
+  followersListJson?: Prisma.JsonNullableWithAggregatesFilter<"TargetSnapshot">
+  followingListJson?: Prisma.JsonNullableWithAggregatesFilter<"TargetSnapshot">
   rawHash?: Prisma.StringWithAggregatesFilter<"TargetSnapshot"> | string
 }
 
@@ -492,6 +508,8 @@ export type TargetSnapshotCreateInput = {
   latestMediaTimestamp?: Date | string | null
   followersListHash?: string | null
   followingListHash?: string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash: string
   target: Prisma.TargetCreateNestedOneWithoutSnapshotsInput
 }
@@ -517,6 +535,8 @@ export type TargetSnapshotUncheckedCreateInput = {
   latestMediaTimestamp?: Date | string | null
   followersListHash?: string | null
   followingListHash?: string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash: string
 }
 
@@ -540,6 +560,8 @@ export type TargetSnapshotUpdateInput = {
   latestMediaTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   followersListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   followingListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash?: Prisma.StringFieldUpdateOperationsInput | string
   target?: Prisma.TargetUpdateOneRequiredWithoutSnapshotsNestedInput
 }
@@ -565,6 +587,8 @@ export type TargetSnapshotUncheckedUpdateInput = {
   latestMediaTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   followersListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   followingListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -589,6 +613,8 @@ export type TargetSnapshotCreateManyInput = {
   latestMediaTimestamp?: Date | string | null
   followersListHash?: string | null
   followingListHash?: string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash: string
 }
 
@@ -612,6 +638,8 @@ export type TargetSnapshotUpdateManyMutationInput = {
   latestMediaTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   followersListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   followingListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -636,6 +664,8 @@ export type TargetSnapshotUncheckedUpdateManyInput = {
   latestMediaTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   followersListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   followingListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -670,6 +700,8 @@ export type TargetSnapshotCountOrderByAggregateInput = {
   latestMediaTimestamp?: Prisma.SortOrder
   followersListHash?: Prisma.SortOrder
   followingListHash?: Prisma.SortOrder
+  followersListJson?: Prisma.SortOrder
+  followingListJson?: Prisma.SortOrder
   rawHash?: Prisma.SortOrder
 }
 
@@ -799,6 +831,8 @@ export type TargetSnapshotCreateWithoutTargetInput = {
   latestMediaTimestamp?: Date | string | null
   followersListHash?: string | null
   followingListHash?: string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash: string
 }
 
@@ -822,6 +856,8 @@ export type TargetSnapshotUncheckedCreateWithoutTargetInput = {
   latestMediaTimestamp?: Date | string | null
   followersListHash?: string | null
   followingListHash?: string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash: string
 }
 
@@ -875,6 +911,8 @@ export type TargetSnapshotScalarWhereInput = {
   latestMediaTimestamp?: Prisma.DateTimeNullableFilter<"TargetSnapshot"> | Date | string | null
   followersListHash?: Prisma.StringNullableFilter<"TargetSnapshot"> | string | null
   followingListHash?: Prisma.StringNullableFilter<"TargetSnapshot"> | string | null
+  followersListJson?: Prisma.JsonNullableFilter<"TargetSnapshot">
+  followingListJson?: Prisma.JsonNullableFilter<"TargetSnapshot">
   rawHash?: Prisma.StringFilter<"TargetSnapshot"> | string
 }
 
@@ -898,6 +936,8 @@ export type TargetSnapshotCreateManyTargetInput = {
   latestMediaTimestamp?: Date | string | null
   followersListHash?: string | null
   followingListHash?: string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash: string
 }
 
@@ -921,6 +961,8 @@ export type TargetSnapshotUpdateWithoutTargetInput = {
   latestMediaTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   followersListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   followingListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -944,6 +986,8 @@ export type TargetSnapshotUncheckedUpdateWithoutTargetInput = {
   latestMediaTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   followersListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   followingListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -967,6 +1011,8 @@ export type TargetSnapshotUncheckedUpdateManyWithoutTargetInput = {
   latestMediaTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   followersListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   followingListHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  followersListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followingListJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rawHash?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -993,6 +1039,8 @@ export type TargetSnapshotSelect<ExtArgs extends runtime.Types.Extensions.Intern
   latestMediaTimestamp?: boolean
   followersListHash?: boolean
   followingListHash?: boolean
+  followersListJson?: boolean
+  followingListJson?: boolean
   rawHash?: boolean
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["targetSnapshot"]>
@@ -1018,6 +1066,8 @@ export type TargetSnapshotSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   latestMediaTimestamp?: boolean
   followersListHash?: boolean
   followingListHash?: boolean
+  followersListJson?: boolean
+  followingListJson?: boolean
   rawHash?: boolean
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["targetSnapshot"]>
@@ -1043,6 +1093,8 @@ export type TargetSnapshotSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   latestMediaTimestamp?: boolean
   followersListHash?: boolean
   followingListHash?: boolean
+  followersListJson?: boolean
+  followingListJson?: boolean
   rawHash?: boolean
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["targetSnapshot"]>
@@ -1068,10 +1120,12 @@ export type TargetSnapshotSelectScalar = {
   latestMediaTimestamp?: boolean
   followersListHash?: boolean
   followingListHash?: boolean
+  followersListJson?: boolean
+  followingListJson?: boolean
   rawHash?: boolean
 }
 
-export type TargetSnapshotOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "targetId" | "capturedAt" | "username" | "name" | "biography" | "website" | "profilePictureUrl" | "profilePictureStorageUrl" | "profilePictureStorageId" | "followersCount" | "followsCount" | "mediaCount" | "reelsCount" | "hasStory" | "storiesCount" | "latestMediaId" | "latestMediaTimestamp" | "followersListHash" | "followingListHash" | "rawHash", ExtArgs["result"]["targetSnapshot"]>
+export type TargetSnapshotOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "targetId" | "capturedAt" | "username" | "name" | "biography" | "website" | "profilePictureUrl" | "profilePictureStorageUrl" | "profilePictureStorageId" | "followersCount" | "followsCount" | "mediaCount" | "reelsCount" | "hasStory" | "storiesCount" | "latestMediaId" | "latestMediaTimestamp" | "followersListHash" | "followingListHash" | "followersListJson" | "followingListJson" | "rawHash", ExtArgs["result"]["targetSnapshot"]>
 export type TargetSnapshotInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
 }
@@ -1108,6 +1162,8 @@ export type $TargetSnapshotPayload<ExtArgs extends runtime.Types.Extensions.Inte
     latestMediaTimestamp: Date | null
     followersListHash: string | null
     followingListHash: string | null
+    followersListJson: runtime.JsonValue | null
+    followingListJson: runtime.JsonValue | null
     rawHash: string
   }, ExtArgs["result"]["targetSnapshot"]>
   composites: {}
@@ -1553,6 +1609,8 @@ export interface TargetSnapshotFieldRefs {
   readonly latestMediaTimestamp: Prisma.FieldRef<"TargetSnapshot", 'DateTime'>
   readonly followersListHash: Prisma.FieldRef<"TargetSnapshot", 'String'>
   readonly followingListHash: Prisma.FieldRef<"TargetSnapshot", 'String'>
+  readonly followersListJson: Prisma.FieldRef<"TargetSnapshot", 'Json'>
+  readonly followingListJson: Prisma.FieldRef<"TargetSnapshot", 'Json'>
   readonly rawHash: Prisma.FieldRef<"TargetSnapshot", 'String'>
 }
     

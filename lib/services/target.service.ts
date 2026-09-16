@@ -20,7 +20,7 @@ export function validateUsernameFormat(username: string): { valid: boolean; reas
 }
 
 /** Phase: "Backend resolves and validates the target" (plan section 1, step 4). */
-export async function resolveTargetUsername(username: string): Promise<TargetResolution> {
+export async function resolveTargetUsername(username: string, session?: import("@/lib/meta/types").StealthSessionConfig | null): Promise<TargetResolution> {
   const format = validateUsernameFormat(username);
   if (!format.valid) {
     return {
@@ -35,7 +35,7 @@ export async function resolveTargetUsername(username: string): Promise<TargetRes
   }
 
   const provider = getMetaProvider();
-  return provider.resolveTarget(normalizeUsername(username));
+  return provider.resolveTarget(normalizeUsername(username), session);
 }
 
 async function assertOwnsInstagramSession(userId: string, instagramSessionId: string | null | undefined) {

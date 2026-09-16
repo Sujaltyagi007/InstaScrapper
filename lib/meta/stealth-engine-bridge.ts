@@ -1,43 +1,29 @@
 import path from "path";
 import { randomUUID, createHash } from "crypto";
 import { Capability } from "./types";
-import type {
-  TargetResolution, TargetFetchResult, StealthSessionConfig, StealthFetchOptions, NormalizedMediaItem, CapabilityCheck,
-} from "./types";
+import type { TargetResolution, TargetFetchResult, StealthSessionConfig, StealthFetchOptions, NormalizedMediaItem, CapabilityCheck, } from "./types";
+import { scrapeProfileHtml, LOGIN_SHELL_STATUS } from "./html-profile-scraper";
 
-// ---------------------------------------------------------------------------
-// Web (browser) client identity  — www.instagram.com endpoints
-// ---------------------------------------------------------------------------
-// Instagram's backend cross-checks the TLS ClientHello fingerprint against the
-// declared client in headers, and rejects the pair as a whole ("useragent
-// mismatch") if they don't correspond to a known real client. A genuine TLS
-// fingerprint (via @dryft/tlsclient) makes this cross-check *stricter*, not
-// looser — so the header bundle below must describe the exact same client
-// as CHROME_TLS_IDENTIFIER below, not an iOS app or a different browser.
-// Verified empirically: iOS-app-style headers (X-IG-App-ID etc.) against a
-// Safari-iOS TLS fingerprint fail with "useragent mismatch" even when every
-// individual iOS field is internally consistent, because this is a *web*
-// endpoint (www.instagram.com) an iOS app would never call directly.
-// ---------------------------------------------------------------------------
+const CHROME_DESKTOP_VERSIONS = ["116", "117", "119", "120"] as const;
 
-const CHROME_TLS_IDENTIFIER = "chrome_120";
-const CHROME_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-const WEB_APP_ID = "936619743392459"; // Instagram's own web app id
+function pickChromeDesktopIdentity(): { tlsIdentifier: string; userAgent: string; secChUa: string } {
+  const version = CHROME_DESKTOP_VERSIONS[Math.floor(Math.random() * CHROME_DESKTOP_VERSIONS.length)];
+  return {
+    tlsIdentifier: `chrome_${version}`,
+    userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${version}.0.0.0 Safari/537.36`,
+    secChUa: `"Chromium";v="${version}", "Not_A Brand";v="24", "Google Chrome";v="${version}"`,
+  };
+}
 
-// ---------------------------------------------------------------------------
-// iOS app client identity  — i.instagram.com (mobile API) endpoints
-// ---------------------------------------------------------------------------
-// i.instagram.com is the private mobile REST API surface. Real apps (and tools
-// like Instaloader/instagrapi) hit it with an iOS TLS fingerprint AND matching
-// iOS app headers. Sending Chrome headers here triggers the same "useragent
-// mismatch" rejection in the opposite direction.
-// ---------------------------------------------------------------------------
-
+const CHROME_IDENTITY = pickChromeDesktopIdentity();
+const CHROME_TLS_IDENTIFIER = CHROME_IDENTITY.tlsIdentifier;
+const CHROME_USER_AGENT = CHROME_IDENTITY.userAgent;
+const WEB_APP_ID = "936619743392459";
 const IOS_TLS_IDENTIFIER = "safari_ios_16_0";
 const IOS_IG_APP_VERSION = "269.0.0.18.75";
 const IOS_IG_APP_VERSION_CODE = "431634833";
-const IOS_APP_ID = "124024455399602"; // iPhone client app ID
-const IOS_DEVICE_MODEL = "iPhone14,5";  // iPhone 13
+const IOS_APP_ID = "124024455399602";
+const IOS_DEVICE_MODEL = "iPhone14,5";
 const IOS_OS_VERSION = "16_3";
 const IOS_LOCALE = "en_US";
 const IOS_RESOLUTION = "1170x2532";
@@ -51,23 +37,13 @@ function buildIosUserAgent(): string {
   );
 }
 
-function buildMobileClientHeaders(options: {
-  deviceId?: string;
-  uuid?: string;
-  phoneId?: string;
-  cookies?: Record<string, string>;
-  referer?: string;
-}): Record<string, string> {
+function buildMobileClientHeaders(options: { deviceId?: string; uuid?: string; phoneId?: string; cookies?: Record<string, string>; referer?: string; }): Record<string, string> {
   const ua = buildIosUserAgent();
   const deviceId = options.deviceId || randomUUID();
   const uuid = options.uuid || randomUUID();
   const phoneId = options.phoneId || randomUUID();
 
-  const cookieStr = options.cookies
-    ? Object.entries(options.cookies)
-      .map(([k, v]) => `${k}=${v}`)
-      .join("; ")
-    : "";
+  const cookieStr = (options.cookies && typeof options.cookies === "object") ? Object.entries(options.cookies).map(([k, v]) => `${k}=${v}`).join("; ") : "";
 
   const headers: Record<string, string> = {
     "User-Agent": ua,
@@ -115,11 +91,6 @@ function buildMobileClientHeaders(options: {
   return headers;
 }
 
-/**
- * Generates a stable-per-session device/browser instance identifier.
- * Stored on the session config and reused across all requests so Instagram
- * sees a consistent client instance rather than a new one every request.
- */
 function buildIosDeviceFingerprint(seed?: string | null) {
   const deviceId = seed || `web-${randomUUID().replace(/-/g, "").slice(0, 16)}`;
   const derive = (salt: string) => {
@@ -131,12 +102,6 @@ function buildIosDeviceFingerprint(seed?: string | null) {
   return { deviceId, uuid, phoneId };
 }
 
-/**
- * Builds headers for a coherent Chrome-desktop web AJAX identity, matching
- * CHROME_TLS_IDENTIFIER. This is what the Instagram *website* itself sends
- * when it calls its own internal API endpoints, which is exactly the shape
- * these requests need to look like.
- */
 function buildIosClientHeaders(options: {
   deviceId?: string;
   uuid?: string;
@@ -148,7 +113,7 @@ function buildIosClientHeaders(options: {
 }): Record<string, string> {
   const ua = options.userAgent || CHROME_USER_AGENT;
 
-  const cookieStr = options.cookies ? Object.entries(options.cookies).map(([k, v]) => `${k}=${v}`).join("; ") : "";
+  const cookieStr = (options.cookies && typeof options.cookies === "object") ? Object.entries(options.cookies).map(([k, v]) => `${k}=${v}`).join("; ") : "";
 
   const headers: Record<string, string> = {
     "User-Agent": ua,
@@ -157,7 +122,7 @@ function buildIosClientHeaders(options: {
     "Accept-Encoding": "gzip, deflate, br",
     "X-Ig-App-Id": WEB_APP_ID,
     "X-Requested-With": "XMLHttpRequest",
-    "Sec-Ch-Ua": '"Chromium";v="120", "Not_A Brand";v="24", "Google Chrome";v="120"',
+    "Sec-Ch-Ua": CHROME_IDENTITY.secChUa,
     "Sec-Ch-Ua-Mobile": "?0",
     "Sec-Ch-Ua-Platform": '"Windows"',
     "Sec-Fetch-Dest": "empty",
@@ -185,19 +150,7 @@ function buildIosClientHeaders(options: {
   return headers;
 }
 
-/**
- * Resolves the bundled native tls-client library for the current platform,
- * bypassing @dryft/tlsclient's own auto-detection entirely.
- *
- * Why: that package's detection (a) only recognizes Ubuntu/Alpine via
- * /etc/os-release — Vercel's Amazon Linux runtime falls through to a wrong
- * ARM binary, and (b) downloads to os.tmpdir() during `npm install`, which
- * runs on a different machine than the deployed serverless function and
- * never reaches it. We instead ship the correct binaries ourselves under
- * lib/native/ (bundled into the deployment via next.config.ts's
- * outputFileTracingIncludes) and point the library at them directly via
- * its documented `tlsLibPath` override.
- */
+
 function resolveTlsLibPath(): string {
   const nativeDir = path.join(process.cwd(), "lib", "native");
   if (process.platform === "win32") {
@@ -212,16 +165,12 @@ function resolveTlsLibPath(): string {
   );
 }
 
-// Client is stateless aside from tlsLibPath/impersonation target, and creating
-// one spins up a workerpool — reuse a single instance per (identifier) rather
-// than paying that cost on every request.
 const tlsClientCache = new Map<string, any>();
 
 function getTlsClient(tlsClientIdentifier: string, proxy?: string) {
   const cacheKey = `${tlsClientIdentifier}::${proxy ?? ""}`;
   let client = tlsClientCache.get(cacheKey);
   if (!client) {
-    // Dynamically require to avoid native addon crashes during Next.js build-time route evaluation
     const { createTLSClient } = require("@dryft/tlsclient");
     client = createTLSClient({
       tlsClientIdentifier,
@@ -233,10 +182,174 @@ function getTlsClient(tlsClientIdentifier: string, proxy?: string) {
   return client;
 }
 
-/**
- * Returns true if the URL targets the iOS/mobile API surface (i.instagram.com).
- * These endpoints require the iOS app identity; www.instagram.com uses Chrome web.
- */
+let _htmlPool: any = null;
+
+
+function resolveFrom(specifier: string, extraPaths: string[] = []): string {
+  const candidateBases = [...extraPaths, process.cwd()];
+  let lastErr: unknown;
+  for (const base of candidateBases) {
+    try { return require.resolve(specifier, { paths: [base] }); }
+    catch (err) { lastErr = err; }
+  }
+  try {
+    return require.resolve(specifier);
+  } catch (err) {
+    lastErr = err;
+  }
+  throw new Error(
+    `Could not resolve "${specifier}" (tried ${candidateBases.join(", ")} and this module): ${lastErr instanceof Error ? lastErr.message : String(lastErr)
+    }`
+  );
+}
+
+function getHtmlWorkerPool(): any {
+  if (!_htmlPool) {
+    const tlsEntry = resolveFrom("@dryft/tlsclient/lib/helpers/tls.js");
+    const wpName = ["worker", "pool"].join("");
+    const workerpool = eval("require")(resolveFrom(wpName, [path.dirname(tlsEntry)]));
+    _htmlPool = workerpool.pool(tlsEntry, {
+      workerThreadOpts: { env: { TLS_LIB_PATH: resolveTlsLibPath() } },
+    });
+  }
+  return _htmlPool;
+}
+
+/** A fresh cookie jar id per request — see the jar-policy note above. */
+function newHtmlJar(): string {
+  return `ig-html-${randomUUID()}`;
+}
+
+
+async function htmlPageFetch(
+  url: string,
+  session?: StealthSessionConfig | null
+): Promise<{ status: number; text: string } | null> {
+  const proxyUrl = session?.proxyUrl || process.env.DEFAULT_PROXY_URL || "";
+  const cookieStr = session?.cookies
+    ? Object.entries(session.cookies)
+      .map(([k, v]) => `${k}=${v}`)
+      .join("; ")
+    : "";
+
+  const headers: Record<string, string> = {
+    "User-Agent": session?.userAgent || CHROME_USER_AGENT,
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Sec-Ch-Ua": CHROME_IDENTITY.secChUa,
+    "Sec-Ch-Ua-Mobile": "?0",
+    "Sec-Ch-Ua-Platform": '"Windows"',
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
+  };
+  if (cookieStr) headers["Cookie"] = cookieStr;
+
+  const payload = {
+    tlsClientIdentifier: CHROME_TLS_IDENTIFIER,
+    followRedirects: true,
+    insecureSkipVerify: true,
+    withoutCookieJar: false,
+    withDefaultCookieJar: true,
+    isByteRequest: false,
+    catchPanics: false,
+    withDebug: false,
+    forceHttp1: false,
+    withRandomTLSExtensionOrder: true,
+    timeoutSeconds: 30,
+    timeoutMilliseconds: 0,
+    sessionId: newHtmlJar(),
+    isRotatingProxy: false,
+    proxyUrl,
+    certificatePinningHosts: {},
+    headers,
+    headerOrder: [],
+    requestUrl: url,
+    requestMethod: "GET",
+  };
+  const pool = getHtmlWorkerPool();
+
+  try {
+    const raw = await pool.exec("request", [JSON.stringify(payload)]);
+    const res = JSON.parse(raw);
+    if (res?.status === 407) {
+      const err = new Error("PROXY_AUTH_FAILED: proxy rejected credentials (407)");
+      (err as any).isProxyAuthFailed = true;
+      throw err;
+    }
+    const body = typeof res?.body === "object" ? JSON.stringify(res.body) : String(res?.body ?? "");
+    return { status: Number(res?.status ?? 0), text: body };
+  } catch (err) {
+    if ((err as any)?.isProxyAuthFailed) throw err;
+    console.warn(`[stealth] htmlPageFetch failed for ${url}:`, err);
+    return null;
+  }
+}
+
+let _anonCookieCache: Record<string, string> | null = null;
+let _anonCookieFetchedAt = 0;
+const ANON_COOKIE_TTL_MS = 30 * 60 * 1000;
+
+async function bootstrapAnonymousCookies(proxyUrl?: string): Promise<Record<string, string>> {
+  const now = Date.now();
+  if (_anonCookieCache && now - _anonCookieFetchedAt < ANON_COOKIE_TTL_MS) {
+    return _anonCookieCache;
+  }
+
+  try {
+    const client = getTlsClient(CHROME_TLS_IDENTIFIER, proxyUrl);
+    const res = await client.get("https://www.instagram.com/", {
+      headers: {
+        "User-Agent": CHROME_USER_AGENT,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Sec-Ch-Ua": CHROME_IDENTITY.secChUa,
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Upgrade-Insecure-Requests": "1",
+      },
+      validateStatus: () => true,
+    });
+    const cookies: Record<string, string> = {};
+    const rawSetCookie: string | string[] | undefined = res.headers?.["set-cookie"] ?? res.headers?.["Set-Cookie"] ?? undefined;
+    const cookieList: string[] = Array.isArray(rawSetCookie) ? rawSetCookie : rawSetCookie ? [rawSetCookie] : [];
+    for (const line of cookieList) {
+      const matches = line.matchAll(/\b(csrftoken|mid|ig_did|ig_nrcb|datr|ps_n|ps_l)=([^;,\s]+)/g);
+      for (const match of matches) {
+        cookies[match[1]] = match[2];
+      }
+    }
+
+    // Also check res.cookies if the library ever surfaces a parsed cookie map in the future
+    if ((res as any).cookies && typeof (res as any).cookies === "object") {
+      for (const [k, v] of Object.entries((res as any).cookies)) {
+        if (k && v) cookies[k] = String(v);
+      }
+    }
+
+    if (Object.keys(cookies).length > 0) {
+      _anonCookieCache = cookies;
+      _anonCookieFetchedAt = now;
+      console.log("[stealth] bootstrapped anonymous cookies:", Object.keys(cookies).join(", "));
+    } else {
+      console.warn("[stealth] homepage bootstrap returned no Set-Cookie headers");
+    }
+
+    return cookies;
+  } catch (err) {
+    console.warn("[stealth] cookie bootstrap failed:", err instanceof Error ? err.message : String(err));
+    return {};
+  }
+}
+
 function isMobileApiUrl(url: string): boolean {
   try {
     return new URL(url).hostname === "i.instagram.com";
@@ -245,16 +358,6 @@ function isMobileApiUrl(url: string): boolean {
   }
 }
 
-/**
- * Executes a stealth HTTP GET, automatically selecting the correct TLS
- * fingerprint and header identity based on the request host:
- *
- *   www.instagram.com  → Chrome 120 TLS + desktop web headers
- *   i.instagram.com    → Safari iOS 16 TLS + iOS app headers
- *
- * This keeps both sides coherent and avoids the "useragent mismatch" that
- * Instagram's WAF raises when TLS fingerprint ≠ declared client.
- */
 async function stealthRequest(
   url: string,
   options: {
@@ -262,6 +365,8 @@ async function stealthRequest(
     isAjax?: boolean;
     referer?: string;
     jitter?: boolean;
+    postBody?: string;  // if set, sends a POST with this URL-encoded body
+    extraHeaders?: Record<string, string>;
   } = {}
 ): Promise<{ status: number; text: string; data?: any; deviceId?: string }> {
   if (options.jitter) {
@@ -297,20 +402,45 @@ async function stealthRequest(
       isAjax: options.isAjax,
     });
 
+  // Merge any caller-supplied extra headers (e.g. x-csrftoken for GraphQL POSTs)
+  if (options.extraHeaders) {
+    Object.assign(headers, options.extraHeaders);
+  }
+
   let status = 0;
   let text = "";
   try {
-    const proxyUrl = options.session?.proxyUrl || undefined;
+    const proxyUrl = options.session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
     const client = getTlsClient(tlsIdentifier, proxyUrl);
 
-    const res = await client.get(url, {
-      headers,
-      validateStatus: () => true,
-    });
+    let res: any;
+    if (options.postBody !== undefined) {
+      // POST with URL-encoded body — exactly what instaloader.doc_id_graphql_query() does
+      res = await client.post(url, options.postBody, {
+        headers: {
+          ...headers,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        validateStatus: () => true,
+      });
+    } else {
+      res = await client.get(url, {
+        headers,
+        validateStatus: () => true,
+      });
+    }
 
     status = res.status;
     text = typeof res.data === "object" ? JSON.stringify(res.data) : String(res.data);
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // Surface proxy 407 failures with a clear tagged error so callers can
+    // distinguish proxy-layer failures from Instagram-layer blocks.
+    if (msg.includes("407") || msg.toLowerCase().includes("proxy authentication")) {
+      const proxyErr = new Error(`PROXY_AUTH_FAILED: ${msg}`);
+      (proxyErr as any).isProxyAuthFailed = true;
+      throw proxyErr;
+    }
     throw err;
   }
 
@@ -324,27 +454,14 @@ async function stealthRequest(
   return { status, text, data, deviceId };
 }
 
-// ---------------------------------------------------------------------------
-// Error classification types
-// ---------------------------------------------------------------------------
-
 type BlockKind =
-  | "rate_limited"      // transient 429 — retry after backoff
-  | "session_flagged"   // checkpoint / challenge — session needs attention
-  | "ip_blocked"        // IP-level block, unrelated to session quality
-  | "not_blocked";      // probe passed — the original error is real
+  | "rate_limited"
+  | "session_flagged"
+  | "ip_blocked"
+  | "not_blocked";
 
-// ---------------------------------------------------------------------------
-// Retry / backoff primitives (mirrors Instaloader's error_fix_parts logic)
-// ---------------------------------------------------------------------------
+const RETRY_DELAYS_MS = [2000, 5000, 12000];
 
-const RETRY_DELAYS_MS = [2000, 5000, 12000]; // 3 attempts: 2s, 5s, 12s
-
-/**
- * Wraps a stealthRequest with exponential backoff retry.
- * Retries on network errors and transient 429s.
- * Returns null only after all attempts are exhausted.
- */
 async function stealthRequestWithRetry(
   url: string,
   options: Parameters<typeof stealthRequest>[1] = {},
@@ -358,7 +475,6 @@ async function stealthRequestWithRetry(
     }
     try {
       const res = await stealthRequest(url, options);
-      // Only retry on transient server errors — not 404/401/403
       if (res.status === 429 || res.status >= 500) {
         lastErr = new Error(`HTTP ${res.status}`);
         continue;
@@ -372,31 +488,150 @@ async function stealthRequestWithRetry(
   return null;
 }
 
-/**
- * Three-way discrimination:
- *   rate_limited   → transient, retry later
- *   session_flagged → this session/account needs a checkpoint challenge solved
- *   ip_blocked      → IP is blocked regardless of session quality
- *   not_blocked     → the probe itself succeeded, so original error is real (real 404 etc.)
- *
- * This is equivalent to Instaloader's probe_session_flagged + error_fix_parts:
- * it doesn't give up on first failure — it makes a separate independent request
- * to a known-good public profile to isolate what actually failed.
- */
-async function classifyBlock(
-  session?: StealthSessionConfig | null
-): Promise<BlockKind> {
-  try {
-    // Use the official Instagram public profile as the probe target —
-    // same as Instaloader's `instagram` probe.
-    const probe = await stealthRequest("https://www.instagram.com/api/v1/users/web_profile_info/?username=instagram", {
-      session,
+async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthSessionConfig | null | undefined, options: { jitter?: boolean } = {}): Promise<{ status: number; text: string; data?: any; deviceId?: string } | null> {
+  const isUsable = (res: { status: number; data?: any } | null) =>
+    Boolean(res && res.status !== 404 && res.status !== 429 && res.data?.status !== "fail" && res.data?.data?.user);
+
+  const isAuthenticated = Boolean(session?.cookies?.sessionid);
+
+  const tryHtml = () =>
+    scrapeProfileHtml(cleanUser, (url) => htmlPageFetch(url, session));
+
+
+  let htmlFirst: Awaited<ReturnType<typeof tryHtml>> = null;
+  if (!isAuthenticated) {
+    htmlFirst = await tryHtml();
+    if (isUsable(htmlFirst)) return htmlFirst;
+    if (htmlFirst && htmlFirst.status === 404) return htmlFirst;
+    // Fall through: maybe the JSON API is reachable after all.
+  }
+
+  const primaryUrl = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUser}`;
+  const primary = await stealthRequestWithRetry(primaryUrl, {
+    session,
+    isAjax: true,
+    referer: `https://www.instagram.com/${cleanUser}/`,
+    jitter: options.jitter,
+  });
+  if (isUsable(primary)) return primary;
+
+  const mobileUrl = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${cleanUser}`;
+  const fallback = await stealthRequestWithRetry(mobileUrl, {
+    session,
+    isAjax: true,
+    referer: `https://www.instagram.com/${cleanUser}/`,
+    jitter: options.jitter,
+  }, 1);
+  if (isUsable(fallback)) return fallback;
+  const proxyUrl = session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
+  const anonCookies = await bootstrapAnonymousCookies(proxyUrl);
+  const mergedCookies: Record<string, string> = {
+    ...anonCookies,
+    ...(session?.cookies ?? {}),
+  };
+  const csrf = mergedCookies["csrftoken"] || "";
+
+  const variables = JSON.stringify({
+    username: cleanUser,
+    "__relay_internal__pv__PolarisWebSchoolsEnabledrelayprovider": false,
+    "enable_integrity_filters": true,
+  });
+
+  const postBody = new URLSearchParams({
+    variables,
+    doc_id: "27937681195819736",
+    server_timestamps: "true",
+  }).toString();
+
+  const graphqlSession: StealthSessionConfig = {
+    username: session?.username ?? "",
+    cookies: mergedCookies,
+    userAgent: session?.userAgent,
+    proxyUrl: session?.proxyUrl,
+    deviceId: session?.deviceId,
+  };
+
+  const graphqlRes = await stealthRequestWithRetry("https://www.instagram.com/graphql/query",  // no trailing slash — matches instaloader
+    {
+      session: graphqlSession,
       isAjax: true,
+      referer: `https://www.instagram.com/${cleanUser}/`,
+      jitter: options.jitter,
+      postBody,
+      extraHeaders: csrf ? { "x-csrftoken": csrf } : {},
+    },
+    1
+  );
+
+  if (graphqlRes && graphqlRes.status === 200) {
+    const rawUser = graphqlRes.data?.data?.user ??
+      graphqlRes.data?.user ??
+      null;
+
+    if (rawUser) {
+      const normalised = {
+        ...graphqlRes,
+        data: {
+          status: "ok",
+          data: { user: rawUser },
+        },
+      };
+      if (isUsable(normalised)) return normalised;
+    }
+  }
+
+  // Authenticated callers reach the HTML page here, after their JSON attempts.
+  const htmlRes = isAuthenticated ? await tryHtml() : null;
+
+  if (htmlRes) {
+    if (isUsable(htmlRes)) return htmlRes;
+    if (htmlRes.status === 404 || htmlRes.status === 429 || htmlRes.status === LOGIN_SHELL_STATUS) {
+      return htmlRes;
+    }
+  }
+  if (htmlFirst && (htmlFirst.status === LOGIN_SHELL_STATUS || htmlFirst.status === 429)) {
+    return htmlFirst;
+  }
+
+  return primary ?? fallback ?? graphqlRes;
+}
+
+
+async function classifyBlock(session?: StealthSessionConfig | null): Promise<BlockKind> {
+  try {
+    const globalProxy = process.env.DEFAULT_PROXY_URL;
+    const probeSession: StealthSessionConfig | null = session
+      ? { ...session, proxyUrl: session.proxyUrl || globalProxy || undefined }
+      : globalProxy
+        ? { username: "", cookies: {}, proxyUrl: globalProxy }
+        : null;
+
+    const probeProxyUrl = probeSession?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
+    const probeCookies = await bootstrapAnonymousCookies(probeProxyUrl);
+    const probeCsrf = probeCookies["csrftoken"] || "";
+    const mergedProbeCookies: Record<string, string> = {
+      ...probeCookies,
+      ...(probeSession?.cookies ?? {}),
+    };
+
+    const probePostBody = new URLSearchParams({
+      variables: JSON.stringify({
+        username: "instagram", "__relay_internal__pv__PolarisWebSchoolsEnabledrelayprovider": false,
+        "enable_integrity_filters": true,
+      }),
+      doc_id: "27937681195819736",
+      server_timestamps: "true",
+    }).toString();
+
+    const probe = await stealthRequest("https://www.instagram.com/graphql/query", {
+      session: { ...probeSession, username: probeSession?.username ?? "", cookies: mergedProbeCookies },
+      isAjax: true,
+      referer: "https://www.instagram.com/instagram/",
+      postBody: probePostBody,
+      extraHeaders: probeCsrf ? { "x-csrftoken": probeCsrf } : {},
     });
 
     const lower = probe.text.toLowerCase();
-
-    // Explicit Instagram challenge/checkpoint signals
     if (
       lower.includes("checkpoint_required") ||
       lower.includes("challenge_required") ||
@@ -411,47 +646,29 @@ async function classifyBlock(
       return "ip_blocked";
     }
 
-    // If the probe returned valid data for instagram's own profile,
-    // the session/IP is fine — the original error was genuine.
-    if (probe.status === 200 && probe.data?.data?.user) {
-      return "not_blocked";
-    }
-
-    // Anything else (503, malformed JSON, etc.) is still a block signal
+    const probeUser = probe.data?.data?.user ?? probe.data?.user ?? null;
+    if (probe.status === 200 && probeUser) return "not_blocked";
     return "rate_limited";
   } catch {
-    // Network failure on the probe itself → assume transient
     return "rate_limited";
   }
 }
 
-/**
- * Resolves target profile metadata.
- *
- * Error degradation (mirrors Instaloader):
- *   - Retries transient failures with exponential backoff
- *   - Runs classifyBlock() to tell "target gone" apart from
- *     "our session/IP is blocked" — avoids flat NOT_FOUND on a live account
- *   - Anonymous mode: explicitly signals limited capabilities (no stories,
- *     no follower lists) rather than pretending auth isn't needed
- */
+
 export async function stealthResolveTarget(
   username: string,
   session?: StealthSessionConfig | null
 ): Promise<TargetResolution> {
-  const isAuthenticated = Boolean(session?.cookies?.sessionid);
+  const globalProxy = process.env.DEFAULT_PROXY_URL;
+  const effectiveSession: StealthSessionConfig | null = session
+    ? { ...session, proxyUrl: session.proxyUrl || globalProxy || undefined }
+    : globalProxy ? { username: "", cookies: {}, proxyUrl: globalProxy } : null;
+
+  const isAuthenticated = Boolean(effectiveSession?.cookies?.sessionid);
   const cleanUser = username.trim().toLowerCase().replace(/^@/, "");
 
   try {
-    const url = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUser}`;
-
-    const res = await stealthRequestWithRetry(url, {
-      session,
-      isAjax: true,
-      referer: `https://www.instagram.com/${cleanUser}/`,
-    });
-
-    // All retries exhausted (persistent 429 / network failure)
+    const res = await fetchProfileInfoWithFallback(cleanUser, effectiveSession);
     if (!res) {
       return {
         username: cleanUser,
@@ -476,10 +693,25 @@ export async function stealthResolveTarget(
       };
     }
 
-    // 404 or explicit fail status — need to classify before returning NOT_FOUND
-    if (res.status === 404 || res.data?.status === "fail") {
-      const blockKind = await classifyBlock(session);
+    // Instagram served the logged-out wall on every attempt. This says nothing
+    // about credentials, so it must NOT be reported as a flagged session —
+    // it's transient and the right advice is simply to try again.
+    if (res.status === LOGIN_SHELL_STATUS) {
+      return {
+        username: cleanUser,
+        externalId: null,
+        accountType: "UNKNOWN",
+        eligibility: "TEMPORARILY_UNAVAILABLE",
+        capabilities: [],
+        errorCode: "RATE_LIMITED",
+        errorMessage:
+          "Instagram served its logged-out login page instead of the profile. " +
+          "This is temporary — please try again in a moment.",
+      };
+    }
 
+    if (res.status === 404 || res.data?.status === "fail") {
+      const blockKind = await classifyBlock(effectiveSession);
       if (blockKind === "session_flagged") {
         return {
           username: cleanUser,
@@ -488,9 +720,7 @@ export async function stealthResolveTarget(
           eligibility: "TEMPORARILY_UNAVAILABLE",
           capabilities: [],
           errorCode: "SESSION_FLAGGED",
-          errorMessage: isAuthenticated
-            ? "Instagram requires a checkpoint challenge for this session. Log in via browser to resolve."
-            : "Anonymous IP has been challenged. Add an authenticated session to bypass this.",
+          errorMessage: isAuthenticated ? "Instagram requires a checkpoint challenge for this session. Log in via browser to resolve." : "Anonymous IP has been challenged. Add an authenticated session to bypass this."
         };
       }
 
@@ -506,8 +736,6 @@ export async function stealthResolveTarget(
         };
       }
 
-      // blockKind === "not_blocked" → probe to instagram's own profile succeeded
-      // so this really is a genuine 404
       return {
         username: cleanUser,
         externalId: null,
@@ -521,8 +749,7 @@ export async function stealthResolveTarget(
 
     const userData = res.data?.data?.user;
     if (!userData) {
-      // Malformed / unexpected response — classify before giving up
-      const blockKind = await classifyBlock(session);
+      const blockKind = await classifyBlock(effectiveSession);
       if (blockKind !== "not_blocked") {
         return {
           username: cleanUser,
@@ -548,15 +775,8 @@ export async function stealthResolveTarget(
     }
 
     const isPrivate = Boolean(userData.is_private);
-    const accountType = userData.is_business_account
-      ? "BUSINESS"
-      : isPrivate
-        ? "PERSONAL"
-        : "CREATOR";
+    const accountType = userData.is_business_account ? "BUSINESS" : isPrivate ? "PERSONAL" : "CREATOR";
 
-    // Honest anonymous capability limits — matches Instaloader's SKIP_SESSION behaviour.
-    // Anonymous: posts + bio + follower counts visible. Stories, follower/following
-    // lists, and extra post details require an authenticated session.
     const capabilities: CapabilityCheck[] = [
       { capability: Capability.TARGET_LOOKUP_BY_USERNAME, result: "AVAILABLE" },
       { capability: Capability.TARGET_PUBLIC_PROFILE_FIELDS, result: "AVAILABLE" },
@@ -576,27 +796,80 @@ export async function stealthResolveTarget(
       capabilities,
     };
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const isProxyAuthFailed = (err as any).isProxyAuthFailed || msg.startsWith("PROXY_AUTH_FAILED");
     return {
       username,
       externalId: null,
-      accountType: "UNKNOWN",
-      eligibility: "TEMPORARILY_UNAVAILABLE",
+      accountType: "UNKNOWN" as const,
+      eligibility: "TEMPORARILY_UNAVAILABLE" as const,
       capabilities: [] as CapabilityCheck[],
-      errorCode: "REQUEST_ERROR",
-      errorMessage: err instanceof Error ? err.message : String(err),
+      errorCode: isProxyAuthFailed ? "PROXY_AUTH_FAILED" : "REQUEST_ERROR",
+      errorMessage: isProxyAuthFailed
+        ? "Proxy authentication failed (407). Check your DEFAULT_PROXY_URL credentials in .env — make sure you're using the Proxy Username/Password from Webshare's Connections tab, not your account email/password."
+        : msg,
     };
   }
 }
 
-/**
- * Fetches target media, stories, and profile changes.
- *
- * Degradation strategy (mirrors Instaloader):
- *   - Retries transient failures with backoff
- *   - Uses classifyBlock() to distinguish rate-limit vs session-flag vs real 404
- *   - Explicitly marks story data as unavailable for anonymous sessions
- *     rather than silently returning an empty array
- */
+async function simulateHumanActions(session?: StealthSessionConfig | null) {
+  const delay = (min: number, max: number) => new Promise(r => setTimeout(r, Math.floor(Math.random() * (max - min) + min)));
+  const isAuthenticated = Boolean(session?.cookies?.sessionid);
+
+  try {
+    if (isAuthenticated) {
+      await stealthRequestWithRetry("https://www.instagram.com/api/v1/discover/web/explore_grid/", { session, isAjax: true }, 1);
+      await delay(2000, 5000);
+    }
+
+    if (isAuthenticated && session?.username) {
+      await stealthRequestWithRetry(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${session.username}`, { session, isAjax: true }, 1);
+      await delay(1000, 4000);
+    }
+
+    if (true) {
+      const tags = ["travel", "food", "nature", "photography", "art", "music", "fitness", "lifestyle", "design"];
+      const tag = tags[Math.floor(Math.random() * tags.length)];
+      await stealthRequestWithRetry(`https://www.instagram.com/api/v1/tags/web_info/?tag_name=${tag}`, { session, isAjax: true }, 1);
+      await delay(2000, 5000);
+    }
+  } catch (err) {
+    console.warn("[stealth] BeHuman simulation interrupted:", err instanceof Error ? err.message : String(err));
+  }
+}
+
+async function fetchFriendshipIdList(
+  kind: "followers" | "following",
+  externalId: string,
+  cleanUser: string,
+  session: StealthSessionConfig | null | undefined,
+  options: StealthFetchOptions | undefined
+): Promise<string[]> {
+  const list: string[] = [];
+  let maxId: string | null = "";
+  let pages = 0;
+  while (maxId !== null && pages < 10) {
+    const url = `https://i.instagram.com/api/v1/friendships/${externalId}/${kind}/?count=50${maxId ? `&max_id=${maxId}` : ""}`;
+    const res = await stealthRequestWithRetry(url, {
+      session,
+      isAjax: true,
+      referer: `https://www.instagram.com/${cleanUser}/`,
+      jitter: options?.jitterEnabled,
+    });
+    if (res && res.status === 200 && res.data?.users) {
+      for (const u of res.data.users) {
+        list.push(String(u.pk || u.id));
+      }
+      maxId = res.data.next_max_id || null;
+    } else {
+      break;
+    }
+    pages++;
+  }
+  return list;
+}
+
+
 export async function stealthFetchTargetData(params: {
   username: string;
   externalId: string | null;
@@ -604,20 +877,22 @@ export async function stealthFetchTargetData(params: {
   options?: StealthFetchOptions;
 }): Promise<TargetFetchResult> {
   const { username, externalId, session, options } = params;
-  const isAuthenticated = Boolean(session?.cookies?.sessionid);
+  const globalProxy = process.env.DEFAULT_PROXY_URL;
+  const effectiveSession: StealthSessionConfig | null = session
+    ? { ...session, proxyUrl: session.proxyUrl || globalProxy || undefined }
+    : globalProxy
+      ? { username: "", cookies: {}, proxyUrl: globalProxy }
+      : null;
+
+  const isAuthenticated = Boolean(effectiveSession?.cookies?.sessionid);
   const cleanUser = username.trim().toLowerCase().replace(/^@/, "");
 
   try {
-    const url = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUser}`;
+    if (options?.humanSimEnabled) {
+      await simulateHumanActions(effectiveSession);
+    }
 
-    const res = await stealthRequestWithRetry(url, {
-      session,
-      isAjax: true,
-      referer: `https://www.instagram.com/${cleanUser}/`,
-      jitter: options?.jitterEnabled,
-    });
-
-    // All retries exhausted
+    const res = await fetchProfileInfoWithFallback(cleanUser, effectiveSession, { jitter: options?.jitterEnabled });
     if (!res) {
       return {
         ok: false,
@@ -630,39 +905,37 @@ export async function stealthFetchTargetData(params: {
       return { ok: false, rateLimited: true, errorMessage: "Rate limited (HTTP 429)." };
     }
 
+
+    if (res.status === LOGIN_SHELL_STATUS) {
+      return {
+        ok: false,
+        rateLimited: true,
+        errorMessage:
+          "Instagram served its logged-out login page instead of the profile. Will retry on next run.",
+      };
+    }
+
     if (res.status === 404) {
-      const blockKind = await classifyBlock(session);
+      const blockKind = await classifyBlock(effectiveSession);
       return {
         ok: false,
         notFound: blockKind === "not_blocked",
         sessionFlagged: blockKind === "session_flagged",
         rateLimited: blockKind === "rate_limited" || blockKind === "ip_blocked",
-        errorMessage:
-          blockKind === "session_flagged"
-            ? isAuthenticated
-              ? "Instagram checkpoint challenge required. Session needs re-authentication."
-              : "Anonymous IP challenged by Instagram. Add a session to bypass."
-            : blockKind === "not_blocked"
-              ? `Target @${cleanUser} not found — account may have been deleted or renamed.`
-              : "IP/session temporarily blocked. Will retry on next run.",
+        errorMessage: blockKind === "session_flagged" ? isAuthenticated ? "Instagram checkpoint challenge required. Session needs re-authentication." : "Anonymous IP challenged by Instagram. Add a session to bypass." : blockKind === "not_blocked" ? `Target @${cleanUser} not found — account may have been deleted or renamed.` : "IP/session temporarily blocked. Will retry on next run.",
       };
     }
 
     const userData = res.data?.data?.user;
     if (!userData) {
       // Classify before giving up — don't flat-fail on a blocked IP
-      const blockKind = await classifyBlock(session);
+      const blockKind = await classifyBlock(effectiveSession);
       return {
         ok: false,
         sessionFlagged: blockKind === "session_flagged",
         rateLimited: blockKind === "rate_limited" || blockKind === "ip_blocked",
         temporaryFailure: blockKind === "not_blocked",
-        errorMessage:
-          blockKind === "session_flagged"
-            ? "Instagram challenge checkpoint triggered."
-            : blockKind === "not_blocked"
-              ? "Malformed response from Instagram. The API format may have changed."
-              : "Unexpected response from Instagram. Will retry on next run.",
+        errorMessage: blockKind === "session_flagged" ? "Instagram challenge checkpoint triggered." : blockKind === "not_blocked" ? "Malformed response from Instagram. The API format may have changed." : "Unexpected response from Instagram. Will retry on next run.",
       };
     }
 
@@ -725,7 +998,6 @@ export async function stealthFetchTargetData(params: {
       });
     }
 
-    // Check reels media if available and include in media if not already present
     const reelsEdges = userData.edge_felix_video_timeline?.edges || [];
     const reelsCount = reelsEdges.length > 0 ? reelsEdges.length : undefined;
 
@@ -784,28 +1056,10 @@ export async function stealthFetchTargetData(params: {
     }
 
     let followersList: string[] | undefined = undefined;
+    let followingList: string[] | undefined = undefined;
     if (isAuthenticated && options?.watchFollowerChurn && fetchedExternalId) {
-      followersList = [];
-      let maxId: string | null = "";
-      let pages = 0;
-      while (maxId !== null && pages < 10) {
-        const folUrl = `https://i.instagram.com/api/v1/friendships/${fetchedExternalId}/followers/?count=50${maxId ? `&max_id=${maxId}` : ""}`;
-        const folRes = await stealthRequestWithRetry(folUrl, {
-          session,
-          isAjax: true,
-          referer: `https://www.instagram.com/${cleanUser}/`,
-          jitter: options?.jitterEnabled,
-        });
-        if (folRes && folRes.status === 200 && folRes.data?.users) {
-          for (const u of folRes.data.users) {
-            followersList.push(String(u.pk || u.id));
-          }
-          maxId = folRes.data.next_max_id || null;
-        } else {
-          break;
-        }
-        pages++;
-      }
+      followersList = await fetchFriendshipIdList("followers", fetchedExternalId, cleanUser, session, options);
+      followingList = await fetchFriendshipIdList("following", fetchedExternalId, cleanUser, session, options);
     }
 
     return {
@@ -820,29 +1074,31 @@ export async function stealthFetchTargetData(params: {
         followsCount: userData.edge_follow?.count ?? null,
         mediaCount: userData.edge_owner_to_timeline_media?.count ?? null,
         reelsCount: reelsCount ?? null,
-        // has_public_story is only reliable with an authenticated session.
-        // Without auth Instagram may return false even when a story exists.
         hasStory: isAuthenticated ? Boolean(userData.has_public_story) : false,
         isPrivate: Boolean(userData.is_private),
       },
       media,
       stories,
       followersList,
+      followingList,
       anonymousMode: !isAuthenticated,
       deviceId: res.deviceId,
     };
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const isProxyAuthFailed = (err as any).isProxyAuthFailed || msg.startsWith("PROXY_AUTH_FAILED");
     return {
       ok: false,
-      temporaryFailure: true,
-      errorMessage: err instanceof Error ? err.message : String(err),
+      temporaryFailure: !isProxyAuthFailed,
+      authError: isProxyAuthFailed,
+      errorMessage: isProxyAuthFailed
+        ? "Proxy authentication failed (407). Check your DEFAULT_PROXY_URL credentials in .env — use the Proxy Username/Password from Webshare's Connections tab."
+        : msg,
     };
   }
 }
 
-/**
- * Tests an Instagram session purely in Node.js by checking current viewer identity.
- */
+
 export async function stealthTestSession(params: {
   cookies: Record<string, string>;
   proxyUrl?: string | null;

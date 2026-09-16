@@ -8,15 +8,13 @@ export async function sendDiscord(config: DiscordConfig, message: NotificationMe
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      embeds: [
-        {
-          title: message.title,
-          description: message.body,
-          url: message.url,
-          footer: { text: `@${message.targetUsername} • ${message.eventType}` },
-          timestamp: new Date().toISOString(),
-        },
-      ],
+      embeds: [{
+        title: message.title,
+        description: message.body,
+        url: message.url,
+        footer: { text: `@${message.targetUsername} • ${message.eventType}` },
+        timestamp: new Date().toISOString(),
+      }],
     }),
     signal: AbortSignal.timeout(10_000),
   });
@@ -26,9 +24,6 @@ export async function sendDiscord(config: DiscordConfig, message: NotificationMe
 }
 
 async function safeText(res: Response) {
-  try {
-    return await res.text();
-  } catch {
-    return "<no body>";
-  }
+  try { return await res.text(); }
+  catch { return "<no body>"; }
 }

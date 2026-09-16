@@ -5,10 +5,6 @@ import { isMockMetaApi } from "./provider-factory";
 
 const GRAPH_OAUTH_BASE = "https://www.facebook.com/dialog/oauth";
 const GRAPH_TOKEN_BASE = "https://graph.facebook.com";
-
-// Scopes required for Business Discovery-style public-data lookups on
-// professional (Business/Creator) targets. Confirm the exact scope set
-// against current Meta documentation before going live (plan Phase 0).
 const REQUIRED_SCOPES = ["instagram_basic", "pages_show_list", "business_management"];
 
 export function buildAuthorizeUrl(state: string): string {
@@ -40,12 +36,7 @@ export async function exchangeCodeForToken(code: string) {
   return (await res.json()) as { access_token: string; token_type: string; expires_in?: number };
 }
 
-/**
- * In mock mode, "connecting" a Meta identity doesn't hit any real endpoint -
- * it creates a MetaConnection row with a locally-generated fake token so the
- * rest of the app (which only ever reads decrypted tokens, never Graph API
- * shapes) behaves identically to the real flow.
- */
+
 export async function createMockConnection(userId: string) {
   const fakeToken = `mock_token_${crypto.randomBytes(16).toString("hex")}`;
   const encrypted = encryptSecret(fakeToken);

@@ -38,7 +38,7 @@ const JOB_STATUS_VARIANT: Record<string, "secondary" | "success" | "destructive"
 export default function SettingsPage() {
   const { settings, loading: settingsLoading, refresh } = useSettings();
   const { jobs, loading: jobsLoading, refresh: refreshJobs } = useJobs();
-  const { sessions, loading: sessionsLoading, refresh: refreshSessions } = useSessions();
+  const { sessions, poolHealth, loading: sessionsLoading, refresh: refreshSessions, setSessionStatus, resetSession } = useSessions();
   const [metaStatus, setMetaStatus] = useState<MetaStatus | null>(null);
   const [addSessionOpen, setAddSessionOpen] = useState(false);
   const [testingSessionId, setTestingSessionId] = useState<string | null>(null);
@@ -119,6 +119,11 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
+              {poolHealth && poolHealth.total > 0 && (
+                <div className="text-sm text-muted-foreground font-medium pb-2 border-b mb-1">
+                  Pool: {poolHealth.active} active &middot; {poolHealth.cooling} cooling &middot; {poolHealth.flagged} flagged
+                </div>
+              )}
               {sessions.map((sess) => (
                 <div
                   key={sess.id}
@@ -127,14 +132,10 @@ export default function SettingsPage() {
                   <div className="flex flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold text-sm">@{sess.username}</span>
-                      <Badge
-                        variant={
-                          sess.status === "ACTIVE"
-                            ? "success"
-                            : sess.status === "FLAGGED"
-                            ? "destructive"
-                            : "outline"
-                        }
+                      <Badge variant={
+                        sess.status === "ACTIVE" ? "success"
+                          : sess.status === "FLAGGED" ? "destructive" : "outline"
+                      }
                       >
                         {sess.status}
                       </Badge>
@@ -158,8 +159,24 @@ export default function SettingsPage() {
                         ? `Tested ${formatDistanceToNow(new Date(sess.lastTestedAt), { addSuffix: true })}`
                         : "Not tested yet"}
                     </p>
+                    <p className="text-xs font-medium">
+                      {sess.status === "ACTIVE" && (!sess.cooldownUntil || new Date(sess.cooldownUntil) < new Date()) && "In rotation"}
+                      {sess.status === "ACTIVE" && sess.cooldownUntil && new Date(sess.cooldownUntil) > new Date() && `Cooling down until ${new Date(sess.cooldownUntil).toLocaleTimeString()}`}
+                      {sess.status === "PAUSED" && "Paused (excluded from pool)"}
+                      {sess.status === "FLAGGED" && "Flagged — manual reset required"}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap justify-end">
+                    {sess.status === "FLAGGED" && (
+                      <Button variant="outline" size="sm" onClick={() => resetSession(sess.id)}>
+                        Reset
+                      </Button>
+                    )}
+                    {sess.status !== "FLAGGED" && (
+                      <Button variant="outline" size="sm" onClick={() => setSessionStatus(sess.id, sess.status === "ACTIVE" ? "PAUSED" : "ACTIVE")}>
+                        {sess.status === "ACTIVE" ? "Pause" : "Resume"}
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"

@@ -11,8 +11,8 @@ import {
 } from "./stealth-engine-bridge";
 
 export class StealthMetaProvider implements MetaProvider {
-  async resolveTarget(username: string): Promise<TargetResolution> {
-    return stealthResolveTarget(username);
+  async resolveTarget(username: string, session?: StealthSessionConfig | null): Promise<TargetResolution> {
+    return stealthResolveTarget(username, session);
   }
 
   async fetchTargetData(params: {

@@ -8,18 +8,7 @@ import type {
 } from "./types";
 import { Capability } from "./types";
 
-/**
- * Deterministic mock Business Discovery provider.
- *
- * This exists so the full pipeline (resolve -> classify -> poll -> snapshot
- * -> diff -> event -> notify) can be exercised end-to-end before a real Meta
- * Developer App with Instagram Graph API access is available. Behavior is
- * derived from the username so the same username always classifies the same
- * way, and "new" media appears on a slow clock so polling has something to
- * detect. Swap MOCK_META_API=false and provide META_APP_ID/META_APP_SECRET
- * to use `graph-provider.ts` instead - nothing else in the app needs to
- * change, since both implement `MetaProvider`.
- */
+
 
 function hashToInt(input: string): number {
   const hash = crypto.createHash("sha256").update(input).digest();

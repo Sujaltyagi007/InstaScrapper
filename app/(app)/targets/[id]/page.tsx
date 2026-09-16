@@ -2,14 +2,16 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTargetDetail } from "@/features/targets/hooks/use-target-detail";
+import { useSessions } from "@/features/sessions/hooks/use-sessions";
 import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { TargetStatusBadge } from "@/features/targets/components/target-status-badge";
@@ -25,7 +27,9 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
   const { id } = use(params);
   const router = useRouter();
   const { target, loading, error, refresh } = useTargetDetail(id);
+  const { sessions } = useSessions();
   const [saving, setSaving] = useState(false);
+  const activeSessions = (sessions ?? []).filter((s) => s.status === "ACTIVE");
 
   async function updateMonitor(updates: Record<string, unknown>) {
     setSaving(true);
@@ -142,11 +146,16 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
               ) : (
                 <ul className="divide-y">
                   {target.events.map((event) => (
-                    <li key={event.id} className="flex items-center justify-between gap-3 py-3">
-                      <EventTypeBadge type={event.type} />
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(event.detectedAt), "MMM d, yyyy 'at' h:mm a")}
-                      </span>
+                    <li key={event.id} className="flex flex-col gap-1 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <EventTypeBadge type={event.type} />
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(event.detectedAt), "MMM d, yyyy 'at' h:mm a")}
+                        </span>
+                      </div>
+                      {event.type === "FOLLOWER_CHURN" && (
+                        <p className="text-xs text-muted-foreground">{formatChurnSummary(event.after)}</p>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -167,17 +176,45 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
               onCheckedChange={(v) => updateMonitor({ active: v })}
             />
             <Separator />
+
+            <div className="flex flex-col gap-1.5">
+              <Label>Instagram session</Label>
+              <Select
+                value={target.monitor?.instagramSessionId ?? "none"}
+                disabled={saving}
+                onValueChange={(v) =>
+                  v === "none"
+                    ? updateMonitor({
+                        instagramSessionId: null,
+                        watchStories: false,
+                        watchFollowerChurn: false,
+                        watchFollowingCount: false,
+                      })
+                    : updateMonitor({ instagramSessionId: v })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="None (anonymous)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (anonymous)</SelectItem>
+                  {activeSessions.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      @{s.username}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-2">
+              Basic (no login required)
+            </p>
             <ToggleRow
               label="New posts & reels"
               checked={Boolean(target.monitor?.watchNewMedia)}
               disabled={saving}
               onCheckedChange={(v) => updateMonitor({ watchNewMedia: v })}
-            />
-            <ToggleRow
-              label="Stories"
-              checked={Boolean(target.monitor?.watchStories)}
-              disabled={saving}
-              onCheckedChange={(v) => updateMonitor({ watchStories: v })}
             />
             <ToggleRow
               label="Reels count"
@@ -198,16 +235,35 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
               onCheckedChange={(v) => updateMonitor({ watchFollowerCount: v })}
             />
             <ToggleRow
-              label="Follower churn detection"
-              checked={Boolean(target.monitor?.watchFollowerChurn)}
-              disabled={saving}
-              onCheckedChange={(v) => updateMonitor({ watchFollowerChurn: v })}
-            />
-            <ToggleRow
               label="Anti-bot jitter"
               checked={Boolean(target.monitor?.jitterEnabled)}
               disabled={saving}
               onCheckedChange={(v) => updateMonitor({ jitterEnabled: v })}
+            />
+
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-2">
+              Advanced (requires an Instagram session)
+            </p>
+            <ToggleRow
+              label="Stories"
+              checked={Boolean(target.monitor?.watchStories)}
+              disabled={saving || !target.monitor?.instagramSessionId}
+              locked={!target.monitor?.instagramSessionId}
+              onCheckedChange={(v) => updateMonitor({ watchStories: v })}
+            />
+            <ToggleRow
+              label="Follower & following changes"
+              checked={Boolean(target.monitor?.watchFollowerChurn)}
+              disabled={saving || !target.monitor?.instagramSessionId}
+              locked={!target.monitor?.instagramSessionId}
+              onCheckedChange={(v) => updateMonitor({ watchFollowerChurn: v })}
+            />
+            <ToggleRow
+              label="Following count"
+              checked={Boolean(target.monitor?.watchFollowingCount)}
+              disabled={saving || !target.monitor?.instagramSessionId}
+              locked={!target.monitor?.instagramSessionId}
+              onCheckedChange={(v) => updateMonitor({ watchFollowingCount: v })}
             />
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="interval">Check every (minutes)</Label>
@@ -231,6 +287,21 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
   );
 }
 
+function formatChurnSummary(after: unknown): string {
+  const a = (after ?? {}) as {
+    followersAdded?: unknown[];
+    followersRemoved?: unknown[];
+    followingAdded?: unknown[];
+    followingRemoved?: unknown[];
+  };
+  const parts: string[] = [];
+  if (a.followersAdded?.length) parts.push(`+${a.followersAdded.length} follower${a.followersAdded.length === 1 ? "" : "s"}`);
+  if (a.followersRemoved?.length) parts.push(`−${a.followersRemoved.length} follower${a.followersRemoved.length === 1 ? "" : "s"}`);
+  if (a.followingAdded?.length) parts.push(`+${a.followingAdded.length} following`);
+  if (a.followingRemoved?.length) parts.push(`−${a.followingRemoved.length} following`);
+  return parts.length > 0 ? parts.join(" · ") : "No change details recorded.";
+}
+
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
@@ -244,17 +315,25 @@ function ToggleRow({
   label,
   checked,
   disabled,
+  locked,
   onCheckedChange,
 }: {
   label: string;
   checked: boolean;
   disabled?: boolean;
+  locked?: boolean;
   onCheckedChange: (v: boolean) => void;
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <p className="text-sm font-medium">{label}</p>
-      <Switch checked={checked} disabled={disabled} onCheckedChange={onCheckedChange} />
+      <div>
+        <p className="flex items-center gap-1.5 text-sm font-medium">
+          {label}
+          {locked && <Lock className="size-3 text-muted-foreground" />}
+        </p>
+        {locked && <p className="text-xs text-muted-foreground">Requires an Instagram session.</p>}
+      </div>
+      <Switch checked={locked ? false : checked} disabled={disabled} onCheckedChange={onCheckedChange} />
     </div>
   );
 }

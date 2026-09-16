@@ -41,6 +41,8 @@ export type InstagramSessionMinAggregateOutputType = {
   lastErrorMessage: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  lastUsedAt: Date | null
+  cooldownUntil: Date | null
 }
 
 export type InstagramSessionMaxAggregateOutputType = {
@@ -60,6 +62,8 @@ export type InstagramSessionMaxAggregateOutputType = {
   lastErrorMessage: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  lastUsedAt: Date | null
+  cooldownUntil: Date | null
 }
 
 export type InstagramSessionCountAggregateOutputType = {
@@ -79,6 +83,8 @@ export type InstagramSessionCountAggregateOutputType = {
   lastErrorMessage: number
   createdAt: number
   updatedAt: number
+  lastUsedAt: number
+  cooldownUntil: number
   _all: number
 }
 
@@ -100,6 +106,8 @@ export type InstagramSessionMinAggregateInputType = {
   lastErrorMessage?: true
   createdAt?: true
   updatedAt?: true
+  lastUsedAt?: true
+  cooldownUntil?: true
 }
 
 export type InstagramSessionMaxAggregateInputType = {
@@ -119,6 +127,8 @@ export type InstagramSessionMaxAggregateInputType = {
   lastErrorMessage?: true
   createdAt?: true
   updatedAt?: true
+  lastUsedAt?: true
+  cooldownUntil?: true
 }
 
 export type InstagramSessionCountAggregateInputType = {
@@ -138,6 +148,8 @@ export type InstagramSessionCountAggregateInputType = {
   lastErrorMessage?: true
   createdAt?: true
   updatedAt?: true
+  lastUsedAt?: true
+  cooldownUntil?: true
   _all?: true
 }
 
@@ -230,6 +242,8 @@ export type InstagramSessionGroupByOutputType = {
   lastErrorMessage: string | null
   createdAt: Date
   updatedAt: Date
+  lastUsedAt: Date | null
+  cooldownUntil: Date | null
   _count: InstagramSessionCountAggregateOutputType | null
   _min: InstagramSessionMinAggregateOutputType | null
   _max: InstagramSessionMaxAggregateOutputType | null
@@ -270,6 +284,8 @@ export type InstagramSessionWhereInput = {
   lastErrorMessage?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
+  cooldownUntil?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   monitors?: Prisma.MonitorListRelationFilter
 }
@@ -291,6 +307,8 @@ export type InstagramSessionOrderByWithRelationInput = {
   lastErrorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  cooldownUntil?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   monitors?: Prisma.MonitorOrderByRelationAggregateInput
 }
@@ -315,6 +333,8 @@ export type InstagramSessionWhereUniqueInput = Prisma.AtLeast<{
   lastErrorMessage?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
+  cooldownUntil?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   monitors?: Prisma.MonitorListRelationFilter
 }, "id">
@@ -336,6 +356,8 @@ export type InstagramSessionOrderByWithAggregationInput = {
   lastErrorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  cooldownUntil?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.InstagramSessionCountOrderByAggregateInput
   _max?: Prisma.InstagramSessionMaxOrderByAggregateInput
   _min?: Prisma.InstagramSessionMinOrderByAggregateInput
@@ -361,6 +383,8 @@ export type InstagramSessionScalarWhereWithAggregatesInput = {
   lastErrorMessage?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"InstagramSession"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"InstagramSession"> | Date | string
+  lastUsedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"InstagramSession"> | Date | string | null
+  cooldownUntil?: Prisma.DateTimeNullableWithAggregatesFilter<"InstagramSession"> | Date | string | null
 }
 
 export type InstagramSessionCreateInput = {
@@ -379,6 +403,8 @@ export type InstagramSessionCreateInput = {
   lastErrorMessage?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutInstagramSessionsInput
   monitors?: Prisma.MonitorCreateNestedManyWithoutInstagramSessionInput
 }
@@ -400,6 +426,8 @@ export type InstagramSessionUncheckedCreateInput = {
   lastErrorMessage?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
   monitors?: Prisma.MonitorUncheckedCreateNestedManyWithoutInstagramSessionInput
 }
 
@@ -419,6 +447,8 @@ export type InstagramSessionUpdateInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutInstagramSessionsNestedInput
   monitors?: Prisma.MonitorUpdateManyWithoutInstagramSessionNestedInput
 }
@@ -440,6 +470,8 @@ export type InstagramSessionUncheckedUpdateInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   monitors?: Prisma.MonitorUncheckedUpdateManyWithoutInstagramSessionNestedInput
 }
 
@@ -460,6 +492,8 @@ export type InstagramSessionCreateManyInput = {
   lastErrorMessage?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
 }
 
 export type InstagramSessionUpdateManyMutationInput = {
@@ -478,6 +512,8 @@ export type InstagramSessionUpdateManyMutationInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type InstagramSessionUncheckedUpdateManyInput = {
@@ -497,6 +533,8 @@ export type InstagramSessionUncheckedUpdateManyInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type InstagramSessionListRelationFilter = {
@@ -526,6 +564,8 @@ export type InstagramSessionCountOrderByAggregateInput = {
   lastErrorMessage?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
+  cooldownUntil?: Prisma.SortOrder
 }
 
 export type InstagramSessionMaxOrderByAggregateInput = {
@@ -545,6 +585,8 @@ export type InstagramSessionMaxOrderByAggregateInput = {
   lastErrorMessage?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
+  cooldownUntil?: Prisma.SortOrder
 }
 
 export type InstagramSessionMinOrderByAggregateInput = {
@@ -564,6 +606,8 @@ export type InstagramSessionMinOrderByAggregateInput = {
   lastErrorMessage?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  lastUsedAt?: Prisma.SortOrder
+  cooldownUntil?: Prisma.SortOrder
 }
 
 export type InstagramSessionNullableScalarRelationFilter = {
@@ -645,6 +689,8 @@ export type InstagramSessionCreateWithoutUserInput = {
   lastErrorMessage?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
   monitors?: Prisma.MonitorCreateNestedManyWithoutInstagramSessionInput
 }
 
@@ -664,6 +710,8 @@ export type InstagramSessionUncheckedCreateWithoutUserInput = {
   lastErrorMessage?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
   monitors?: Prisma.MonitorUncheckedCreateNestedManyWithoutInstagramSessionInput
 }
 
@@ -713,6 +761,8 @@ export type InstagramSessionScalarWhereInput = {
   lastErrorMessage?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
+  lastUsedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
+  cooldownUntil?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
 }
 
 export type InstagramSessionCreateWithoutMonitorsInput = {
@@ -731,6 +781,8 @@ export type InstagramSessionCreateWithoutMonitorsInput = {
   lastErrorMessage?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutInstagramSessionsInput
 }
 
@@ -751,6 +803,8 @@ export type InstagramSessionUncheckedCreateWithoutMonitorsInput = {
   lastErrorMessage?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
 }
 
 export type InstagramSessionCreateOrConnectWithoutMonitorsInput = {
@@ -785,6 +839,8 @@ export type InstagramSessionUpdateWithoutMonitorsInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutInstagramSessionsNestedInput
 }
 
@@ -805,6 +861,8 @@ export type InstagramSessionUncheckedUpdateWithoutMonitorsInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type InstagramSessionCreateManyUserInput = {
@@ -823,6 +881,8 @@ export type InstagramSessionCreateManyUserInput = {
   lastErrorMessage?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
 }
 
 export type InstagramSessionUpdateWithoutUserInput = {
@@ -841,6 +901,8 @@ export type InstagramSessionUpdateWithoutUserInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   monitors?: Prisma.MonitorUpdateManyWithoutInstagramSessionNestedInput
 }
 
@@ -860,6 +922,8 @@ export type InstagramSessionUncheckedUpdateWithoutUserInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   monitors?: Prisma.MonitorUncheckedUpdateManyWithoutInstagramSessionNestedInput
 }
 
@@ -879,6 +943,8 @@ export type InstagramSessionUncheckedUpdateManyWithoutUserInput = {
   lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -929,6 +995,8 @@ export type InstagramSessionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   lastErrorMessage?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  lastUsedAt?: boolean
+  cooldownUntil?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   monitors?: boolean | Prisma.InstagramSession$monitorsArgs<ExtArgs>
   _count?: boolean | Prisma.InstagramSessionCountOutputTypeDefaultArgs<ExtArgs>
@@ -951,6 +1019,8 @@ export type InstagramSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   lastErrorMessage?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  lastUsedAt?: boolean
+  cooldownUntil?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["instagramSession"]>
 
@@ -971,6 +1041,8 @@ export type InstagramSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   lastErrorMessage?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  lastUsedAt?: boolean
+  cooldownUntil?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["instagramSession"]>
 
@@ -991,9 +1063,11 @@ export type InstagramSessionSelectScalar = {
   lastErrorMessage?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  lastUsedAt?: boolean
+  cooldownUntil?: boolean
 }
 
-export type InstagramSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "authMethod" | "encryptedCookies" | "encryptedCookiesIv" | "userAgent" | "deviceId" | "impersonateTarget" | "proxyUrl" | "status" | "lastTestedAt" | "lastSuccessAt" | "lastErrorMessage" | "createdAt" | "updatedAt", ExtArgs["result"]["instagramSession"]>
+export type InstagramSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "authMethod" | "encryptedCookies" | "encryptedCookiesIv" | "userAgent" | "deviceId" | "impersonateTarget" | "proxyUrl" | "status" | "lastTestedAt" | "lastSuccessAt" | "lastErrorMessage" | "createdAt" | "updatedAt" | "lastUsedAt" | "cooldownUntil", ExtArgs["result"]["instagramSession"]>
 export type InstagramSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   monitors?: boolean | Prisma.InstagramSession$monitorsArgs<ExtArgs>
@@ -1029,6 +1103,8 @@ export type $InstagramSessionPayload<ExtArgs extends runtime.Types.Extensions.In
     lastErrorMessage: string | null
     createdAt: Date
     updatedAt: Date
+    lastUsedAt: Date | null
+    cooldownUntil: Date | null
   }, ExtArgs["result"]["instagramSession"]>
   composites: {}
 }
@@ -1470,6 +1546,8 @@ export interface InstagramSessionFieldRefs {
   readonly lastErrorMessage: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly createdAt: Prisma.FieldRef<"InstagramSession", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"InstagramSession", 'DateTime'>
+  readonly lastUsedAt: Prisma.FieldRef<"InstagramSession", 'DateTime'>
+  readonly cooldownUntil: Prisma.FieldRef<"InstagramSession", 'DateTime'>
 }
     
 
