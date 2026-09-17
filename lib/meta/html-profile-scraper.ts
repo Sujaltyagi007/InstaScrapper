@@ -24,8 +24,15 @@ export const LOGIN_SHELL_STATUS = 503;
  * letting one lookup stall for too long. Neither jar reuse nor a crawler
  * user-agent raises the per-attempt odds — see the bridge's jar-policy note.
  */
-const MAX_ATTEMPTS = 8;
-const RETRY_DELAY_MS = [500, 900, 1500, 2200, 3000, 4000, 5000];
+const MAX_ATTEMPTS = 14;
+/**
+ * Short, near-flat delays. A soft-blocked attempt is a bare 302 with no body,
+ * so it costs a few hundred ms — cheap enough that many quick tries beat a few
+ * slow ones. 14 attempts at ~20% each is ~95%, in ~13s worst case.
+ */
+const RETRY_DELAY_MS = [
+  300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000,
+];
 
 /**
  * Brace-matches the JSON object that follows `"<key>":` in `src`.
@@ -119,6 +126,38 @@ function looksLikeRealProfile(html: string, username: string): boolean {
   return /Followers/i.test(desc) || html.includes('"follower_count"');
 }
 
+/**
+ * True when the page carries the full Relay prefetch payload (exact counts,
+ * bio, bio_links). Instagram also serves a "lite" real profile page (~700KB
+ * vs ~813KB) that has the og: tags but no such payload, so this distinguishes
+ * the two and lets the retry loop hold out for the richer one.
+ */
+function hasFullPayload(html: string): boolean {
+  return html.includes('"xig_user_by_username"');
+}
+
+/**
+ * Recovers the numeric user id from a page without the Relay payload.
+ *
+ * This matters more than it looks: the id is what the app stores as a
+ * target's externalId, so a page that yields no id resolves "successfully"
+ * but cannot actually be saved as a target. All three of these keys were
+ * observed carrying the same id on a lite page.
+ */
+function extractUserIdFallback(html: string): string | null {
+  const patterns = [
+    /"profile_id":"(\d+)"/,
+    /profilePage_(\d+)/,
+    /"props":\{"id":"(\d+)"/,
+    /"user_id":"?(\d+)"?/,
+  ];
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (m?.[1]) return m[1];
+  }
+  return null;
+}
+
 /** Instagram media_type codes → our normalized union. */
 function mapMediaType(mediaType: number, productType: string): string {
   if (productType === "clips") return "REEL";
@@ -162,9 +201,21 @@ function toGraphqlNode(node: any): any {
   };
 }
 
+/**
+ * Worst case for one more attempt: the retry delay plus a request that runs
+ * to the transport's 10s timeout, plus a little parse/DB slack.
+ */
+const ATTEMPT_RESERVE_MS = 11_000;
+
+export interface ScrapeOptions {
+  /** Epoch ms after which no new attempt may start (see StealthFetchOptions). */
+  deadlineAt?: number;
+}
+
 export async function scrapeProfileHtml(
   username: string,
-  fetcher: HtmlFetcher
+  fetcher: HtmlFetcher,
+  options: ScrapeOptions = {}
 ): Promise<HtmlScrapeResult | null> {
   const cleanUser = username.trim().toLowerCase().replace(/^@/, "");
   const url = `https://www.instagram.com/${cleanUser}/`;
@@ -173,11 +224,21 @@ export async function scrapeProfileHtml(
   let shells = 0;
   let rateLimits = 0;
   let html: string | null = null;
+  let liteHtml: string | null = null;
+
+  let stoppedForDeadline = false;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    if (attempt > 0) {
-      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS[attempt - 1] ?? 6000));
+    const delay = attempt > 0 ? (RETRY_DELAY_MS[attempt - 1] ?? 6000) : 0;
+
+    // Out of time: stop cleanly rather than let the platform kill the
+    // function mid-request. The first attempt always runs.
+    if (attempt > 0 && options.deadlineAt && Date.now() + delay + ATTEMPT_RESERVE_MS > options.deadlineAt) {
+      stoppedForDeadline = true;
+      break;
     }
+
+    if (delay) await new Promise((r) => setTimeout(r, delay));
     const res = await fetcher(url);
     if (!res) continue;
     lastStatus = res.status;
@@ -200,21 +261,49 @@ export async function scrapeProfileHtml(
       continue;
     }
 
+    // 3xx: Instagram redirects logged-out profile requests to its login page.
+    // The transport deliberately does not follow it, so a redirect IS the
+    // soft-block signal — same meaning as the login shell, detected instantly
+    // instead of after downloading a ~500KB page.
+    if (res.status >= 300 && res.status < 400) {
+      shells++;
+      continue;
+    }
+
     if (res.status !== 200) continue;
 
     if (looksLikeRealProfile(res.text, cleanUser)) {
-      html = res.text;
-      break;
+      if (hasFullPayload(res.text)) {
+        html = res.text;
+        break;
+      }
+      // A "lite" real page: og: tags but no Relay payload, so counts are
+      // abbreviated and bio/website are absent. Keep it as a fallback and
+      // spend remaining attempts trying for the full version.
+      if (!liteHtml) liteHtml = res.text;
+      continue;
     }
 
-    // Login shell — a soft block, not a failure, and it carries no profile
-    // data at all. Just try again; each attempt is an independent ~15% roll.
+    // A 200 that isn't the real profile is the inline login shell — same soft
+    // block. Just try again; each attempt is an independent ~15% roll.
     shells++;
+  }
+
+  // Never got the full payload — fall back to the lite page rather than
+  // failing outright. Degraded (abbreviated counts, no bio) but still enough
+  // to identify and add the target.
+  if (!html && liteHtml) {
+    console.warn(
+      `[html-scraper] @${cleanUser}: using lite profile page (no Relay payload) — ` +
+      `counts will be approximate and bio/website unavailable`
+    );
+    html = liteHtml;
   }
 
   if (!html) {
     console.warn(
-      `[html-scraper] @${cleanUser}: no real profile page after ${MAX_ATTEMPTS} attempts ` +
+      `[html-scraper] @${cleanUser}: no real profile page ` +
+      (stoppedForDeadline ? `(stopped early for time budget) ` : `after ${MAX_ATTEMPTS} attempts `) +
       `(${shells} login shells, last status ${lastStatus})`
     );
     // Every attempt was the logged-out wall: report that specifically, so the
@@ -257,6 +346,17 @@ export async function scrapeProfileHtml(
     return null;
   }
 
+  // The numeric user id. `pk` from the Relay payload is authoritative; the
+  // lite page has no payload, so recover it from the page's other id keys.
+  // Without an id the caller can resolve the profile but cannot save it as a
+  // target, so treat a missing id as a parse failure rather than returning a
+  // half-usable result.
+  const userId = profile?.pk ? String(profile.pk) : extractUserIdFallback(html);
+  if (!userId) {
+    console.warn(`[html-scraper] @${cleanUser}: profile page had no recoverable user id`);
+    return null;
+  }
+
   const followers = profile?.follower_count ?? og.followers;
   const following = profile?.following_count ?? og.following;
   const mediaCount = og.posts ?? profile?.all_media_count ?? null;
@@ -264,10 +364,11 @@ export async function scrapeProfileHtml(
   const bioLink = Array.isArray(profile?.bio_links) ? profile.bio_links[0] : null;
 
   const user = {
-    // `pk` is the numeric user id used by the friendships/stories endpoints.
-    // The sibling `id` field is the IG-business id and is NOT interchangeable.
-    id: profile?.pk ? String(profile.pk) : null,
-    pk: profile?.pk ? String(profile.pk) : null,
+    // The numeric user id used by the friendships/stories endpoints. Note the
+    // Relay payload's sibling `id` field is the IG-business id and is NOT
+    // interchangeable with this one.
+    id: userId,
+    pk: userId,
     username: profile?.username ?? cleanUser,
     full_name: profile?.full_name ?? nameFromTitle,
     biography: profile?.biography ?? null,

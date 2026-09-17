@@ -9,16 +9,6 @@
 * 🟢 You can import this file directly.
 */
 
-export const MetaConnectionStatus = {
-  ACTIVE: 'ACTIVE',
-  REAUTH_REQUIRED: 'REAUTH_REQUIRED',
-  REVOKED: 'REVOKED',
-  ERROR: 'ERROR'
-} as const
-
-export type MetaConnectionStatus = (typeof MetaConnectionStatus)[keyof typeof MetaConnectionStatus]
-
-
 export const TargetAccountType = {
   BUSINESS: 'BUSINESS',
   CREATOR: 'CREATOR',
@@ -57,6 +47,16 @@ export const TargetStatus = {
 export type TargetStatus = (typeof TargetStatus)[keyof typeof TargetStatus]
 
 
+export const MetaConnectionStatus = {
+  ACTIVE: 'ACTIVE',
+  REAUTH_REQUIRED: 'REAUTH_REQUIRED',
+  REVOKED: 'REVOKED',
+  ERROR: 'ERROR'
+} as const
+
+export type MetaConnectionStatus = (typeof MetaConnectionStatus)[keyof typeof MetaConnectionStatus]
+
+
 export const EventType = {
   NEW_MEDIA: 'NEW_MEDIA',
   MEDIA_UPDATED: 'MEDIA_UPDATED',
@@ -85,25 +85,6 @@ export const EventStatus = {
 export type EventStatus = (typeof EventStatus)[keyof typeof EventStatus]
 
 
-export const NotificationProvider = {
-  DISCORD: 'DISCORD',
-  NTFY: 'NTFY',
-  WEBHOOK: 'WEBHOOK'
-} as const
-
-export type NotificationProvider = (typeof NotificationProvider)[keyof typeof NotificationProvider]
-
-
-export const NotificationStatus = {
-  PENDING: 'PENDING',
-  SENT: 'SENT',
-  FAILED: 'FAILED',
-  RETRYING: 'RETRYING'
-} as const
-
-export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus]
-
-
 export const JobType = {
   TARGET_CHECK: 'TARGET_CHECK',
   NOTIFICATION_DISPATCH: 'NOTIFICATION_DISPATCH',
@@ -121,3 +102,22 @@ export const JobStatus = {
 } as const
 
 export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus]
+
+
+export const NotificationProvider = {
+  DISCORD: 'DISCORD',
+  NTFY: 'NTFY',
+  WEBHOOK: 'WEBHOOK'
+} as const
+
+export type NotificationProvider = (typeof NotificationProvider)[keyof typeof NotificationProvider]
+
+
+export const NotificationStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  FAILED: 'FAILED',
+  RETRYING: 'RETRYING'
+} as const
+
+export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus]

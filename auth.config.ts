@@ -8,9 +8,7 @@ export const authConfig: NextAuthOptions = {
   providers: [],
   callbacks: {
     async jwt({ token, user }) {
-      if (user?.id) {
-        token.userId = user.id;
-      }
+      if (user?.id) token.userId = user.id;
       return token;
     },
     async session({ session, token }) {

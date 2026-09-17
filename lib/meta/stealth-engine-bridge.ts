@@ -3,6 +3,7 @@ import { randomUUID, createHash } from "crypto";
 import { Capability } from "./types";
 import type { TargetResolution, TargetFetchResult, StealthSessionConfig, StealthFetchOptions, NormalizedMediaItem, CapabilityCheck, } from "./types";
 import { scrapeProfileHtml, LOGIN_SHELL_STATUS } from "./html-profile-scraper";
+import { scrapePostMedia } from "./post-page-scraper";
 
 const CHROME_DESKTOP_VERSIONS = ["116", "117", "119", "120"] as const;
 
@@ -182,55 +183,9 @@ function getTlsClient(tlsClientIdentifier: string, proxy?: string) {
   return client;
 }
 
-let _htmlPool: any = null;
-
-
-function resolveFrom(specifier: string, extraPaths: string[] = []): string {
-  const candidateBases = [...extraPaths, process.cwd()];
-  let lastErr: unknown;
-  for (const base of candidateBases) {
-    try { return require.resolve(specifier, { paths: [base] }); }
-    catch (err) { lastErr = err; }
-  }
-  try {
-    return require.resolve(specifier);
-  } catch (err) {
-    lastErr = err;
-  }
-  throw new Error(
-    `Could not resolve "${specifier}" (tried ${candidateBases.join(", ")} and this module): ${lastErr instanceof Error ? lastErr.message : String(lastErr)
-    }`
-  );
-}
-
-function getHtmlWorkerPool(): any {
-  if (!_htmlPool) {
-    const tlsEntry = resolveFrom("@dryft/tlsclient/lib/helpers/tls.js");
-    const wpName = ["worker", "pool"].join("");
-    const workerpool = eval("require")(resolveFrom(wpName, [path.dirname(tlsEntry)]));
-    _htmlPool = workerpool.pool(tlsEntry, {
-      workerThreadOpts: { env: { TLS_LIB_PATH: resolveTlsLibPath() } },
-    });
-  }
-  return _htmlPool;
-}
-
-/** A fresh cookie jar id per request — see the jar-policy note above. */
-function newHtmlJar(): string {
-  return `ig-html-${randomUUID()}`;
-}
-
-
-async function htmlPageFetch(
-  url: string,
-  session?: StealthSessionConfig | null
-): Promise<{ status: number; text: string } | null> {
-  const proxyUrl = session?.proxyUrl || process.env.DEFAULT_PROXY_URL || "";
-  const cookieStr = session?.cookies
-    ? Object.entries(session.cookies)
-      .map(([k, v]) => `${k}=${v}`)
-      .join("; ")
-    : "";
+async function htmlPageFetch(url: string, session?: StealthSessionConfig | null): Promise<{ status: number; text: string } | null> {
+  const proxyUrl = session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
+  const cookieStr = session?.cookies ? Object.entries(session.cookies).map(([k, v]) => `${k}=${v}`).join("; ") : "";
 
   const headers: Record<string, string> = {
     "User-Agent": session?.userAgent || CHROME_USER_AGENT,
@@ -249,43 +204,23 @@ async function htmlPageFetch(
   };
   if (cookieStr) headers["Cookie"] = cookieStr;
 
-  const payload = {
-    tlsClientIdentifier: CHROME_TLS_IDENTIFIER,
-    followRedirects: true,
-    insecureSkipVerify: true,
-    withoutCookieJar: false,
-    withDefaultCookieJar: true,
-    isByteRequest: false,
-    catchPanics: false,
-    withDebug: false,
-    forceHttp1: false,
-    withRandomTLSExtensionOrder: true,
-    timeoutSeconds: 30,
-    timeoutMilliseconds: 0,
-    sessionId: newHtmlJar(),
-    isRotatingProxy: false,
-    proxyUrl,
-    certificatePinningHosts: {},
-    headers,
-    headerOrder: [],
-    requestUrl: url,
-    requestMethod: "GET",
-  };
-  const pool = getHtmlWorkerPool();
-
   try {
-    const raw = await pool.exec("request", [JSON.stringify(payload)]);
-    const res = JSON.parse(raw);
-    if (res?.status === 407) {
-      const err = new Error("PROXY_AUTH_FAILED: proxy rejected credentials (407)");
-      (err as any).isProxyAuthFailed = true;
-      throw err;
-    }
-    const body = typeof res?.body === "object" ? JSON.stringify(res.body) : String(res?.body ?? "");
-    return { status: Number(res?.status ?? 0), text: body };
+    const client = getTlsClient(CHROME_TLS_IDENTIFIER, proxyUrl);
+    // 10s cap per request (the adapter defaults to 30s). A time-budgeted run
+    // plans retries around this bound, so one hung request can't push the
+    // serverless function past its limit.
+    const res = await client.get(url, { headers, validateStatus: () => true, timeout: 10_000 });
+    const text =
+      typeof res.data === "object" ? JSON.stringify(res.data) : String(res.data ?? "");
+    return { status: Number(res.status ?? 0), text };
   } catch (err) {
-    if ((err as any)?.isProxyAuthFailed) throw err;
-    console.warn(`[stealth] htmlPageFetch failed for ${url}:`, err);
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("407") || msg.toLowerCase().includes("proxy authentication")) {
+      const proxyErr = new Error(`PROXY_AUTH_FAILED: ${msg}`);
+      (proxyErr as any).isProxyAuthFailed = true;
+      throw proxyErr;
+    }
+    console.warn(`[stealth] htmlPageFetch failed for ${url}:`, msg);
     return null;
   }
 }
@@ -488,14 +423,14 @@ async function stealthRequestWithRetry(
   return null;
 }
 
-async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthSessionConfig | null | undefined, options: { jitter?: boolean } = {}): Promise<{ status: number; text: string; data?: any; deviceId?: string } | null> {
+async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthSessionConfig | null | undefined, options: { jitter?: boolean; deadlineAt?: number } = {}): Promise<{ status: number; text: string; data?: any; deviceId?: string } | null> {
   const isUsable = (res: { status: number; data?: any } | null) =>
     Boolean(res && res.status !== 404 && res.status !== 429 && res.data?.status !== "fail" && res.data?.data?.user);
 
   const isAuthenticated = Boolean(session?.cookies?.sessionid);
 
   const tryHtml = () =>
-    scrapeProfileHtml(cleanUser, (url) => htmlPageFetch(url, session));
+    scrapeProfileHtml(cleanUser, (url) => htmlPageFetch(url, session), { deadlineAt: options.deadlineAt });
 
 
   let htmlFirst: Awaited<ReturnType<typeof tryHtml>> = null;
@@ -503,6 +438,14 @@ async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthS
     htmlFirst = await tryHtml();
     if (isUsable(htmlFirst)) return htmlFirst;
     if (htmlFirst && htmlFirst.status === 404) return htmlFirst;
+
+    // The JSON endpoints below are walled for logged-out callers and cost
+    // several requests with multi-second retry delays. When a time budget is
+    // nearly spent, return the HTML verdict instead of starting them — they
+    // would almost certainly fail and risk the function being killed.
+    if (options.deadlineAt && options.deadlineAt - Date.now() < 20_000) {
+      return htmlFirst;
+    }
     // Fall through: maybe the JSON API is reachable after all.
   }
 
@@ -827,7 +770,9 @@ async function simulateHumanActions(session?: StealthSessionConfig | null) {
       await delay(1000, 4000);
     }
 
-    if (true) {
+    // Hashtag browsing only with a session: logged out, this endpoint is
+    // walled and just adds a failed request against the proxy IP.
+    if (isAuthenticated) {
       const tags = ["travel", "food", "nature", "photography", "art", "music", "fitness", "lifestyle", "design"];
       const tag = tags[Math.floor(Math.random() * tags.length)];
       await stealthRequestWithRetry(`https://www.instagram.com/api/v1/tags/web_info/?tag_name=${tag}`, { session, isAjax: true }, 1);
@@ -888,11 +833,19 @@ export async function stealthFetchTargetData(params: {
   const cleanUser = username.trim().toLowerCase().replace(/^@/, "");
 
   try {
-    if (options?.humanSimEnabled) {
+    // Browsing noise only makes sense for a logged-in session, and only
+    // sometimes. Anonymous "browsing" hits walled endpoints, and extra walled
+    // requests measurably raise login-shell rates on the profile page itself
+    // (see brain.md), so for anonymous checks it actively hurts.
+    const timeLeftMs = options?.deadlineAt ? options.deadlineAt - Date.now() : Infinity;
+    if (options?.humanSimEnabled && isAuthenticated && Math.random() < 0.3 && timeLeftMs > 30_000) {
       await simulateHumanActions(effectiveSession);
     }
 
-    const res = await fetchProfileInfoWithFallback(cleanUser, effectiveSession, { jitter: options?.jitterEnabled });
+    const res = await fetchProfileInfoWithFallback(cleanUser, effectiveSession, {
+      jitter: options?.jitterEnabled,
+      deadlineAt: options?.deadlineAt,
+    });
     if (!res) {
       return {
         ok: false,
@@ -967,7 +920,9 @@ export async function stealthFetchTargetData(params: {
       return itemNode.video_url || null;
     };
 
-    for (const edge of mediaEdges.slice(0, 12)) {
+    // Anonymous HTML pages embed exactly 12 items, so this cap only binds for
+    // authenticated fetches, where the JSON API can return more.
+    for (const edge of mediaEdges.slice(0, 36)) {
       const node = edge.node;
       if (!node) continue;
       const isVideo = Boolean(node.is_video);
@@ -1001,7 +956,7 @@ export async function stealthFetchTargetData(params: {
     const reelsEdges = userData.edge_felix_video_timeline?.edges || [];
     const reelsCount = reelsEdges.length > 0 ? reelsEdges.length : undefined;
 
-    for (const edge of reelsEdges.slice(0, 8)) {
+    for (const edge of reelsEdges.slice(0, 24)) {
       const node = edge.node;
       if (!node) continue;
       const reelId = String(node.id || node.pk);
@@ -1031,7 +986,10 @@ export async function stealthFetchTargetData(params: {
 
     const fetchedExternalId = externalId || userData.id || userData.pk || null;
     let stories: NormalizedMediaItem[] = [];
-    if (isAuthenticated && options?.watchStories && fetchedExternalId) {
+    // Optional extras are skipped when the time budget is nearly spent; the
+    // core profile + media data above is already enough for this check.
+    const hasTimeForExtras = !options?.deadlineAt || options.deadlineAt - Date.now() > 12_000;
+    if (isAuthenticated && options?.watchStories && fetchedExternalId && hasTimeForExtras) {
       const storiesUrl = `https://i.instagram.com/api/v1/feed/user/${fetchedExternalId}/reel_media/`;
       const storiesRes = await stealthRequestWithRetry(storiesUrl, {
         session,
@@ -1057,7 +1015,7 @@ export async function stealthFetchTargetData(params: {
 
     let followersList: string[] | undefined = undefined;
     let followingList: string[] | undefined = undefined;
-    if (isAuthenticated && options?.watchFollowerChurn && fetchedExternalId) {
+    if (isAuthenticated && options?.watchFollowerChurn && fetchedExternalId && hasTimeForExtras) {
       followersList = await fetchFriendshipIdList("followers", fetchedExternalId, cleanUser, session, options);
       followingList = await fetchFriendshipIdList("following", fetchedExternalId, cleanUser, session, options);
     }
@@ -1176,4 +1134,26 @@ export async function stealthImportBrowserSession(params: {
     ok: false,
     message: `Direct OS process file reading for ${params.browser} requires elevated permissions. Please paste your sessionid and ds_user_id cookies in the 'Paste Cookies' tab.`,
   };
+}
+
+/**
+ * Re-resolves fresh CDN URLs for a single post from its permalink.
+ *
+ * Used by the on-demand re-download path: the `sourceMediaUrl` stored at
+ * ingestion carries an `oe=` expiry param and goes stale, whereas the
+ * permalink does not, so re-scraping the post page is what actually makes
+ * re-download work for older media.
+ */
+export async function stealthResolvePostMedia(
+  permalinkOrCode: string,
+  session?: StealthSessionConfig | null
+): Promise<{ imageUrl: string | null; videoUrl: string | null } | null> {
+  const globalProxy = process.env.DEFAULT_PROXY_URL;
+  const effectiveSession: StealthSessionConfig | null = session
+    ? { ...session, proxyUrl: session.proxyUrl || globalProxy || undefined }
+    : globalProxy
+      ? { username: "", cookies: {}, proxyUrl: globalProxy }
+      : null;
+
+  return scrapePostMedia(permalinkOrCode, (url) => htmlPageFetch(url, effectiveSession));
 }

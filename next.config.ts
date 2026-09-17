@@ -1,20 +1,18 @@
 import type { NextConfig } from "next";
 
-// Routes that (transitively) import lib/meta/stealth-engine-bridge.ts. The bundled
-// native tls-client binaries are loaded via a runtime-computed path (see
-// resolveTlsLibPath in that file), which Next's build-time file tracer can't follow
-// statically — so each route that needs it must be listed here explicitly, or the
-// deployed function won't have the .so file on disk at request time.
 const stealthRoutes = [
   "/api/cron/monitor",
   "/api/targets",
   "/api/targets/bulk",
   "/api/targets/resolve",
   "/api/targets/\\[id\\]",
+  "/api/targets/\\[id\\]/check",
   "/api/sessions",
   "/api/sessions/test",
   "/api/meta/status",
   "/api/health",
+  "/api/media/\\[id\\]/redownload",
+  "/api/cron/cleanup",
 ];
 
 const nextConfig: NextConfig = {
@@ -22,7 +20,6 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: Object.fromEntries(
     stealthRoutes.map((route) => [route, ["lib/native/**/*"]])
   ),
-  /* config options here */
 };
 
 export default nextConfig;

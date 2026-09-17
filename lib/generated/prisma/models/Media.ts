@@ -34,8 +34,15 @@ export type MediaMinAggregateOutputType = {
   caption: string | null
   mediaUrl: string | null
   videoUrl: string | null
+  sourceMediaUrl: string | null
+  sourceVideoUrl: string | null
   storageUrl: string | null
   storageFileId: string | null
+  storedAt: Date | null
+  thumbnailUrl: string | null
+  thumbnailFileId: string | null
+  isExpired: boolean | null
+  expiredAt: Date | null
   isStory: boolean | null
   isCollab: boolean | null
   firstSeenAt: Date | null
@@ -51,8 +58,15 @@ export type MediaMaxAggregateOutputType = {
   caption: string | null
   mediaUrl: string | null
   videoUrl: string | null
+  sourceMediaUrl: string | null
+  sourceVideoUrl: string | null
   storageUrl: string | null
   storageFileId: string | null
+  storedAt: Date | null
+  thumbnailUrl: string | null
+  thumbnailFileId: string | null
+  isExpired: boolean | null
+  expiredAt: Date | null
   isStory: boolean | null
   isCollab: boolean | null
   firstSeenAt: Date | null
@@ -68,8 +82,15 @@ export type MediaCountAggregateOutputType = {
   caption: number
   mediaUrl: number
   videoUrl: number
+  sourceMediaUrl: number
+  sourceVideoUrl: number
   storageUrl: number
   storageFileId: number
+  storedAt: number
+  thumbnailUrl: number
+  thumbnailFileId: number
+  isExpired: number
+  expiredAt: number
   isStory: number
   isCollab: number
   collaborators: number
@@ -88,8 +109,15 @@ export type MediaMinAggregateInputType = {
   caption?: true
   mediaUrl?: true
   videoUrl?: true
+  sourceMediaUrl?: true
+  sourceVideoUrl?: true
   storageUrl?: true
   storageFileId?: true
+  storedAt?: true
+  thumbnailUrl?: true
+  thumbnailFileId?: true
+  isExpired?: true
+  expiredAt?: true
   isStory?: true
   isCollab?: true
   firstSeenAt?: true
@@ -105,8 +133,15 @@ export type MediaMaxAggregateInputType = {
   caption?: true
   mediaUrl?: true
   videoUrl?: true
+  sourceMediaUrl?: true
+  sourceVideoUrl?: true
   storageUrl?: true
   storageFileId?: true
+  storedAt?: true
+  thumbnailUrl?: true
+  thumbnailFileId?: true
+  isExpired?: true
+  expiredAt?: true
   isStory?: true
   isCollab?: true
   firstSeenAt?: true
@@ -122,8 +157,15 @@ export type MediaCountAggregateInputType = {
   caption?: true
   mediaUrl?: true
   videoUrl?: true
+  sourceMediaUrl?: true
+  sourceVideoUrl?: true
   storageUrl?: true
   storageFileId?: true
+  storedAt?: true
+  thumbnailUrl?: true
+  thumbnailFileId?: true
+  isExpired?: true
+  expiredAt?: true
   isStory?: true
   isCollab?: true
   collaborators?: true
@@ -213,8 +255,15 @@ export type MediaGroupByOutputType = {
   caption: string | null
   mediaUrl: string | null
   videoUrl: string | null
+  sourceMediaUrl: string | null
+  sourceVideoUrl: string | null
   storageUrl: string | null
   storageFileId: string | null
+  storedAt: Date | null
+  thumbnailUrl: string | null
+  thumbnailFileId: string | null
+  isExpired: boolean
+  expiredAt: Date | null
   isStory: boolean
   isCollab: boolean
   collaborators: string[]
@@ -252,8 +301,15 @@ export type MediaWhereInput = {
   caption?: Prisma.StringNullableFilter<"Media"> | string | null
   mediaUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   videoUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  sourceMediaUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  sourceVideoUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   storageUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   storageFileId?: Prisma.StringNullableFilter<"Media"> | string | null
+  storedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
+  thumbnailUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  thumbnailFileId?: Prisma.StringNullableFilter<"Media"> | string | null
+  isExpired?: Prisma.BoolFilter<"Media"> | boolean
+  expiredAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
   isStory?: Prisma.BoolFilter<"Media"> | boolean
   isCollab?: Prisma.BoolFilter<"Media"> | boolean
   collaborators?: Prisma.StringNullableListFilter<"Media">
@@ -271,8 +327,15 @@ export type MediaOrderByWithRelationInput = {
   caption?: Prisma.SortOrderInput | Prisma.SortOrder
   mediaUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   videoUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  sourceMediaUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  sourceVideoUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   storageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   storageFileId?: Prisma.SortOrderInput | Prisma.SortOrder
+  storedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnailFileId?: Prisma.SortOrderInput | Prisma.SortOrder
+  isExpired?: Prisma.SortOrder
+  expiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   isStory?: Prisma.SortOrder
   isCollab?: Prisma.SortOrder
   collaborators?: Prisma.SortOrder
@@ -294,8 +357,15 @@ export type MediaWhereUniqueInput = Prisma.AtLeast<{
   caption?: Prisma.StringNullableFilter<"Media"> | string | null
   mediaUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   videoUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  sourceMediaUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  sourceVideoUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   storageUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   storageFileId?: Prisma.StringNullableFilter<"Media"> | string | null
+  storedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
+  thumbnailUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  thumbnailFileId?: Prisma.StringNullableFilter<"Media"> | string | null
+  isExpired?: Prisma.BoolFilter<"Media"> | boolean
+  expiredAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
   isStory?: Prisma.BoolFilter<"Media"> | boolean
   isCollab?: Prisma.BoolFilter<"Media"> | boolean
   collaborators?: Prisma.StringNullableListFilter<"Media">
@@ -313,8 +383,15 @@ export type MediaOrderByWithAggregationInput = {
   caption?: Prisma.SortOrderInput | Prisma.SortOrder
   mediaUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   videoUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  sourceMediaUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  sourceVideoUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   storageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   storageFileId?: Prisma.SortOrderInput | Prisma.SortOrder
+  storedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnailFileId?: Prisma.SortOrderInput | Prisma.SortOrder
+  isExpired?: Prisma.SortOrder
+  expiredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   isStory?: Prisma.SortOrder
   isCollab?: Prisma.SortOrder
   collaborators?: Prisma.SortOrder
@@ -337,8 +414,15 @@ export type MediaScalarWhereWithAggregatesInput = {
   caption?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
   mediaUrl?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
   videoUrl?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
+  sourceMediaUrl?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
+  sourceVideoUrl?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
   storageUrl?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
   storageFileId?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
+  storedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Media"> | Date | string | null
+  thumbnailUrl?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
+  thumbnailFileId?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
+  isExpired?: Prisma.BoolWithAggregatesFilter<"Media"> | boolean
+  expiredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Media"> | Date | string | null
   isStory?: Prisma.BoolWithAggregatesFilter<"Media"> | boolean
   isCollab?: Prisma.BoolWithAggregatesFilter<"Media"> | boolean
   collaborators?: Prisma.StringNullableListFilter<"Media">
@@ -354,8 +438,15 @@ export type MediaCreateInput = {
   caption?: string | null
   mediaUrl?: string | null
   videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
   storageUrl?: string | null
   storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
   isStory?: boolean
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
@@ -373,8 +464,15 @@ export type MediaUncheckedCreateInput = {
   caption?: string | null
   mediaUrl?: string | null
   videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
   storageUrl?: string | null
   storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
   isStory?: boolean
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
@@ -390,8 +488,15 @@ export type MediaUpdateInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
@@ -409,8 +514,15 @@ export type MediaUncheckedUpdateInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
@@ -427,8 +539,15 @@ export type MediaCreateManyInput = {
   caption?: string | null
   mediaUrl?: string | null
   videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
   storageUrl?: string | null
   storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
   isStory?: boolean
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
@@ -444,8 +563,15 @@ export type MediaUpdateManyMutationInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
@@ -462,8 +588,15 @@ export type MediaUncheckedUpdateManyInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
@@ -495,8 +628,15 @@ export type MediaCountOrderByAggregateInput = {
   caption?: Prisma.SortOrder
   mediaUrl?: Prisma.SortOrder
   videoUrl?: Prisma.SortOrder
+  sourceMediaUrl?: Prisma.SortOrder
+  sourceVideoUrl?: Prisma.SortOrder
   storageUrl?: Prisma.SortOrder
   storageFileId?: Prisma.SortOrder
+  storedAt?: Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrder
+  thumbnailFileId?: Prisma.SortOrder
+  isExpired?: Prisma.SortOrder
+  expiredAt?: Prisma.SortOrder
   isStory?: Prisma.SortOrder
   isCollab?: Prisma.SortOrder
   collaborators?: Prisma.SortOrder
@@ -513,8 +653,15 @@ export type MediaMaxOrderByAggregateInput = {
   caption?: Prisma.SortOrder
   mediaUrl?: Prisma.SortOrder
   videoUrl?: Prisma.SortOrder
+  sourceMediaUrl?: Prisma.SortOrder
+  sourceVideoUrl?: Prisma.SortOrder
   storageUrl?: Prisma.SortOrder
   storageFileId?: Prisma.SortOrder
+  storedAt?: Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrder
+  thumbnailFileId?: Prisma.SortOrder
+  isExpired?: Prisma.SortOrder
+  expiredAt?: Prisma.SortOrder
   isStory?: Prisma.SortOrder
   isCollab?: Prisma.SortOrder
   firstSeenAt?: Prisma.SortOrder
@@ -530,8 +677,15 @@ export type MediaMinOrderByAggregateInput = {
   caption?: Prisma.SortOrder
   mediaUrl?: Prisma.SortOrder
   videoUrl?: Prisma.SortOrder
+  sourceMediaUrl?: Prisma.SortOrder
+  sourceVideoUrl?: Prisma.SortOrder
   storageUrl?: Prisma.SortOrder
   storageFileId?: Prisma.SortOrder
+  storedAt?: Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrder
+  thumbnailFileId?: Prisma.SortOrder
+  isExpired?: Prisma.SortOrder
+  expiredAt?: Prisma.SortOrder
   isStory?: Prisma.SortOrder
   isCollab?: Prisma.SortOrder
   firstSeenAt?: Prisma.SortOrder
@@ -597,8 +751,15 @@ export type MediaCreateWithoutTargetInput = {
   caption?: string | null
   mediaUrl?: string | null
   videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
   storageUrl?: string | null
   storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
   isStory?: boolean
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
@@ -614,8 +775,15 @@ export type MediaUncheckedCreateWithoutTargetInput = {
   caption?: string | null
   mediaUrl?: string | null
   videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
   storageUrl?: string | null
   storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
   isStory?: boolean
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
@@ -661,8 +829,15 @@ export type MediaScalarWhereInput = {
   caption?: Prisma.StringNullableFilter<"Media"> | string | null
   mediaUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   videoUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  sourceMediaUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  sourceVideoUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   storageUrl?: Prisma.StringNullableFilter<"Media"> | string | null
   storageFileId?: Prisma.StringNullableFilter<"Media"> | string | null
+  storedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
+  thumbnailUrl?: Prisma.StringNullableFilter<"Media"> | string | null
+  thumbnailFileId?: Prisma.StringNullableFilter<"Media"> | string | null
+  isExpired?: Prisma.BoolFilter<"Media"> | boolean
+  expiredAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
   isStory?: Prisma.BoolFilter<"Media"> | boolean
   isCollab?: Prisma.BoolFilter<"Media"> | boolean
   collaborators?: Prisma.StringNullableListFilter<"Media">
@@ -678,8 +853,15 @@ export type MediaCreateManyTargetInput = {
   caption?: string | null
   mediaUrl?: string | null
   videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
   storageUrl?: string | null
   storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
   isStory?: boolean
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
@@ -695,8 +877,15 @@ export type MediaUpdateWithoutTargetInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
@@ -712,8 +901,15 @@ export type MediaUncheckedUpdateWithoutTargetInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
@@ -729,8 +925,15 @@ export type MediaUncheckedUpdateManyWithoutTargetInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
@@ -749,8 +952,15 @@ export type MediaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   caption?: boolean
   mediaUrl?: boolean
   videoUrl?: boolean
+  sourceMediaUrl?: boolean
+  sourceVideoUrl?: boolean
   storageUrl?: boolean
   storageFileId?: boolean
+  storedAt?: boolean
+  thumbnailUrl?: boolean
+  thumbnailFileId?: boolean
+  isExpired?: boolean
+  expiredAt?: boolean
   isStory?: boolean
   isCollab?: boolean
   collaborators?: boolean
@@ -768,8 +978,15 @@ export type MediaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   caption?: boolean
   mediaUrl?: boolean
   videoUrl?: boolean
+  sourceMediaUrl?: boolean
+  sourceVideoUrl?: boolean
   storageUrl?: boolean
   storageFileId?: boolean
+  storedAt?: boolean
+  thumbnailUrl?: boolean
+  thumbnailFileId?: boolean
+  isExpired?: boolean
+  expiredAt?: boolean
   isStory?: boolean
   isCollab?: boolean
   collaborators?: boolean
@@ -787,8 +1004,15 @@ export type MediaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   caption?: boolean
   mediaUrl?: boolean
   videoUrl?: boolean
+  sourceMediaUrl?: boolean
+  sourceVideoUrl?: boolean
   storageUrl?: boolean
   storageFileId?: boolean
+  storedAt?: boolean
+  thumbnailUrl?: boolean
+  thumbnailFileId?: boolean
+  isExpired?: boolean
+  expiredAt?: boolean
   isStory?: boolean
   isCollab?: boolean
   collaborators?: boolean
@@ -806,15 +1030,22 @@ export type MediaSelectScalar = {
   caption?: boolean
   mediaUrl?: boolean
   videoUrl?: boolean
+  sourceMediaUrl?: boolean
+  sourceVideoUrl?: boolean
   storageUrl?: boolean
   storageFileId?: boolean
+  storedAt?: boolean
+  thumbnailUrl?: boolean
+  thumbnailFileId?: boolean
+  isExpired?: boolean
+  expiredAt?: boolean
   isStory?: boolean
   isCollab?: boolean
   collaborators?: boolean
   firstSeenAt?: boolean
 }
 
-export type MediaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "targetId" | "externalMediaId" | "mediaType" | "permalink" | "timestamp" | "caption" | "mediaUrl" | "videoUrl" | "storageUrl" | "storageFileId" | "isStory" | "isCollab" | "collaborators" | "firstSeenAt", ExtArgs["result"]["media"]>
+export type MediaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "targetId" | "externalMediaId" | "mediaType" | "permalink" | "timestamp" | "caption" | "mediaUrl" | "videoUrl" | "sourceMediaUrl" | "sourceVideoUrl" | "storageUrl" | "storageFileId" | "storedAt" | "thumbnailUrl" | "thumbnailFileId" | "isExpired" | "expiredAt" | "isStory" | "isCollab" | "collaborators" | "firstSeenAt", ExtArgs["result"]["media"]>
 export type MediaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
 }
@@ -840,8 +1071,15 @@ export type $MediaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     caption: string | null
     mediaUrl: string | null
     videoUrl: string | null
+    sourceMediaUrl: string | null
+    sourceVideoUrl: string | null
     storageUrl: string | null
     storageFileId: string | null
+    storedAt: Date | null
+    thumbnailUrl: string | null
+    thumbnailFileId: string | null
+    isExpired: boolean
+    expiredAt: Date | null
     isStory: boolean
     isCollab: boolean
     collaborators: string[]
@@ -1279,8 +1517,15 @@ export interface MediaFieldRefs {
   readonly caption: Prisma.FieldRef<"Media", 'String'>
   readonly mediaUrl: Prisma.FieldRef<"Media", 'String'>
   readonly videoUrl: Prisma.FieldRef<"Media", 'String'>
+  readonly sourceMediaUrl: Prisma.FieldRef<"Media", 'String'>
+  readonly sourceVideoUrl: Prisma.FieldRef<"Media", 'String'>
   readonly storageUrl: Prisma.FieldRef<"Media", 'String'>
   readonly storageFileId: Prisma.FieldRef<"Media", 'String'>
+  readonly storedAt: Prisma.FieldRef<"Media", 'DateTime'>
+  readonly thumbnailUrl: Prisma.FieldRef<"Media", 'String'>
+  readonly thumbnailFileId: Prisma.FieldRef<"Media", 'String'>
+  readonly isExpired: Prisma.FieldRef<"Media", 'Boolean'>
+  readonly expiredAt: Prisma.FieldRef<"Media", 'DateTime'>
   readonly isStory: Prisma.FieldRef<"Media", 'Boolean'>
   readonly isCollab: Prisma.FieldRef<"Media", 'Boolean'>
   readonly collaborators: Prisma.FieldRef<"Media", 'String[]'>

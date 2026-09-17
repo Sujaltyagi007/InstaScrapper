@@ -77,3 +77,13 @@ export type Job = Prisma.JobModel
  * 
  */
 export type AuthRateLimit = Prisma.AuthRateLimitModel
+/**
+ * Model R2UsageCounter
+ * 
+ */
+export type R2UsageCounter = Prisma.R2UsageCounterModel
+/**
+ * Model ScrapeThrottle
+ * 
+ */
+export type ScrapeThrottle = Prisma.ScrapeThrottleModel

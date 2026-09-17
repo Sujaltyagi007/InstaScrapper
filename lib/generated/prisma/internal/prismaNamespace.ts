@@ -408,7 +408,9 @@ export const ModelName = {
   NotificationChannel: 'NotificationChannel',
   Notification: 'Notification',
   Job: 'Job',
-  AuthRateLimit: 'AuthRateLimit'
+  AuthRateLimit: 'AuthRateLimit',
+  R2UsageCounter: 'R2UsageCounter',
+  ScrapeThrottle: 'ScrapeThrottle'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -424,7 +426,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "metaConnection" | "target" | "instagramSession" | "monitor" | "targetSnapshot" | "media" | "event" | "notificationChannel" | "notification" | "job" | "authRateLimit"
+    modelProps: "user" | "metaConnection" | "target" | "instagramSession" | "monitor" | "targetSnapshot" | "media" | "event" | "notificationChannel" | "notification" | "job" | "authRateLimit" | "r2UsageCounter" | "scrapeThrottle"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1316,6 +1318,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    R2UsageCounter: {
+      payload: Prisma.$R2UsageCounterPayload<ExtArgs>
+      fields: Prisma.R2UsageCounterFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.R2UsageCounterFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.R2UsageCounterFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>
+        }
+        findFirst: {
+          args: Prisma.R2UsageCounterFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.R2UsageCounterFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>
+        }
+        findMany: {
+          args: Prisma.R2UsageCounterFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>[]
+        }
+        create: {
+          args: Prisma.R2UsageCounterCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>
+        }
+        createMany: {
+          args: Prisma.R2UsageCounterCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.R2UsageCounterCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>[]
+        }
+        delete: {
+          args: Prisma.R2UsageCounterDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>
+        }
+        update: {
+          args: Prisma.R2UsageCounterUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>
+        }
+        deleteMany: {
+          args: Prisma.R2UsageCounterDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.R2UsageCounterUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.R2UsageCounterUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>[]
+        }
+        upsert: {
+          args: Prisma.R2UsageCounterUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$R2UsageCounterPayload>
+        }
+        aggregate: {
+          args: Prisma.R2UsageCounterAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateR2UsageCounter>
+        }
+        groupBy: {
+          args: Prisma.R2UsageCounterGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.R2UsageCounterGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.R2UsageCounterCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.R2UsageCounterCountAggregateOutputType> | number
+        }
+      }
+    }
+    ScrapeThrottle: {
+      payload: Prisma.$ScrapeThrottlePayload<ExtArgs>
+      fields: Prisma.ScrapeThrottleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ScrapeThrottleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ScrapeThrottleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>
+        }
+        findFirst: {
+          args: Prisma.ScrapeThrottleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ScrapeThrottleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>
+        }
+        findMany: {
+          args: Prisma.ScrapeThrottleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>[]
+        }
+        create: {
+          args: Prisma.ScrapeThrottleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>
+        }
+        createMany: {
+          args: Prisma.ScrapeThrottleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ScrapeThrottleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>[]
+        }
+        delete: {
+          args: Prisma.ScrapeThrottleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>
+        }
+        update: {
+          args: Prisma.ScrapeThrottleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>
+        }
+        deleteMany: {
+          args: Prisma.ScrapeThrottleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ScrapeThrottleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ScrapeThrottleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>[]
+        }
+        upsert: {
+          args: Prisma.ScrapeThrottleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ScrapeThrottlePayload>
+        }
+        aggregate: {
+          args: Prisma.ScrapeThrottleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateScrapeThrottle>
+        }
+        groupBy: {
+          args: Prisma.ScrapeThrottleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ScrapeThrottleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ScrapeThrottleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ScrapeThrottleCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1362,6 +1512,12 @@ export const UserScalarFieldEnum = {
   name: 'name',
   timezone: 'timezone',
   retentionDays: 'retentionDays',
+  role: 'role',
+  maxTargets: 'maxTargets',
+  targetQuotaAlertLevel: 'targetQuotaAlertLevel',
+  sleepEnabled: 'sleepEnabled',
+  sleepStartHour: 'sleepStartHour',
+  sleepEndHour: 'sleepEndHour',
   emailVerified: 'emailVerified',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1404,6 +1560,7 @@ export const TargetScalarFieldEnum = {
   lastCheckedAt: 'lastCheckedAt',
   lastSuccessAt: 'lastSuccessAt',
   consecutiveFailures: 'consecutiveFailures',
+  lockedUntil: 'lockedUntil',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1504,8 +1661,15 @@ export const MediaScalarFieldEnum = {
   caption: 'caption',
   mediaUrl: 'mediaUrl',
   videoUrl: 'videoUrl',
+  sourceMediaUrl: 'sourceMediaUrl',
+  sourceVideoUrl: 'sourceVideoUrl',
   storageUrl: 'storageUrl',
   storageFileId: 'storageFileId',
+  storedAt: 'storedAt',
+  thumbnailUrl: 'thumbnailUrl',
+  thumbnailFileId: 'thumbnailFileId',
+  isExpired: 'isExpired',
+  expiredAt: 'expiredAt',
   isStory: 'isStory',
   isCollab: 'isCollab',
   collaborators: 'collaborators',
@@ -1594,6 +1758,32 @@ export const AuthRateLimitScalarFieldEnum = {
 export type AuthRateLimitScalarFieldEnum = (typeof AuthRateLimitScalarFieldEnum)[keyof typeof AuthRateLimitScalarFieldEnum]
 
 
+export const R2UsageCounterScalarFieldEnum = {
+  id: 'id',
+  billingMonth: 'billingMonth',
+  aClassOps: 'aClassOps',
+  bClassOps: 'bClassOps',
+  storageBytesEst: 'storageBytesEst',
+  lastReconciledAt: 'lastReconciledAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type R2UsageCounterScalarFieldEnum = (typeof R2UsageCounterScalarFieldEnum)[keyof typeof R2UsageCounterScalarFieldEnum]
+
+
+export const ScrapeThrottleScalarFieldEnum = {
+  id: 'id',
+  day: 'day',
+  profileViews: 'profileViews',
+  consecutiveSoftFails: 'consecutiveSoftFails',
+  pauseLevel: 'pauseLevel',
+  pausedUntil: 'pausedUntil',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ScrapeThrottleScalarFieldEnum = (typeof ScrapeThrottleScalarFieldEnum)[keyof typeof ScrapeThrottleScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1670,6 +1860,13 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -1736,13 +1933,6 @@ export type EnumTargetStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
  * Reference to a field of type 'TargetStatus[]'
  */
 export type ListEnumTargetStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TargetStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -1841,6 +2031,20 @@ export type EnumJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
  * Reference to a field of type 'JobStatus[]'
  */
 export type ListEnumJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JobStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt'
+ */
+export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt[]'
+ */
+export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
     
 
 
@@ -2020,6 +2224,8 @@ export type GlobalOmitConfig = {
   notification?: Prisma.NotificationOmit
   job?: Prisma.JobOmit
   authRateLimit?: Prisma.AuthRateLimitOmit
+  r2UsageCounter?: Prisma.R2UsageCounterOmit
+  scrapeThrottle?: Prisma.ScrapeThrottleOmit
 }
 
 /* Types for Logging */

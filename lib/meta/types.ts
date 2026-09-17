@@ -95,6 +95,12 @@ export interface StealthFetchOptions {
   jitterEnabled?: boolean;
   humanSimEnabled?: boolean;
   proxyUrl?: string | null;
+  /**
+   * Epoch ms by which the check must be done. Scheduled runs pass their time
+   * budget so retries stop early instead of the serverless function being
+   * killed mid-request (Vercel Hobby caps functions at ~60s).
+   */
+  deadlineAt?: number;
 }
 
 export interface StealthSessionConfig {

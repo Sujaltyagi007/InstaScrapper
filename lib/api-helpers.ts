@@ -4,7 +4,17 @@ import { NotFoundError } from "@/lib/errors";
 import { UnsafeUrlError } from "@/lib/security/ssrf";
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  /**
+   * `code` is a stable machine-readable identifier (e.g. TARGET_LIMIT_REACHED)
+   * so the UI can react to a specific failure without matching message text.
+   * `details` carries structured context such as current usage.
+   */
+  constructor(
+    public status: number,
+    message: string,
+    public code?: string,
+    public details?: Record<string, unknown>
+  ) {
     super(message);
   }
 }
@@ -19,7 +29,14 @@ export async function requireUserId(): Promise<string> {
 
 export function jsonError(err: unknown) {
   if (err instanceof ApiError) {
-    return NextResponse.json({ error: err.message }, { status: err.status });
+    return NextResponse.json(
+      {
+        error: err.message,
+        ...(err.code ? { code: err.code } : {}),
+        ...(err.details ? { details: err.details } : {}),
+      },
+      { status: err.status }
+    );
   }
   if (err instanceof NotFoundError) {
     return NextResponse.json({ error: err.message }, { status: 404 });

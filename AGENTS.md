@@ -8,6 +8,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+# READ FIRST: `brain.md`
+
+Before exploring or changing any code, read **`brain.md`** at the repo root. It is the project's orientation doc: architecture, verified findings, known traps, and a **"Recent changes"** log of the latest work. Reading it first is much cheaper than rediscovering the same context from source files.
+
+After any meaningful change, update `brain.md` in the same session: add a dated entry at the top of "Recent changes" (newest first), and fix any section your change made inaccurate.
+
+
 # GSD (Get Stuff Done) Master Instructions & Workflow Guide
 
 This document consolidates all agent roles, workflows, execution protocols, and verification standards for this repository.

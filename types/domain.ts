@@ -11,9 +11,6 @@ export type TargetDetail = Target & {
 
 export type EventWithTarget = Event & { target: { id: string; username: string } };
 
-export type NotificationChannelSummary = Pick<
-  NotificationChannel,
-  "id" | "name" | "provider" | "eventTypeFilter" | "cooldownSeconds" | "enabled" | "createdAt"
->;
+export type NotificationChannelSummary = Pick<NotificationChannel,"id" | "name" | "provider" | "eventTypeFilter" | "cooldownSeconds" | "enabled" | "createdAt">;
 
 export type JobWithTarget = Job & { target: { username: string } | null };

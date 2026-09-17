@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { reserveTargetSlot } from "@/lib/services/quota.service";
 import { NotFoundError } from "@/lib/errors";
 import { getMetaProvider } from "@/lib/meta/provider-factory";
 import { toPrismaAccountType, toPrismaEligibility, isMonitorable } from "@/lib/meta/capability.service";
@@ -86,7 +87,10 @@ export async function createTarget(params: {
 
   await assertOwnsInstagramSession(params.userId, params.instagramSessionId);
 
-  return prisma.target.create({
+  // The quota is enforced here, at the one place targets are created, inside a
+  // per-user lock — so every caller is covered and concurrent adds can't
+  // overshoot the limit.
+  return reserveTargetSlot(params.userId, (tx) => tx.target.create({
     data: {
       userId: params.userId,
       username: params.resolution.username,
@@ -97,7 +101,12 @@ export async function createTarget(params: {
       status: monitorable ? "ACTIVE" : "UNSUPPORTED",
       errorCode: params.resolution.errorCode,
       errorMessage: params.resolution.errorMessage,
-      nextRunAt: monitorable ? nextRunAtFromInterval(interval) : null,
+      // Due immediately, NOT one interval out. Snapshots and media are only
+      // written by a monitoring run, so deferring the first check left a new
+      // target with no profile data and an empty media grid for a full
+      // interval (the UI defaults to 90 minutes) — which reads as "the app
+      // scraped nothing". The cron/dev poller picks this up on its next pass.
+      nextRunAt: monitorable ? new Date() : null,
       monitor: {
         create: {
           userId: params.userId,
@@ -124,7 +133,7 @@ export async function createTarget(params: {
       },
     },
     include: { monitor: true },
-  });
+  }));
 }
 
 export async function listTargets(userId: string) {
@@ -142,7 +151,12 @@ export async function getTargetDetail(userId: string, targetId: string) {
       monitor: true,
       snapshots: { orderBy: { capturedAt: "desc" }, take: 1 },
       events: { orderBy: { detectedAt: "desc" }, take: 20 },
-      media: { orderBy: [{ timestamp: "desc" }, { firstSeenAt: "desc" }], take: 24 },
+      // Anonymous scrapes only ever yield Instagram's 12 newest posts per
+      // check (logged-out GraphQL pagination returns a null user, so the back
+      // catalogue is unreachable without a session). Media therefore
+      // accumulates slowly over many checks — capping at 24 was discarding
+      // history we had already collected and made the grid look near-empty.
+      media: { orderBy: [{ timestamp: "desc" }, { firstSeenAt: "desc" }], take: 120 },
     },
   });
 }

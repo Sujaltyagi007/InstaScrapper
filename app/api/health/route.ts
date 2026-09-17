@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isImageKitEnabled } from "@/lib/storage/imagekit";
+import { getStorageProvider } from "@/lib/storage";
 import { getProviderMode } from "@/lib/meta/provider-factory";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +22,9 @@ export async function GET() {
     dbError = err instanceof Error ? err.message : String(err);
   }
 
-  // 2. ImageKit storage status
-  const imageKitConfigured = isImageKitEnabled();
+  // 2. Media storage status
+  const storageProvider = getStorageProvider();
+  const r2Configured = storageProvider !== "none";
 
   // 3. Instagram Scraper Engine Mode
   const engineMode = getProviderMode();
@@ -44,7 +45,7 @@ export async function GET() {
 
   // Aggregate overall status
   const isHealthy = dbStatus === "up";
-  const status = isHealthy ? (imageKitConfigured ? "healthy" : "operational") : "degraded";
+  const status = isHealthy ? (r2Configured ? "healthy" : "operational") : "degraded";
   const totalDurationMs = Date.now() - start;
 
   return NextResponse.json({
@@ -58,9 +59,9 @@ export async function GET() {
         error: dbError,
       },
       storage: {
-        provider: "imagekit.io",
-        status: imageKitConfigured ? "configured" : "fallback_local_or_unconfigured",
-        enabled: imageKitConfigured,
+        provider: storageProvider,
+        status: r2Configured ? "configured" : "fallback_local_or_unconfigured",
+        enabled: r2Configured,
       },
       scraperEngine: {
         mode: engineMode,

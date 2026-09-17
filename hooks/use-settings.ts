@@ -1,7 +1,6 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
+import { useCallback, useEffect, useState } from "react";
 
 export interface UserSettings {
   id: string;
@@ -9,6 +8,9 @@ export interface UserSettings {
   name: string | null;
   timezone: string;
   retentionDays: number;
+  sleepEnabled: boolean;
+  sleepStartHour: number;
+  sleepEndHour: number;
 }
 
 export function useSettings() {

@@ -195,6 +195,54 @@ export async function sendTestNotification(channelId: string, userId: string) {
   });
 }
 
+/**
+ * Sends an account-level alert (not tied to a target or Event) straight to
+ * every enabled channel the user has.
+ *
+ * Why not the Event queue: Events belong to a target (`targetId` is required
+ * and cascades on delete), and an account alert like "limit reached" isn't
+ * about any one target. Delivery here is best-effort and immediate; failures
+ * are logged per channel and never thrown, so an unreachable webhook can't
+ * break the action that triggered the alert.
+ *
+ * Channel `eventTypeFilter`s are intentionally ignored: they select which
+ * *target* events a channel wants, and account alerts aren't one of those.
+ */
+export async function sendAccountAlert(
+  userId: string,
+  message: { title: string; body: string; kind: string; url?: string }
+): Promise<{ sent: number; failed: number }> {
+  const channels = await prisma.notificationChannel.findMany({
+    where: { userId, enabled: true },
+  });
+
+  let sent = 0;
+  let failed = 0;
+  for (const channel of channels) {
+    try {
+      const config = decryptJson<ChannelConfig>({
+        ciphertext: channel.encryptedConfig,
+        iv: channel.encryptedConfigIv,
+      });
+      await dispatchToProvider(channel.provider, config, {
+        title: message.title,
+        body: message.body,
+        url: message.url,
+        eventType: message.kind,
+        targetUsername: "account",
+      });
+      sent += 1;
+    } catch (err) {
+      failed += 1;
+      console.warn(
+        `[account-alert] channel ${channel.id} (${channel.provider}) failed:`,
+        err instanceof Error ? err.message : err
+      );
+    }
+  }
+  return { sent, failed };
+}
+
 export function buildEncryptedConfig(provider: NotificationProvider, rawConfig: ChannelConfig) {
   const encrypted = encryptJson(rawConfig);
   return { encryptedConfig: encrypted.ciphertext, encryptedConfigIv: encrypted.iv };

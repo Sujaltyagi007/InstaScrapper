@@ -10,6 +10,7 @@ import {
 import { isMonitorable, eligibilityMessage } from "@/lib/meta/capability.service";
 import { prisma } from "@/lib/prisma";
 import { peekSession } from "@/lib/meta/session-pool";
+import { assertCanAddTarget } from "@/lib/services/quota.service";
 
 export async function GET() {
   try {
@@ -29,6 +30,10 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
     }
+
+    // Fail fast before the slow Instagram lookup. createTarget() re-checks
+    // under a lock, so this is only for a quick, friendly response.
+    await assertCanAddTarget(userId);
 
     const normalized = normalizeUsername(parsed.data.username);
     const existing = await prisma.target.findUnique({

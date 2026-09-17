@@ -1,22 +1,23 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { Loader2, Link2, CheckCircle2, AlertTriangle, Plus, Activity, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useSettings, type UserSettings } from "@/hooks/use-settings";
-import { useJobs } from "@/features/monitoring/hooks/use-jobs";
-import { useSessions } from "@/features/sessions/hooks/use-sessions";
-import { AddSessionDialog } from "@/features/sessions/components/add-session-dialog";
-import { LoadingState } from "@/components/common/loading-state";
-import { apiFetch } from "@/lib/fetcher";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/fetcher";
+import { TargetLimitCard } from "@/features/account/components/target-limit-card";
+import { CheckScheduleCard } from "@/features/account/components/check-schedule-card";
+import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { useJobs } from "@/features/monitoring/hooks/use-jobs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LoadingState } from "@/components/common/loading-state";
+import { useSessions } from "@/features/sessions/hooks/use-sessions";
+import { useSettings, type UserSettings } from "@/hooks/use-settings";
+import { AddSessionDialog } from "@/features/sessions/components/add-session-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Loader2, Link2, CheckCircle2, AlertTriangle, Plus, Activity, Trash2 } from "lucide-react";
 
 interface MetaStatus {
   mock: boolean;
@@ -244,6 +245,16 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <TargetLimitCard />
+
+      {settings && (
+        <CheckScheduleCard
+          key={`${settings.timezone}-${settings.sleepEnabled}-${settings.sleepStartHour}-${settings.sleepEndHour}`}
+          settings={settings}
+          onSaved={refresh}
+        />
+      )}
 
       <Card>
         <CardHeader>

@@ -3,12 +3,23 @@ import { requireUserId, jsonError } from "@/lib/api-helpers";
 import { updateSettingsSchema } from "@/lib/validation/settings";
 import { prisma } from "@/lib/prisma";
 
+const SETTINGS_SELECT = {
+  id: true,
+  email: true,
+  name: true,
+  timezone: true,
+  retentionDays: true,
+  sleepEnabled: true,
+  sleepStartHour: true,
+  sleepEndHour: true,
+} as const;
+
 export async function GET() {
   try {
     const userId = await requireUserId();
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { id: true, email: true, name: true, timezone: true, retentionDays: true },
+      select: SETTINGS_SELECT,
     });
     return NextResponse.json({ user });
   } catch (err) {
@@ -27,7 +38,7 @@ export async function PATCH(req: Request) {
     const user = await prisma.user.update({
       where: { id: userId },
       data: parsed.data,
-      select: { id: true, email: true, name: true, timezone: true, retentionDays: true },
+      select: SETTINGS_SELECT,
     });
     return NextResponse.json({ user });
   } catch (err) {

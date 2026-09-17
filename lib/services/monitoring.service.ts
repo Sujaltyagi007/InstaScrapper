@@ -7,9 +7,28 @@ import { recordEvent } from "./event.service";
 import { nextRunAtFromInterval, clampIntervalSeconds } from "./target.service";
 import { pickSession, reportSessionOutcome } from "@/lib/meta/session-pool";
 import type { TargetFetchResult } from "@/lib/meta/types";
-import { uploadRemoteMediaToImageKit, isImageKitEnabled } from "@/lib/storage/imagekit";
+import { uploadHeavyAndThumbnail } from "@/lib/services/media-storage.service";
+import { isStorageEnabled, fetchToBuffer, uploadBuffer } from "@/lib/storage";
+import { getPacingGate, reserveProfileView, recordCheckOutcome } from "./pacing.service";
+import {
+  humanIntervalSeconds,
+  isInWindow,
+  nextActiveTime,
+  nextAwakeTime,
+  randomBetween,
+  safeTimeZone,
+} from "@/lib/scheduling/time-windows";
 
-type TargetWithMonitorAndSnapshot = Prisma.TargetGetPayload<{ include: { monitor: true; snapshots: { orderBy: { capturedAt: "desc" }; take: 1 } }; }>;
+const SLEEP_FIELDS = { timezone: true, sleepEnabled: true, sleepStartHour: true, sleepEndHour: true } as const;
+type UserSleepSettings = Prisma.UserGetPayload<{ select: typeof SLEEP_FIELDS }>;
+
+type TargetWithMonitorAndSnapshot = Prisma.TargetGetPayload<{
+  include: {
+    monitor: true;
+    snapshots: { orderBy: { capturedAt: "desc" }; take: 1 };
+    user: { select: typeof SLEEP_FIELDS };
+  };
+}>;
 type TargetWithActiveMonitor = TargetWithMonitorAndSnapshot & {
   monitor: NonNullable<TargetWithMonitorAndSnapshot["monitor"]>;
 };
@@ -22,31 +41,144 @@ function backoffSeconds(consecutiveFailures: number): number {
   return Math.min(base * 2 ** consecutiveFailures, 6 * 60 * 60); // cap at 6h
 }
 
-export async function runDueTargetChecks(limit = 20) {
-  const due = await prisma.target.findMany({
-    where: {
-      status: { in: ["ACTIVE", "RATE_LIMITED", "BACKOFF"] },
-      nextRunAt: { lte: new Date() },
-    },
-    take: limit,
-    orderBy: { nextRunAt: "asc" },
-  });
+/**
+ * Time budget for one scheduler invocation. Vercel Hobby kills functions at
+ * ~60s; 45s leaves room for DB writes and uploads after the last check.
+ */
+export const DEFAULT_RUN_BUDGET_MS = 45_000;
+/** Don't start a check with less time than this left — it would be cut short. */
+const MIN_TIME_TO_START_MS = 20_000;
+/** How long a claimed target stays locked if a run dies without releasing it. */
+const CHECK_LEASE_MS = 5 * 60 * 1000;
 
-  const results = [];
-  for (const target of due) {
+export type RunStopReason = "NO_DUE_TARGETS" | "TIME_BUDGET" | "MAX_CHECKS" | "PAUSED" | "DAILY_LIMIT";
+
+export interface RunOptions {
+  /** Total wall-clock budget for this invocation, in ms. */
+  budgetMs?: number;
+  /** Upper bound on real (non-skipped) checks in one invocation. */
+  maxChecks?: number;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isSkipped(outcome: string): boolean {
+  return outcome.startsWith("SKIPPED_");
+}
+
+/**
+ * Human-paced scheduler. Checks due targets ONE AT A TIME with random pauses
+ * between them, stops starting new work once the time budget runs low, and
+ * respects the app-wide daily cap and circuit breaker (pacing.service).
+ *
+ * It deliberately does less per call than it could: callers (cron, GitHub
+ * Actions, dev poller) invoke it every few minutes, so work spreads out over
+ * time instead of arriving as a burst — which is both what a person browsing
+ * looks like and what keeps the proxy IP from getting hot.
+ */
+export async function runDueTargetChecks(options: RunOptions = {}) {
+  const budgetMs = options.budgetMs ?? DEFAULT_RUN_BUDGET_MS;
+  const maxChecks = options.maxChecks ?? 5;
+  const startedAt = Date.now();
+  const deadlineAt = startedAt + budgetMs;
+
+  const results: Array<{ targetId: string; outcome: string; error?: string }> = [];
+  const attempted = new Set<string>();
+  let realChecks = 0;
+  let stopReason: RunStopReason = "NO_DUE_TARGETS";
+
+  while (true) {
+    if (realChecks >= maxChecks) { stopReason = "MAX_CHECKS"; break; }
+    if (deadlineAt - Date.now() < MIN_TIME_TO_START_MS) { stopReason = "TIME_BUDGET"; break; }
+
+    const gate = await getPacingGate();
+    if (!gate.ok) { stopReason = gate.reason; break; }
+
+    const candidate = await pickNextDueTarget(attempted);
+    if (!candidate) { stopReason = "NO_DUE_TARGETS"; break; }
+    // Never retry the same target within one run — a target that returns a
+    // skip (e.g. inactive) would otherwise be picked again forever.
+    attempted.add(candidate);
+
+    // A person doesn't open profiles back-to-back. Pause only between real
+    // checks, and never let the pause eat the time needed for the next one.
+    if (realChecks > 0) {
+      const pauseMs = randomBetween(3_000, 15_000);
+      if (deadlineAt - Date.now() - pauseMs < MIN_TIME_TO_START_MS) { stopReason = "TIME_BUDGET"; break; }
+      await sleep(pauseMs);
+    }
+
     try {
-      results.push(await processTarget(target.id));
+      const result = await processTarget(candidate, { deadlineAt, scheduled: true });
+      results.push(result);
+      if (result.outcome === "SKIPPED_DAILY_LIMIT") { stopReason = "DAILY_LIMIT"; break; }
+      if (!isSkipped(result.outcome)) realChecks++;
     } catch (err) {
-      // processTarget already records the failure (job + pushed-out nextRunAt) before
-      // re-throwing; catching here just keeps one bad target from aborting the rest of the batch.
+      // processTarget already recorded the failure (job + pushed-out
+      // nextRunAt) before re-throwing; one bad target mustn't stop the run.
+      realChecks++;
       results.push({
-        targetId: target.id,
-        outcome: "ERROR" as const,
+        targetId: candidate,
+        outcome: "ERROR",
         error: err instanceof Error ? err.message : String(err),
       });
     }
   }
-  return { checked: results.length, results };
+
+  return {
+    checked: realChecks,
+    results,
+    stopReason,
+    elapsedMs: Date.now() - startedAt,
+  };
+}
+
+/**
+ * Next due, unlocked target not yet attempted in this run. Targets whose
+ * owner is inside their sleep window are pushed to wake-up time (plus a random
+ * spread, so mornings don't start with a burst) instead of being checked.
+ */
+async function pickNextDueTarget(exclude: Set<string>): Promise<string | null> {
+  // Bounded: each pass either returns a target or defers a batch of sleeping ones.
+  for (let pass = 0; pass < 5; pass++) {
+    const now = new Date();
+    const due = await prisma.target.findMany({
+      where: {
+        status: { in: ["ACTIVE", "RATE_LIMITED", "BACKOFF"] },
+        nextRunAt: { lte: now },
+        OR: [{ lockedUntil: null }, { lockedUntil: { lt: now } }],
+        ...(exclude.size ? { id: { notIn: [...exclude] } } : {}),
+      },
+      orderBy: { nextRunAt: "asc" },
+      take: 10,
+      select: { id: true, nextRunAt: true, user: { select: SLEEP_FIELDS } },
+    });
+    if (due.length === 0) return null;
+
+    for (const t of due) {
+      const wakeAt = deferForSleep(now, t.user);
+      if (wakeAt.getTime() === now.getTime()) return t.id;
+
+      // Guarded on the nextRunAt we read, so a concurrent change isn't clobbered.
+      await prisma.target.updateMany({
+        where: { id: t.id, nextRunAt: t.nextRunAt },
+        data: { nextRunAt: wakeAt },
+      });
+    }
+  }
+  return null;
+}
+
+/**
+ * If `at` falls inside the user's sleep window, returns wake-up time plus a
+ * 0–45 min spread; otherwise returns `at` unchanged.
+ */
+export function deferForSleep(at: Date, user: UserSleepSettings): Date {
+  if (!user.sleepEnabled) return at;
+  const tz = safeTimeZone(user.timezone);
+  if (!isInWindow(at, tz, user.sleepStartHour, user.sleepEndHour)) return at;
+  const awake = nextAwakeTime(at, tz, user.sleepStartHour, user.sleepEndHour);
+  return new Date(awake.getTime() + randomBetween(0, 45) * 60 * 1000);
 }
 
 function calculateNextRunAt(
@@ -56,36 +188,72 @@ function calculateNextRunAt(
     restrictedHoursEnabled?: boolean;
     restrictedHoursStart?: number;
     restrictedHoursEnd?: number;
-  }
+  },
+  user: UserSleepSettings
 ): Date {
-  let interval = clampIntervalSeconds(monitor.intervalSeconds);
+  const base = clampIntervalSeconds(monitor.intervalSeconds);
+  // "jitterEnabled" now means human-like gaps: usually near the interval,
+  // occasionally much longer. Clamped so it never drops below the safe minimum.
+  const seconds = monitor.jitterEnabled ? clampIntervalSeconds(humanIntervalSeconds(base, 0)) : base;
+  let planned = new Date(Date.now() + seconds * 1000);
+  const tz = safeTimeZone(user.timezone);
 
-  if (monitor.jitterEnabled) {
-    const jitterFactor = Math.random() * 0.3 - 0.15; // -15% to +15%
-    interval = Math.max(60, Math.round(interval * (1 + jitterFactor)));
-  }
-
-  const planned = new Date(Date.now() + interval * 1000);
-
+  // Per-target active hours, in the user's own timezone (was UTC) and allowed
+  // to wrap midnight (was unsupported). The end hour stays inclusive, as
+  // before: 8–23 means checks may run 08:00–23:59.
   if (monitor.restrictedHoursEnabled) {
-    const startHour = monitor.restrictedHoursStart ?? 8;
-    const endHour = monitor.restrictedHoursEnd ?? 23;
-    const currentHour = planned.getUTCHours();
-
-    if (startHour <= endHour) {
-      if (currentHour < startHour || currentHour > endHour) {
-        planned.setUTCHours(startHour, Math.floor(Math.random() * 15), 0, 0);
-        if (currentHour > endHour) {
-          planned.setUTCDate(planned.getUTCDate() + 1);
-        }
-      }
+    const start = monitor.restrictedHoursStart ?? 8;
+    const endExclusive = ((monitor.restrictedHoursEnd ?? 23) + 1) % 24;
+    const active = nextActiveTime(planned, tz, start, endExclusive);
+    if (active.getTime() !== planned.getTime()) {
+      planned = new Date(active.getTime() + randomBetween(0, 20) * 60 * 1000);
     }
   }
 
-  return planned;
+  return deferForSleep(planned, user);
 }
 
-export async function processTarget(targetId: string) {
+export interface ProcessTargetOptions {
+  /** Epoch ms by which this check must finish (scheduled runs). */
+  deadlineAt?: number;
+  /**
+   * True for scheduler-driven checks: enforces the app-wide daily cap. A user
+   * clicking "Run check now" is counted but never refused.
+   */
+  scheduled?: boolean;
+}
+
+/**
+ * Runs one check for a target, holding a lease so overlapping schedulers
+ * (cron, GitHub Actions, dev poller, "Run check now") can never scrape the
+ * same account at the same time. The lease is claimed atomically and released
+ * only if still ours; if the process dies it simply expires.
+ */
+export async function processTarget(targetId: string, options: ProcessTargetOptions = {}) {
+  const now = new Date();
+  const leaseUntil = new Date(now.getTime() + CHECK_LEASE_MS);
+  const claim = await prisma.target.updateMany({
+    where: { id: targetId, OR: [{ lockedUntil: null }, { lockedUntil: { lt: now } }] },
+    data: { lockedUntil: leaseUntil },
+  });
+  if (claim.count === 0) {
+    return { targetId, outcome: "SKIPPED_BUSY" as const };
+  }
+
+  try {
+    const result = await runClaimedCheck(targetId, options);
+    await recordCheckOutcome(result.outcome).catch((err) =>
+      console.warn("[pacing] failed to record outcome:", err instanceof Error ? err.message : err)
+    );
+    return result;
+  } finally {
+    await prisma.target
+      .updateMany({ where: { id: targetId, lockedUntil: leaseUntil }, data: { lockedUntil: null } })
+      .catch(() => undefined);
+  }
+}
+
+async function runClaimedCheck(targetId: string, options: ProcessTargetOptions) {
   const job = await prisma.job.create({
     data: { type: "TARGET_CHECK", targetId, status: "RUNNING", startedAt: new Date() },
   });
@@ -96,12 +264,21 @@ export async function processTarget(targetId: string) {
       include: {
         monitor: { include: { instagramSession: true } },
         snapshots: { orderBy: { capturedAt: "desc" }, take: 1 },
+        user: { select: SLEEP_FIELDS },
       },
     });
 
     if (!target.monitor || !target.monitor.active) {
       await finishJob(job.id, "SUCCEEDED", "Skipped: monitor inactive");
       return { targetId, outcome: "SKIPPED_INACTIVE" as const };
+    }
+
+    // Count this profile view against the app-wide daily cap. Scheduled runs
+    // are refused once it's reached; manual checks are counted but allowed.
+    const viewAllowed = await reserveProfileView({ enforce: Boolean(options.scheduled) });
+    if (!viewAllowed) {
+      await finishJob(job.id, "SUCCEEDED", "Skipped: daily profile-view limit reached");
+      return { targetId, outcome: "SKIPPED_DAILY_LIMIT" as const };
     }
 
     const isStealth = (target.monitor.engineType ?? "STEALTH_SCRAPER") === "STEALTH_SCRAPER";
@@ -152,6 +329,7 @@ export async function processTarget(targetId: string) {
         jitterEnabled: target.monitor.jitterEnabled,
         humanSimEnabled: target.monitor.humanSimEnabled,
         proxyUrl: sessionConfig?.proxyUrl,
+        deadlineAt: options.deadlineAt,
       },
     });
 
@@ -159,7 +337,13 @@ export async function processTarget(targetId: string) {
       return await handleFailedFetch(target as TargetWithActiveMonitor, fetchResult, job.id, usedSessionId);
     }
 
-    return await handleSuccessfulFetch(target as TargetWithActiveMonitor, fetchResult, job.id, usedSessionId);
+    return await handleSuccessfulFetch(
+      target as TargetWithActiveMonitor,
+      fetchResult,
+      job.id,
+      usedSessionId,
+      options.deadlineAt
+    );
   } catch (err) {
     await finishJob(job.id, "FAILED", err instanceof Error ? err.message : String(err));
     // Best-effort: push the target's next attempt out so a persistent bug doesn't hot-loop the scheduler.
@@ -339,9 +523,14 @@ async function handleSuccessfulFetch(
   target: TargetWithActiveMonitor,
   fetchResult: TargetFetchResult,
   jobId: string,
-  usedSessionId: string | null = null
+  usedSessionId: string | null = null,
+  deadlineAt?: number
 ) {
   const now = new Date();
+  // Uploads are the slow tail of a check. Near the deadline, still record the
+  // media rows (so dedupe and events stay correct) but skip storing files;
+  // the UI falls back to the source URL.
+  const hasTimeToUpload = () => !deadlineAt || deadlineAt - Date.now() > 8_000;
   const profile = fetchResult.profile!;
   const media = fetchResult.media ?? [];
   const stories = fetchResult.stories ?? [];
@@ -360,25 +549,19 @@ async function handleSuccessfulFetch(
     const newItems = findNewMedia(media, knownIds);
 
     for (const item of newItems) {
-      let storageUrl: string | null = null;
-      let storageFileId: string | null = null;
-
-      if (isImageKitEnabled()) {
-        const targetUrl = item.videoUrl || item.mediaUrl;
-        if (targetUrl) {
-          const ext = item.videoUrl ? "mp4" : "jpg";
-          const res = await uploadRemoteMediaToImageKit({
-            url: targetUrl,
-            fileName: `${target.normalizedUsername}_${item.externalMediaId}.${ext}`,
-            folder: `/instascrapper/targets/${target.normalizedUsername}/media`,
-            tags: [target.normalizedUsername, item.mediaType],
-          });
-          if (res) {
-            storageUrl = res.url;
-            storageFileId = res.fileId;
-          }
-        }
-      }
+      // Upload the full-resolution file plus an independently-stored
+      // compressed thumbnail. The thumbnail is what keeps the feed rendering
+      // after the 48h policy deletes the heavy original.
+      const sourceUrl = item.videoUrl || item.mediaUrl;
+      const stored = sourceUrl && hasTimeToUpload()
+        ? await uploadHeavyAndThumbnail({
+          sourceUrl,
+          fileNameBase: `${target.normalizedUsername}_${item.externalMediaId}`,
+          folder: `/instascrapper/targets/${target.normalizedUsername}/media`,
+          tags: [target.normalizedUsername, item.mediaType],
+          isVideo: Boolean(item.videoUrl),
+        })
+        : null;
 
       await prisma.media.create({
         data: {
@@ -388,10 +571,19 @@ async function handleSuccessfulFetch(
           permalink: item.permalink,
           timestamp: item.timestamp ? new Date(item.timestamp) : null,
           caption: item.caption,
-          mediaUrl: storageUrl ?? item.mediaUrl,
+          // Display URLs: prefer storage, fall back to the live source.
+          mediaUrl: stored?.storageUrl ?? item.mediaUrl,
           videoUrl: item.videoUrl,
-          storageUrl,
-          storageFileId,
+          // Original upstream links, preserved verbatim for re-download.
+          // Previously `mediaUrl` was overwritten with the storage URL, which
+          // destroyed the only pointer back to the source.
+          sourceMediaUrl: item.mediaUrl,
+          sourceVideoUrl: item.videoUrl,
+          storageUrl: stored?.storageUrl ?? null,
+          storageFileId: stored?.storageFileId ?? null,
+          storedAt: stored?.storedAt ?? null,
+          thumbnailUrl: stored?.thumbnailUrl ?? null,
+          thumbnailFileId: stored?.thumbnailFileId ?? null,
           isStory: false,
           isCollab: item.isCollab ?? false,
           collaborators: item.collaborators ?? [],
@@ -407,7 +599,7 @@ async function handleSuccessfulFetch(
             before: null,
             after: {
               ...item,
-              storageUrl,
+              storageUrl: stored?.storageUrl ?? null,
             } as unknown as Record<string, unknown>,
           },
         });
@@ -429,7 +621,7 @@ async function handleSuccessfulFetch(
                 permalink: item.permalink,
                 mediaType: item.mediaType,
                 collaborators: item.collaborators,
-                storageUrl,
+                storageUrl: stored?.storageUrl ?? null,
               } as unknown as Record<string, unknown>,
             },
           });
@@ -452,19 +644,22 @@ async function handleSuccessfulFetch(
         let storyStorageUrl: string | null = null;
         let storyStorageFileId: string | null = null;
 
-        if (isImageKitEnabled()) {
+        if (isStorageEnabled() && hasTimeToUpload()) {
           const targetUrl = story.videoUrl || story.mediaUrl;
           if (targetUrl) {
             const ext = story.videoUrl ? "mp4" : "jpg";
-            const res = await uploadRemoteMediaToImageKit({
-              url: targetUrl,
-              fileName: `${target.normalizedUsername}_story_${story.externalMediaId}.${ext}`,
-              folder: `/instascrapper/targets/${target.normalizedUsername}/stories`,
-              tags: [target.normalizedUsername, "STORY"],
-            });
-            if (res) {
-              storyStorageUrl = res.url;
-              storyStorageFileId = res.fileId;
+            const buffer = await fetchToBuffer(targetUrl);
+            if (buffer) {
+              const res = await uploadBuffer({
+                buffer,
+                fileName: `${target.normalizedUsername}_story_${story.externalMediaId}.${ext}`,
+                folder: `/instascrapper/targets/${target.normalizedUsername}/stories`,
+                contentType: story.videoUrl ? "video/mp4" : "image/jpeg",
+              });
+              if (res) {
+                storyStorageUrl = res.url;
+                storyStorageFileId = res.fileId;
+              }
             }
           }
         }
@@ -546,19 +741,22 @@ async function handleSuccessfulFetch(
     eventsCreated++;
   }
 
-  // Upload profile picture if available & ImageKit is active
+  // Upload profile picture if storage is configured
   let profilePicStorageUrl: string | null = null;
   let profilePicStorageId: string | null = null;
-  if (isImageKitEnabled() && profile.profilePictureUrl) {
-    const res = await uploadRemoteMediaToImageKit({
-      url: profile.profilePictureUrl,
-      fileName: `${target.normalizedUsername}_profile_${Date.now()}.jpg`,
-      folder: `/instascrapper/targets/${target.normalizedUsername}/profile`,
-      tags: [target.normalizedUsername, "PROFILE_PIC"],
-    });
-    if (res) {
-      profilePicStorageUrl = res.url;
-      profilePicStorageId = res.fileId;
+  if (isStorageEnabled() && hasTimeToUpload() && profile.profilePictureUrl) {
+    const buffer = await fetchToBuffer(profile.profilePictureUrl);
+    if (buffer) {
+      const res = await uploadBuffer({
+        buffer,
+        fileName: `${target.normalizedUsername}_profile_${Date.now()}.jpg`,
+        folder: `/instascrapper/targets/${target.normalizedUsername}/profile`,
+        contentType: "image/jpeg",
+      });
+      if (res) {
+        profilePicStorageUrl = res.url;
+        profilePicStorageId = res.fileId;
+      }
     }
   }
 
@@ -586,7 +784,7 @@ async function handleSuccessfulFetch(
     },
   });
 
-  const nextRunAt = calculateNextRunAt(target.monitor);
+  const nextRunAt = calculateNextRunAt(target.monitor, target.user);
 
   if (usedSessionId) {
     await reportSessionOutcome(usedSessionId, { kind: "SUCCESS", deviceId: fetchResult.deviceId });

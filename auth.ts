@@ -27,23 +27,16 @@ export const authOptions: NextAuthOptions = {
         if (!parsed.success) return null;
         const { email, password } = parsed.data;
         const normalizedEmail = email.toLowerCase();
-
         const rate = await checkRateLimit(`login:${normalizedEmail}`);
         if (!rate.allowed) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: normalizedEmail },
-        });
+        const user = await prisma.user.findUnique({ where: { email: normalizedEmail }, });
         if (!user) return null;
-
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
-
         return { id: user.id, email: user.email, name: user.name ?? undefined };
       },
     }),
   ],
 };
 
-// Helper for server components and route handlers (replaces auth() from v5)
 export const auth = () => getServerSession(authOptions);

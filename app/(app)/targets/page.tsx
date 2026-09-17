@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTargets } from "@/features/targets/hooks/use-targets";
+import { useTargetQuota } from "@/features/account/hooks/use-target-quota";
+import { TargetQuotaBanner } from "@/features/account/components/target-quota-banner";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/common/empty-state";
 import { LoadingState } from "@/components/common/loading-state";
@@ -41,6 +43,7 @@ const STATUS_FILTERS = [
 export default function TargetsPage() {
   const router = useRouter();
   const { targets, loading, error, refresh } = useTargets();
+  const { quota, refresh: refreshQuota } = useTargetQuota();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [query, setQuery] = useState("");
@@ -92,6 +95,7 @@ export default function TargetsPage() {
       });
       toast.success(active ? "Monitoring resumed." : "Monitoring paused.");
       refresh();
+      refreshQuota();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -106,6 +110,7 @@ export default function TargetsPage() {
       await apiFetch(`/api/targets/${targetId}`, { method: "DELETE" });
       toast.success("Target deleted.");
       refresh();
+      refreshQuota();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -133,6 +138,7 @@ export default function TargetsPage() {
       }
       setSelected(new Set());
       refresh();
+      refreshQuota();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -145,14 +151,25 @@ export default function TargetsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Targets</h1>
-          <p className="text-sm text-muted-foreground">Accounts you&apos;re monitoring for changes.</p>
+          <p className="text-sm text-muted-foreground">
+            Accounts you&apos;re monitoring for changes.
+            {quota && ` ${quota.used} of ${quota.limit} used.`}
+          </p>
         </div>
-        <Button asChild>
-          <Link href="/targets/new">
+        {quota?.level === "FULL" ? (
+          <Button disabled title="Account limit reached">
             <Plus /> Add target
-          </Link>
-        </Button>
+          </Button>
+        ) : (
+          <Button asChild>
+            <Link href="/targets/new">
+              <Plus /> Add target
+            </Link>
+          </Button>
+        )}
       </div>
+
+      <TargetQuotaBanner quota={quota} />
 
       {targets && targets.length > 0 && (
         <div className="flex flex-wrap items-center gap-3">

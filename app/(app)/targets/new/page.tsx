@@ -16,6 +16,8 @@ import { apiFetch, FetchError } from "@/lib/fetcher";
 import { toast } from "sonner";
 import type { TargetResolution } from "@/lib/meta/types";
 import { useSessions } from "@/features/sessions/hooks/use-sessions";
+import { useTargetQuota } from "@/features/account/hooks/use-target-quota";
+import { TargetQuotaBanner } from "@/features/account/components/target-quota-banner";
 
 const RESULT_ICON: Record<string, React.ReactNode> = {
   AVAILABLE: <CheckCircle2 className="size-4 text-success" />,
@@ -26,8 +28,13 @@ const RESULT_ICON: Record<string, React.ReactNode> = {
   TEMPORARY_FAILURE: <AlertCircle className="size-4 text-warning-foreground" />,
 };
 
+/** Stable code from quota.service; matched on code, never on message text. */
+const TARGET_LIMIT_REACHED = "TARGET_LIMIT_REACHED";
+
 export default function NewTargetPage() {
   const router = useRouter();
+  const { quota, refresh: refreshQuota } = useTargetQuota();
+  const atLimit = quota?.level === "FULL";
   const { sessions } = useSessions();
   const [username, setUsername] = useState("");
   const [resolving, setResolving] = useState(false);
@@ -66,6 +73,9 @@ export default function NewTargetPage() {
     } catch (err) {
       if (err instanceof FetchError && err.status === 409) {
         setResolveError("You're already monitoring this account.");
+      } else if (err instanceof FetchError && err.code === TARGET_LIMIT_REACHED) {
+        setResolveError(err.message);
+        refreshQuota();
       } else {
         setResolveError(err instanceof Error ? err.message : "Failed to resolve this account.");
       }
@@ -104,6 +114,17 @@ export default function NewTargetPage() {
       toast.success(`Now monitoring @${resolution.username}.`);
       router.push(`/targets/${data.target.id}`);
     } catch (err) {
+      if (err instanceof FetchError && err.code === TARGET_LIMIT_REACHED) {
+        // Someone may have hit the limit from another tab since this page
+        // loaded — refresh so the banner and disabled state catch up.
+        refreshQuota();
+        toast.error(err.message, {
+          action: err.details?.canRaise
+            ? { label: "Raise limit", onClick: () => router.push("/settings#account-limit") }
+            : undefined,
+        });
+        return;
+      }
       toast.error(err instanceof Error ? err.message : "Failed to create target.");
     } finally {
       setCreating(false);
@@ -122,6 +143,8 @@ export default function NewTargetPage() {
         <p className="text-sm text-muted-foreground">Enter an Instagram username to start monitoring it.</p>
       </div>
 
+      <TargetQuotaBanner quota={quota} />
+
       <Card>
         <CardContent className="pt-6">
           <form onSubmit={onResolve} className="flex gap-2">
@@ -131,7 +154,7 @@ export default function NewTargetPage() {
               onChange={(e) => setUsername(e.target.value)}
               required
             />
-            <Button type="submit" disabled={resolving}>
+            <Button type="submit" disabled={resolving || atLimit}>
               {resolving ? <Loader2 className="animate-spin" /> : <Search />}
               Resolve
             </Button>
@@ -286,7 +309,7 @@ export default function NewTargetPage() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={onCreate} disabled={creating} className="w-full">
+            <Button onClick={onCreate} disabled={creating || atLimit} className="w-full">
               {creating && <Loader2 className="animate-spin" />}
               Start monitoring
             </Button>

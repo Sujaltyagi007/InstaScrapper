@@ -62,7 +62,9 @@ export const ModelName = {
   NotificationChannel: 'NotificationChannel',
   Notification: 'Notification',
   Job: 'Job',
-  AuthRateLimit: 'AuthRateLimit'
+  AuthRateLimit: 'AuthRateLimit',
+  R2UsageCounter: 'R2UsageCounter',
+  ScrapeThrottle: 'ScrapeThrottle'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -88,6 +90,12 @@ export const UserScalarFieldEnum = {
   name: 'name',
   timezone: 'timezone',
   retentionDays: 'retentionDays',
+  role: 'role',
+  maxTargets: 'maxTargets',
+  targetQuotaAlertLevel: 'targetQuotaAlertLevel',
+  sleepEnabled: 'sleepEnabled',
+  sleepStartHour: 'sleepStartHour',
+  sleepEndHour: 'sleepEndHour',
   emailVerified: 'emailVerified',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -130,6 +138,7 @@ export const TargetScalarFieldEnum = {
   lastCheckedAt: 'lastCheckedAt',
   lastSuccessAt: 'lastSuccessAt',
   consecutiveFailures: 'consecutiveFailures',
+  lockedUntil: 'lockedUntil',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -230,8 +239,15 @@ export const MediaScalarFieldEnum = {
   caption: 'caption',
   mediaUrl: 'mediaUrl',
   videoUrl: 'videoUrl',
+  sourceMediaUrl: 'sourceMediaUrl',
+  sourceVideoUrl: 'sourceVideoUrl',
   storageUrl: 'storageUrl',
   storageFileId: 'storageFileId',
+  storedAt: 'storedAt',
+  thumbnailUrl: 'thumbnailUrl',
+  thumbnailFileId: 'thumbnailFileId',
+  isExpired: 'isExpired',
+  expiredAt: 'expiredAt',
   isStory: 'isStory',
   isCollab: 'isCollab',
   collaborators: 'collaborators',
@@ -318,6 +334,32 @@ export const AuthRateLimitScalarFieldEnum = {
 } as const
 
 export type AuthRateLimitScalarFieldEnum = (typeof AuthRateLimitScalarFieldEnum)[keyof typeof AuthRateLimitScalarFieldEnum]
+
+
+export const R2UsageCounterScalarFieldEnum = {
+  id: 'id',
+  billingMonth: 'billingMonth',
+  aClassOps: 'aClassOps',
+  bClassOps: 'bClassOps',
+  storageBytesEst: 'storageBytesEst',
+  lastReconciledAt: 'lastReconciledAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type R2UsageCounterScalarFieldEnum = (typeof R2UsageCounterScalarFieldEnum)[keyof typeof R2UsageCounterScalarFieldEnum]
+
+
+export const ScrapeThrottleScalarFieldEnum = {
+  id: 'id',
+  day: 'day',
+  profileViews: 'profileViews',
+  consecutiveSoftFails: 'consecutiveSoftFails',
+  pauseLevel: 'pauseLevel',
+  pausedUntil: 'pausedUntil',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ScrapeThrottleScalarFieldEnum = (typeof ScrapeThrottleScalarFieldEnum)[keyof typeof ScrapeThrottleScalarFieldEnum]
 
 
 export const SortOrder = {

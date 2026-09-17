@@ -49,6 +49,7 @@ export type TargetMinAggregateOutputType = {
   lastCheckedAt: Date | null
   lastSuccessAt: Date | null
   consecutiveFailures: number | null
+  lockedUntil: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -68,6 +69,7 @@ export type TargetMaxAggregateOutputType = {
   lastCheckedAt: Date | null
   lastSuccessAt: Date | null
   consecutiveFailures: number | null
+  lockedUntil: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -87,6 +89,7 @@ export type TargetCountAggregateOutputType = {
   lastCheckedAt: number
   lastSuccessAt: number
   consecutiveFailures: number
+  lockedUntil: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -116,6 +119,7 @@ export type TargetMinAggregateInputType = {
   lastCheckedAt?: true
   lastSuccessAt?: true
   consecutiveFailures?: true
+  lockedUntil?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -135,6 +139,7 @@ export type TargetMaxAggregateInputType = {
   lastCheckedAt?: true
   lastSuccessAt?: true
   consecutiveFailures?: true
+  lockedUntil?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -154,6 +159,7 @@ export type TargetCountAggregateInputType = {
   lastCheckedAt?: true
   lastSuccessAt?: true
   consecutiveFailures?: true
+  lockedUntil?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -260,6 +266,7 @@ export type TargetGroupByOutputType = {
   lastCheckedAt: Date | null
   lastSuccessAt: Date | null
   consecutiveFailures: number
+  lockedUntil: Date | null
   createdAt: Date
   updatedAt: Date
   _count: TargetCountAggregateOutputType | null
@@ -302,6 +309,7 @@ export type TargetWhereInput = {
   lastCheckedAt?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   lastSuccessAt?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   consecutiveFailures?: Prisma.IntFilter<"Target"> | number
+  lockedUntil?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Target"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Target"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -327,6 +335,7 @@ export type TargetOrderByWithRelationInput = {
   lastCheckedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrderInput | Prisma.SortOrder
   consecutiveFailures?: Prisma.SortOrder
+  lockedUntil?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -356,6 +365,7 @@ export type TargetWhereUniqueInput = Prisma.AtLeast<{
   lastCheckedAt?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   lastSuccessAt?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   consecutiveFailures?: Prisma.IntFilter<"Target"> | number
+  lockedUntil?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Target"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Target"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -381,6 +391,7 @@ export type TargetOrderByWithAggregationInput = {
   lastCheckedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrderInput | Prisma.SortOrder
   consecutiveFailures?: Prisma.SortOrder
+  lockedUntil?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.TargetCountOrderByAggregateInput
@@ -408,6 +419,7 @@ export type TargetScalarWhereWithAggregatesInput = {
   lastCheckedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Target"> | Date | string | null
   lastSuccessAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Target"> | Date | string | null
   consecutiveFailures?: Prisma.IntWithAggregatesFilter<"Target"> | number
+  lockedUntil?: Prisma.DateTimeNullableWithAggregatesFilter<"Target"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Target"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Target"> | Date | string
 }
@@ -426,6 +438,7 @@ export type TargetCreateInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTargetsInput
@@ -451,6 +464,7 @@ export type TargetUncheckedCreateInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   monitor?: Prisma.MonitorUncheckedCreateNestedOneWithoutTargetInput
@@ -474,6 +488,7 @@ export type TargetUpdateInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTargetsNestedInput
@@ -499,6 +514,7 @@ export type TargetUncheckedUpdateInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   monitor?: Prisma.MonitorUncheckedUpdateOneWithoutTargetNestedInput
@@ -523,6 +539,7 @@ export type TargetCreateManyInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -541,6 +558,7 @@ export type TargetUpdateManyMutationInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -560,6 +578,7 @@ export type TargetUncheckedUpdateManyInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -594,6 +613,7 @@ export type TargetCountOrderByAggregateInput = {
   lastCheckedAt?: Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrder
   consecutiveFailures?: Prisma.SortOrder
+  lockedUntil?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -617,6 +637,7 @@ export type TargetMaxOrderByAggregateInput = {
   lastCheckedAt?: Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrder
   consecutiveFailures?: Prisma.SortOrder
+  lockedUntil?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -636,6 +657,7 @@ export type TargetMinOrderByAggregateInput = {
   lastCheckedAt?: Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrder
   consecutiveFailures?: Prisma.SortOrder
+  lockedUntil?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -794,6 +816,7 @@ export type TargetCreateWithoutUserInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   monitor?: Prisma.MonitorCreateNestedOneWithoutTargetInput
@@ -817,6 +840,7 @@ export type TargetUncheckedCreateWithoutUserInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   monitor?: Prisma.MonitorUncheckedCreateNestedOneWithoutTargetInput
@@ -870,6 +894,7 @@ export type TargetScalarWhereInput = {
   lastCheckedAt?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   lastSuccessAt?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   consecutiveFailures?: Prisma.IntFilter<"Target"> | number
+  lockedUntil?: Prisma.DateTimeNullableFilter<"Target"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Target"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Target"> | Date | string
 }
@@ -888,6 +913,7 @@ export type TargetCreateWithoutMonitorInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTargetsInput
@@ -912,6 +938,7 @@ export type TargetUncheckedCreateWithoutMonitorInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   snapshots?: Prisma.TargetSnapshotUncheckedCreateNestedManyWithoutTargetInput
@@ -950,6 +977,7 @@ export type TargetUpdateWithoutMonitorInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTargetsNestedInput
@@ -974,6 +1002,7 @@ export type TargetUncheckedUpdateWithoutMonitorInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   snapshots?: Prisma.TargetSnapshotUncheckedUpdateManyWithoutTargetNestedInput
@@ -996,6 +1025,7 @@ export type TargetCreateWithoutSnapshotsInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTargetsInput
@@ -1020,6 +1050,7 @@ export type TargetUncheckedCreateWithoutSnapshotsInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   monitor?: Prisma.MonitorUncheckedCreateNestedOneWithoutTargetInput
@@ -1058,6 +1089,7 @@ export type TargetUpdateWithoutSnapshotsInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTargetsNestedInput
@@ -1082,6 +1114,7 @@ export type TargetUncheckedUpdateWithoutSnapshotsInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   monitor?: Prisma.MonitorUncheckedUpdateOneWithoutTargetNestedInput
@@ -1104,6 +1137,7 @@ export type TargetCreateWithoutMediaInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTargetsInput
@@ -1128,6 +1162,7 @@ export type TargetUncheckedCreateWithoutMediaInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   monitor?: Prisma.MonitorUncheckedCreateNestedOneWithoutTargetInput
@@ -1166,6 +1201,7 @@ export type TargetUpdateWithoutMediaInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTargetsNestedInput
@@ -1190,6 +1226,7 @@ export type TargetUncheckedUpdateWithoutMediaInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   monitor?: Prisma.MonitorUncheckedUpdateOneWithoutTargetNestedInput
@@ -1212,6 +1249,7 @@ export type TargetCreateWithoutEventsInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTargetsInput
@@ -1236,6 +1274,7 @@ export type TargetUncheckedCreateWithoutEventsInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   monitor?: Prisma.MonitorUncheckedCreateNestedOneWithoutTargetInput
@@ -1274,6 +1313,7 @@ export type TargetUpdateWithoutEventsInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTargetsNestedInput
@@ -1298,6 +1338,7 @@ export type TargetUncheckedUpdateWithoutEventsInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   monitor?: Prisma.MonitorUncheckedUpdateOneWithoutTargetNestedInput
@@ -1320,6 +1361,7 @@ export type TargetCreateWithoutJobsInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTargetsInput
@@ -1344,6 +1386,7 @@ export type TargetUncheckedCreateWithoutJobsInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   monitor?: Prisma.MonitorUncheckedCreateNestedOneWithoutTargetInput
@@ -1382,6 +1425,7 @@ export type TargetUpdateWithoutJobsInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTargetsNestedInput
@@ -1406,6 +1450,7 @@ export type TargetUncheckedUpdateWithoutJobsInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   monitor?: Prisma.MonitorUncheckedUpdateOneWithoutTargetNestedInput
@@ -1428,6 +1473,7 @@ export type TargetCreateManyUserInput = {
   lastCheckedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
   consecutiveFailures?: number
+  lockedUntil?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1446,6 +1492,7 @@ export type TargetUpdateWithoutUserInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   monitor?: Prisma.MonitorUpdateOneWithoutTargetNestedInput
@@ -1469,6 +1516,7 @@ export type TargetUncheckedUpdateWithoutUserInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   monitor?: Prisma.MonitorUncheckedUpdateOneWithoutTargetNestedInput
@@ -1492,6 +1540,7 @@ export type TargetUncheckedUpdateManyWithoutUserInput = {
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1569,6 +1618,7 @@ export type TargetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   lastCheckedAt?: boolean
   lastSuccessAt?: boolean
   consecutiveFailures?: boolean
+  lockedUntil?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1595,6 +1645,7 @@ export type TargetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   lastCheckedAt?: boolean
   lastSuccessAt?: boolean
   consecutiveFailures?: boolean
+  lockedUntil?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1615,6 +1666,7 @@ export type TargetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   lastCheckedAt?: boolean
   lastSuccessAt?: boolean
   consecutiveFailures?: boolean
+  lockedUntil?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1635,11 +1687,12 @@ export type TargetSelectScalar = {
   lastCheckedAt?: boolean
   lastSuccessAt?: boolean
   consecutiveFailures?: boolean
+  lockedUntil?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type TargetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "normalizedUsername" | "externalId" | "accountType" | "eligibility" | "status" | "errorCode" | "errorMessage" | "nextRunAt" | "lastCheckedAt" | "lastSuccessAt" | "consecutiveFailures" | "createdAt" | "updatedAt", ExtArgs["result"]["target"]>
+export type TargetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "normalizedUsername" | "externalId" | "accountType" | "eligibility" | "status" | "errorCode" | "errorMessage" | "nextRunAt" | "lastCheckedAt" | "lastSuccessAt" | "consecutiveFailures" | "lockedUntil" | "createdAt" | "updatedAt", ExtArgs["result"]["target"]>
 export type TargetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   monitor?: boolean | Prisma.Target$monitorArgs<ExtArgs>
@@ -1681,6 +1734,7 @@ export type $TargetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     lastCheckedAt: Date | null
     lastSuccessAt: Date | null
     consecutiveFailures: number
+    lockedUntil: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["target"]>
@@ -2126,6 +2180,7 @@ export interface TargetFieldRefs {
   readonly lastCheckedAt: Prisma.FieldRef<"Target", 'DateTime'>
   readonly lastSuccessAt: Prisma.FieldRef<"Target", 'DateTime'>
   readonly consecutiveFailures: Prisma.FieldRef<"Target", 'Int'>
+  readonly lockedUntil: Prisma.FieldRef<"Target", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Target", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Target", 'DateTime'>
 }

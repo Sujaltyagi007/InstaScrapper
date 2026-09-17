@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { expireStaleMedia } from "@/lib/services/media-storage.service";
 
 const JOB_HISTORY_RETENTION_DAYS = 30; // system-level, independent of per-user retention
 
@@ -33,5 +34,17 @@ export async function runRetentionCleanup() {
     where: { finishedAt: { lt: jobCutoff }, status: { in: ["SUCCEEDED", "FAILED"] } },
   });
 
-  return { eventsDeleted, snapshotsDeleted, jobsDeleted: jobs.count };
+  // Reclaim cloud storage by deleting heavy originals past the 48h window.
+  // Rows and thumbnails are kept, so this only frees space — it never removes
+  // media from the feed. Note the cron runs daily (vercel.json), so effective
+  // expiry lands somewhere in 48-72h; run the job more often to tighten that.
+  const media = await expireStaleMedia();
+
+  return {
+    eventsDeleted,
+    snapshotsDeleted,
+    jobsDeleted: jobs.count,
+    mediaExpired: media.expired,
+    mediaExpiryFailed: media.failed,
+  };
 }

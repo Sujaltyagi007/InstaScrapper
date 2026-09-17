@@ -16,12 +16,16 @@ import { LoadingState } from "@/components/common/loading-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { TargetStatusBadge } from "@/features/targets/components/target-status-badge";
 import { EventTypeBadge } from "@/features/monitoring/components/event-type-badge";
-import { MediaGallery } from "@/features/targets/components/media-gallery";
+import { InstagramSimulator } from "@/features/targets/components/instagram-simulator";
 import { apiFetch } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+import { MediaGallery } from "@/features/targets/components/media-gallery";
+import { Download, HardDrive, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function TargetDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -70,72 +74,178 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
   }
 
   const snapshot = target.snapshots[0];
+  const downloadedMediaCount = target.media?.length ?? 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-            <Link href="/targets">
-              <ArrowLeft className="size-4 mr-1" /> Back to targets
-            </Link>
-          </Button>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">@{target.username}</h1>
-            <TargetStatusBadge status={target.status} />
+    <div className="flex-1 h-full min-h-0 overflow-hidden flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-24 gap-8 h-full min-h-0 items-stretch overflow-hidden">
+        <div className="lg:col-span-16 flex flex-col gap-6 w-full min-w-0 h-full overflow-y-auto pr-3 custom-scrollbar">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4 shrink-0">
+            <div>
+              <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
+                <Link href="/targets">
+                  <ArrowLeft className="size-4 mr-1" /> Back to targets
+                </Link>
+              </Button>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">@{target.username}</h1>
+                <TargetStatusBadge status={target.status} />
+              </div>
+              {target.errorMessage && <p className="mt-1 text-sm text-destructive">{target.errorMessage}</p>}
+            </div>
+            <Button variant="outline" size="sm" onClick={remove} className="self-start sm:self-auto text-destructive hover:bg-destructive/10">
+              <Trash2 className="size-4 mr-1.5" /> Delete target
+            </Button>
           </div>
-          {target.errorMessage && <p className="mt-1 text-sm text-destructive">{target.errorMessage}</p>}
-        </div>
-        <Button variant="outline" size="sm" onClick={remove} className="self-start sm:self-auto text-destructive hover:bg-destructive/10">
-          <Trash2 className="size-4 mr-1.5" /> Delete target
-        </Button>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
-          <Card>
+          {/* Monitor Settings */}
+          <Card className="h-fit shrink-0">
             <CardHeader>
-              <CardTitle>Profile snapshot</CardTitle>
-              <CardDescription>
-                {snapshot
-                  ? `Last captured ${formatDistanceToNow(new Date(snapshot.capturedAt), { addSuffix: true })}`
-                  : "No data captured yet — this appears after the first scheduled check."}
-              </CardDescription>
+              <CardTitle>Monitor settings</CardTitle>
+              <CardDescription>Configure auto-scraping and alert options for @{target.username}</CardDescription>
             </CardHeader>
-            {snapshot && (
-              <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                <Stat label="Followers" value={snapshot.followersCount ?? "—"} />
-                <Stat label="Following" value={snapshot.followsCount ?? "—"} />
-                <Stat label="Posts" value={snapshot.mediaCount ?? "—"} />
-                <Stat label="Reels" value={snapshot.reelsCount ?? "—"} />
-                <Stat
-                  label="Active Story"
-                  value={snapshot.hasStory ? `Yes (${snapshot.storiesCount ?? 1})` : "No"}
-                />
-                <Stat
-                  label="Last checked"
-                  value={target.lastCheckedAt ? formatDistanceToNow(new Date(target.lastCheckedAt), { addSuffix: true }) : "—"}
-                />
-                {snapshot.biography && (
-                  <p className="col-span-full text-sm text-muted-foreground">{snapshot.biography}</p>
-                )}
-              </CardContent>
-            )}
-          </Card>
+            <CardContent className="flex flex-col gap-4">
+              <ToggleRow
+                label="Active"
+                checked={Boolean(target.monitor?.active)}
+                disabled={saving}
+                onCheckedChange={(v) => updateMonitor({ active: v })}
+              />
+              <Separator />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Scraped Media & Captions</CardTitle>
-              <CardDescription>
-                High-definition posts, reels, and stories stored on ImageKit.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <MediaGallery media={target.media || []} username={target.username} />
+              <div className="flex flex-col gap-1.5">
+                <Label>Instagram session</Label>
+                <Select
+                  value={target.monitor?.instagramSessionId ?? "none"}
+                  disabled={saving}
+                  onValueChange={(v) =>
+                    v === "none"
+                      ? updateMonitor({
+                        instagramSessionId: null,
+                        watchStories: false,
+                        watchFollowerChurn: false,
+                        watchFollowingCount: false,
+                      })
+                      : updateMonitor({ instagramSessionId: v })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="None (anonymous)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None (anonymous)</SelectItem>
+                    {activeSessions.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        @{s.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-2">
+                Basic (no login required)
+              </p>
+              <ToggleRow
+                label="New posts & reels (Auto-download HD media)"
+                checked={Boolean(target.monitor?.watchNewMedia)}
+                disabled={saving}
+                onCheckedChange={(v) => updateMonitor({ watchNewMedia: v })}
+              />
+              <ToggleRow
+                label="Reels count"
+                checked={Boolean(target.monitor?.watchReels)}
+                disabled={saving}
+                onCheckedChange={(v) => updateMonitor({ watchReels: v })}
+              />
+              <ToggleRow
+                label="Profile changes"
+                checked={Boolean(target.monitor?.watchProfile)}
+                disabled={saving}
+                onCheckedChange={(v) => updateMonitor({ watchProfile: v })}
+              />
+              <ToggleRow
+                label="Follower count"
+                checked={Boolean(target.monitor?.watchFollowerCount)}
+                disabled={saving}
+                onCheckedChange={(v) => updateMonitor({ watchFollowerCount: v })}
+              />
+              <ToggleRow
+                label="Anti-bot jitter"
+                checked={Boolean(target.monitor?.jitterEnabled)}
+                disabled={saving}
+                onCheckedChange={(v) => updateMonitor({ jitterEnabled: v })}
+              />
+
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-2">
+                Advanced (requires an Instagram session)
+              </p>
+              <ToggleRow
+                label="Stories"
+                checked={Boolean(target.monitor?.watchStories)}
+                disabled={saving || !target.monitor?.instagramSessionId}
+                locked={!target.monitor?.instagramSessionId}
+                onCheckedChange={(v) => updateMonitor({ watchStories: v })}
+              />
+              <ToggleRow
+                label="Follower & following changes"
+                checked={Boolean(target.monitor?.watchFollowerChurn)}
+                disabled={saving || !target.monitor?.instagramSessionId}
+                locked={!target.monitor?.instagramSessionId}
+                onCheckedChange={(v) => updateMonitor({ watchFollowerChurn: v })}
+              />
+              <ToggleRow
+                label="Following count"
+                checked={Boolean(target.monitor?.watchFollowingCount)}
+                disabled={saving || !target.monitor?.instagramSessionId}
+                locked={!target.monitor?.instagramSessionId}
+                onCheckedChange={(v) => updateMonitor({ watchFollowingCount: v })}
+              />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="interval">Check every (minutes)</Label>
+                <Input
+                  id="interval"
+                  type="number"
+                  min={5}
+                  defaultValue={Math.round((target.monitor?.intervalSeconds ?? 5400) / 60)}
+                  onBlur={(e) => updateMonitor({ intervalSeconds: Number(e.target.value) * 60 })}
+                />
+              </div>
+              {saving && (
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Loader2 className="size-3 animate-spin" /> Saving...
+                </p>
+              )}
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Auto-Downloaded Media Option & Gallery */}
+          <Card className="shrink-0">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <HardDrive className="size-5 text-primary" />
+                  <span>Auto-Downloaded Media</span>
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {downloadedMediaCount} item{downloadedMediaCount === 1 ? "" : "s"}
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  High-res images, reels, and stories automatically fetched and backed up to cloud storage.
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <MediaGallery
+                media={target.media || []}
+                username={target.username}
+                onMediaChanged={refresh}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Event History */}
+          <Card className="shrink-0 pb-4">
             <CardHeader>
               <CardTitle>Event history</CardTitle>
               <CardDescription>Changes detected for this account.</CardDescription>
@@ -163,125 +273,25 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
             </CardContent>
           </Card>
         </div>
-
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Monitor settings</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <ToggleRow
-              label="Active"
-              checked={Boolean(target.monitor?.active)}
-              disabled={saving}
-              onCheckedChange={(v) => updateMonitor({ active: v })}
-            />
-            <Separator />
-
-            <div className="flex flex-col gap-1.5">
-              <Label>Instagram session</Label>
-              <Select
-                value={target.monitor?.instagramSessionId ?? "none"}
-                disabled={saving}
-                onValueChange={(v) =>
-                  v === "none"
-                    ? updateMonitor({
-                        instagramSessionId: null,
-                        watchStories: false,
-                        watchFollowerChurn: false,
-                        watchFollowingCount: false,
-                      })
-                    : updateMonitor({ instagramSessionId: v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="None (anonymous)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None (anonymous)</SelectItem>
-                  {activeSessions.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      @{s.username}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-2">
-              Basic (no login required)
-            </p>
-            <ToggleRow
-              label="New posts & reels"
-              checked={Boolean(target.monitor?.watchNewMedia)}
-              disabled={saving}
-              onCheckedChange={(v) => updateMonitor({ watchNewMedia: v })}
-            />
-            <ToggleRow
-              label="Reels count"
-              checked={Boolean(target.monitor?.watchReels)}
-              disabled={saving}
-              onCheckedChange={(v) => updateMonitor({ watchReels: v })}
-            />
-            <ToggleRow
-              label="Profile changes"
-              checked={Boolean(target.monitor?.watchProfile)}
-              disabled={saving}
-              onCheckedChange={(v) => updateMonitor({ watchProfile: v })}
-            />
-            <ToggleRow
-              label="Follower count"
-              checked={Boolean(target.monitor?.watchFollowerCount)}
-              disabled={saving}
-              onCheckedChange={(v) => updateMonitor({ watchFollowerCount: v })}
-            />
-            <ToggleRow
-              label="Anti-bot jitter"
-              checked={Boolean(target.monitor?.jitterEnabled)}
-              disabled={saving}
-              onCheckedChange={(v) => updateMonitor({ jitterEnabled: v })}
-            />
-
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-2">
-              Advanced (requires an Instagram session)
-            </p>
-            <ToggleRow
-              label="Stories"
-              checked={Boolean(target.monitor?.watchStories)}
-              disabled={saving || !target.monitor?.instagramSessionId}
-              locked={!target.monitor?.instagramSessionId}
-              onCheckedChange={(v) => updateMonitor({ watchStories: v })}
-            />
-            <ToggleRow
-              label="Follower & following changes"
-              checked={Boolean(target.monitor?.watchFollowerChurn)}
-              disabled={saving || !target.monitor?.instagramSessionId}
-              locked={!target.monitor?.instagramSessionId}
-              onCheckedChange={(v) => updateMonitor({ watchFollowerChurn: v })}
-            />
-            <ToggleRow
-              label="Following count"
-              checked={Boolean(target.monitor?.watchFollowingCount)}
-              disabled={saving || !target.monitor?.instagramSessionId}
-              locked={!target.monitor?.instagramSessionId}
-              onCheckedChange={(v) => updateMonitor({ watchFollowingCount: v })}
-            />
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="interval">Check every (minutes)</Label>
-              <Input
-                id="interval"
-                type="number"
-                min={5}
-                defaultValue={Math.round((target.monitor?.intervalSeconds ?? 5400) / 60)}
-                onBlur={(e) => updateMonitor({ intervalSeconds: Number(e.target.value) * 60 })}
-              />
-            </div>
-            {saving && (
-              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Loader2 className="size-3 animate-spin" /> Saving...
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-8 w-full flex flex-col items-center justify-start h-full min-h-0 overflow-hidden shrink-0 z-10">
+          <div className="w-full max-w-sm mb-2 flex items-center justify-between px-1 text-xs text-muted-foreground shrink-0">
+            <span className="flex items-center gap-1.5 font-medium text-foreground">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+              </span>
+              Target Simulator
+            </span>
+            <span className="text-[11px] bg-muted/80 border px-2 py-0.5 rounded-full font-mono">Fixed View</span>
+          </div>
+          <InstagramSimulator
+            snapshot={snapshot}
+            media={target.media || []}
+            username={target.username}
+            targetId={id}
+            onDataChanged={refresh}
+          />
+        </div>
       </div>
     </div>
   );
@@ -300,15 +310,6 @@ function formatChurnSummary(after: unknown): string {
   if (a.followingAdded?.length) parts.push(`+${a.followingAdded.length} following`);
   if (a.followingRemoved?.length) parts.push(`−${a.followingRemoved.length} following`);
   return parts.length > 0 ? parts.join(" · ") : "No change details recorded.";
-}
-
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-lg font-semibold">{value}</p>
-    </div>
-  );
 }
 
 function ToggleRow({

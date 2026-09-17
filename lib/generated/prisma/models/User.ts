@@ -28,10 +28,16 @@ export type AggregateUser = {
 
 export type UserAvgAggregateOutputType = {
   retentionDays: number | null
+  maxTargets: number | null
+  sleepStartHour: number | null
+  sleepEndHour: number | null
 }
 
 export type UserSumAggregateOutputType = {
   retentionDays: number | null
+  maxTargets: number | null
+  sleepStartHour: number | null
+  sleepEndHour: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -41,6 +47,12 @@ export type UserMinAggregateOutputType = {
   name: string | null
   timezone: string | null
   retentionDays: number | null
+  role: string | null
+  maxTargets: number | null
+  targetQuotaAlertLevel: string | null
+  sleepEnabled: boolean | null
+  sleepStartHour: number | null
+  sleepEndHour: number | null
   emailVerified: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -53,6 +65,12 @@ export type UserMaxAggregateOutputType = {
   name: string | null
   timezone: string | null
   retentionDays: number | null
+  role: string | null
+  maxTargets: number | null
+  targetQuotaAlertLevel: string | null
+  sleepEnabled: boolean | null
+  sleepStartHour: number | null
+  sleepEndHour: number | null
   emailVerified: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -65,6 +83,12 @@ export type UserCountAggregateOutputType = {
   name: number
   timezone: number
   retentionDays: number
+  role: number
+  maxTargets: number
+  targetQuotaAlertLevel: number
+  sleepEnabled: number
+  sleepStartHour: number
+  sleepEndHour: number
   emailVerified: number
   createdAt: number
   updatedAt: number
@@ -74,10 +98,16 @@ export type UserCountAggregateOutputType = {
 
 export type UserAvgAggregateInputType = {
   retentionDays?: true
+  maxTargets?: true
+  sleepStartHour?: true
+  sleepEndHour?: true
 }
 
 export type UserSumAggregateInputType = {
   retentionDays?: true
+  maxTargets?: true
+  sleepStartHour?: true
+  sleepEndHour?: true
 }
 
 export type UserMinAggregateInputType = {
@@ -87,6 +117,12 @@ export type UserMinAggregateInputType = {
   name?: true
   timezone?: true
   retentionDays?: true
+  role?: true
+  maxTargets?: true
+  targetQuotaAlertLevel?: true
+  sleepEnabled?: true
+  sleepStartHour?: true
+  sleepEndHour?: true
   emailVerified?: true
   createdAt?: true
   updatedAt?: true
@@ -99,6 +135,12 @@ export type UserMaxAggregateInputType = {
   name?: true
   timezone?: true
   retentionDays?: true
+  role?: true
+  maxTargets?: true
+  targetQuotaAlertLevel?: true
+  sleepEnabled?: true
+  sleepStartHour?: true
+  sleepEndHour?: true
   emailVerified?: true
   createdAt?: true
   updatedAt?: true
@@ -111,6 +153,12 @@ export type UserCountAggregateInputType = {
   name?: true
   timezone?: true
   retentionDays?: true
+  role?: true
+  maxTargets?: true
+  targetQuotaAlertLevel?: true
+  sleepEnabled?: true
+  sleepStartHour?: true
+  sleepEndHour?: true
   emailVerified?: true
   createdAt?: true
   updatedAt?: true
@@ -210,6 +258,12 @@ export type UserGroupByOutputType = {
   name: string | null
   timezone: string
   retentionDays: number
+  role: string
+  maxTargets: number
+  targetQuotaAlertLevel: string | null
+  sleepEnabled: boolean
+  sleepStartHour: number
+  sleepEndHour: number
   emailVerified: Date | null
   createdAt: Date
   updatedAt: Date
@@ -245,6 +299,12 @@ export type UserWhereInput = {
   name?: Prisma.StringNullableFilter<"User"> | string | null
   timezone?: Prisma.StringFilter<"User"> | string
   retentionDays?: Prisma.IntFilter<"User"> | number
+  role?: Prisma.StringFilter<"User"> | string
+  maxTargets?: Prisma.IntFilter<"User"> | number
+  targetQuotaAlertLevel?: Prisma.StringNullableFilter<"User"> | string | null
+  sleepEnabled?: Prisma.BoolFilter<"User"> | boolean
+  sleepStartHour?: Prisma.IntFilter<"User"> | number
+  sleepEndHour?: Prisma.IntFilter<"User"> | number
   emailVerified?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -262,6 +322,12 @@ export type UserOrderByWithRelationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrder
   retentionDays?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  maxTargets?: Prisma.SortOrder
+  targetQuotaAlertLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  sleepEnabled?: Prisma.SortOrder
+  sleepStartHour?: Prisma.SortOrder
+  sleepEndHour?: Prisma.SortOrder
   emailVerified?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -282,6 +348,12 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringNullableFilter<"User"> | string | null
   timezone?: Prisma.StringFilter<"User"> | string
   retentionDays?: Prisma.IntFilter<"User"> | number
+  role?: Prisma.StringFilter<"User"> | string
+  maxTargets?: Prisma.IntFilter<"User"> | number
+  targetQuotaAlertLevel?: Prisma.StringNullableFilter<"User"> | string | null
+  sleepEnabled?: Prisma.BoolFilter<"User"> | boolean
+  sleepStartHour?: Prisma.IntFilter<"User"> | number
+  sleepEndHour?: Prisma.IntFilter<"User"> | number
   emailVerified?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -299,6 +371,12 @@ export type UserOrderByWithAggregationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrder
   retentionDays?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  maxTargets?: Prisma.SortOrder
+  targetQuotaAlertLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  sleepEnabled?: Prisma.SortOrder
+  sleepStartHour?: Prisma.SortOrder
+  sleepEndHour?: Prisma.SortOrder
   emailVerified?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -319,6 +397,12 @@ export type UserScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   timezone?: Prisma.StringWithAggregatesFilter<"User"> | string
   retentionDays?: Prisma.IntWithAggregatesFilter<"User"> | number
+  role?: Prisma.StringWithAggregatesFilter<"User"> | string
+  maxTargets?: Prisma.IntWithAggregatesFilter<"User"> | number
+  targetQuotaAlertLevel?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  sleepEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  sleepStartHour?: Prisma.IntWithAggregatesFilter<"User"> | number
+  sleepEndHour?: Prisma.IntWithAggregatesFilter<"User"> | number
   emailVerified?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -331,6 +415,12 @@ export type UserCreateInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -348,6 +438,12 @@ export type UserUncheckedCreateInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -365,6 +461,12 @@ export type UserUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -382,6 +484,12 @@ export type UserUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -399,6 +507,12 @@ export type UserCreateManyInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -411,6 +525,12 @@ export type UserUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -423,6 +543,12 @@ export type UserUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -435,6 +561,12 @@ export type UserCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   retentionDays?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  maxTargets?: Prisma.SortOrder
+  targetQuotaAlertLevel?: Prisma.SortOrder
+  sleepEnabled?: Prisma.SortOrder
+  sleepStartHour?: Prisma.SortOrder
+  sleepEndHour?: Prisma.SortOrder
   emailVerified?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -442,6 +574,9 @@ export type UserCountOrderByAggregateInput = {
 
 export type UserAvgOrderByAggregateInput = {
   retentionDays?: Prisma.SortOrder
+  maxTargets?: Prisma.SortOrder
+  sleepStartHour?: Prisma.SortOrder
+  sleepEndHour?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -451,6 +586,12 @@ export type UserMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   retentionDays?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  maxTargets?: Prisma.SortOrder
+  targetQuotaAlertLevel?: Prisma.SortOrder
+  sleepEnabled?: Prisma.SortOrder
+  sleepStartHour?: Prisma.SortOrder
+  sleepEndHour?: Prisma.SortOrder
   emailVerified?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -463,6 +604,12 @@ export type UserMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   retentionDays?: Prisma.SortOrder
+  role?: Prisma.SortOrder
+  maxTargets?: Prisma.SortOrder
+  targetQuotaAlertLevel?: Prisma.SortOrder
+  sleepEnabled?: Prisma.SortOrder
+  sleepStartHour?: Prisma.SortOrder
+  sleepEndHour?: Prisma.SortOrder
   emailVerified?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -470,6 +617,9 @@ export type UserMinOrderByAggregateInput = {
 
 export type UserSumOrderByAggregateInput = {
   retentionDays?: Prisma.SortOrder
+  maxTargets?: Prisma.SortOrder
+  sleepStartHour?: Prisma.SortOrder
+  sleepEndHour?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -496,6 +646,10 @@ export type IntFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
 }
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -585,6 +739,12 @@ export type UserCreateWithoutMetaConnectionsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -601,6 +761,12 @@ export type UserUncheckedCreateWithoutMetaConnectionsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -633,6 +799,12 @@ export type UserUpdateWithoutMetaConnectionsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -649,6 +821,12 @@ export type UserUncheckedUpdateWithoutMetaConnectionsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -665,6 +843,12 @@ export type UserCreateWithoutTargetsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -681,6 +865,12 @@ export type UserUncheckedCreateWithoutTargetsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -713,6 +903,12 @@ export type UserUpdateWithoutTargetsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -729,6 +925,12 @@ export type UserUncheckedUpdateWithoutTargetsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -745,6 +947,12 @@ export type UserCreateWithoutInstagramSessionsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -761,6 +969,12 @@ export type UserUncheckedCreateWithoutInstagramSessionsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -793,6 +1007,12 @@ export type UserUpdateWithoutInstagramSessionsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -809,6 +1029,12 @@ export type UserUncheckedUpdateWithoutInstagramSessionsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -825,6 +1051,12 @@ export type UserCreateWithoutNotificationChannelsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -841,6 +1073,12 @@ export type UserUncheckedCreateWithoutNotificationChannelsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -873,6 +1111,12 @@ export type UserUpdateWithoutNotificationChannelsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -889,6 +1133,12 @@ export type UserUncheckedUpdateWithoutNotificationChannelsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -905,6 +1155,12 @@ export type UserCreateWithoutAuthRateLimitsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -921,6 +1177,12 @@ export type UserUncheckedCreateWithoutAuthRateLimitsInput = {
   name?: string | null
   timezone?: string
   retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
   emailVerified?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -953,6 +1215,12 @@ export type UserUpdateWithoutAuthRateLimitsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -969,6 +1237,12 @@ export type UserUncheckedUpdateWithoutAuthRateLimitsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1052,6 +1326,12 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   timezone?: boolean
   retentionDays?: boolean
+  role?: boolean
+  maxTargets?: boolean
+  targetQuotaAlertLevel?: boolean
+  sleepEnabled?: boolean
+  sleepStartHour?: boolean
+  sleepEndHour?: boolean
   emailVerified?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1070,6 +1350,12 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   timezone?: boolean
   retentionDays?: boolean
+  role?: boolean
+  maxTargets?: boolean
+  targetQuotaAlertLevel?: boolean
+  sleepEnabled?: boolean
+  sleepStartHour?: boolean
+  sleepEndHour?: boolean
   emailVerified?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1082,6 +1368,12 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   timezone?: boolean
   retentionDays?: boolean
+  role?: boolean
+  maxTargets?: boolean
+  targetQuotaAlertLevel?: boolean
+  sleepEnabled?: boolean
+  sleepStartHour?: boolean
+  sleepEndHour?: boolean
   emailVerified?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1094,12 +1386,18 @@ export type UserSelectScalar = {
   name?: boolean
   timezone?: boolean
   retentionDays?: boolean
+  role?: boolean
+  maxTargets?: boolean
+  targetQuotaAlertLevel?: boolean
+  sleepEnabled?: boolean
+  sleepStartHour?: boolean
+  sleepEndHour?: boolean
   emailVerified?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "timezone" | "retentionDays" | "emailVerified" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "timezone" | "retentionDays" | "role" | "maxTargets" | "targetQuotaAlertLevel" | "sleepEnabled" | "sleepStartHour" | "sleepEndHour" | "emailVerified" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   metaConnections?: boolean | Prisma.User$metaConnectionsArgs<ExtArgs>
   instagramSessions?: boolean | Prisma.User$instagramSessionsArgs<ExtArgs>
@@ -1127,6 +1425,12 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string | null
     timezone: string
     retentionDays: number
+    role: string
+    maxTargets: number
+    targetQuotaAlertLevel: string | null
+    sleepEnabled: boolean
+    sleepStartHour: number
+    sleepEndHour: number
     emailVerified: Date | null
     createdAt: Date
     updatedAt: Date
@@ -1564,6 +1868,12 @@ export interface UserFieldRefs {
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly timezone: Prisma.FieldRef<"User", 'String'>
   readonly retentionDays: Prisma.FieldRef<"User", 'Int'>
+  readonly role: Prisma.FieldRef<"User", 'String'>
+  readonly maxTargets: Prisma.FieldRef<"User", 'Int'>
+  readonly targetQuotaAlertLevel: Prisma.FieldRef<"User", 'String'>
+  readonly sleepEnabled: Prisma.FieldRef<"User", 'Boolean'>
+  readonly sleepStartHour: Prisma.FieldRef<"User", 'Int'>
+  readonly sleepEndHour: Prisma.FieldRef<"User", 'Int'>
   readonly emailVerified: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>

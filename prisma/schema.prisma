@@ -1,57 +1,10 @@
 generator client {
   provider = "prisma-client"
-  output = "../lib/generated/prisma"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-}
-
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String
-  name          String?
-  timezone      String    @default("UTC")
-  retentionDays Int       @default(90)
-  emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  metaConnections      MetaConnection[]
-  instagramSessions    InstagramSession[]
-  targets              Target[]
-  notificationChannels NotificationChannel[]
-  authRateLimits       AuthRateLimit[]
-
-  @@map("users")
-}
-
-enum MetaConnectionStatus {
-  ACTIVE
-  REAUTH_REQUIRED
-  REVOKED
-  ERROR
-}
-
-model MetaConnection {
-  id                   String               @id @default(cuid())
-  userId               String
-  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider             String               @default("meta")
-  externalUserId       String
-  accountType          String?
-  encryptedAccessToken String
-  encryptedTokenIv     String
-  scopes               String[]
-  status               MetaConnectionStatus @default(ACTIVE)
-  expiresAt            DateTime?
-  lastVerifiedAt       DateTime?
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-
-  @@index([userId])
-  @@map("meta_connections")
 }
 
 enum TargetAccountType {
@@ -83,6 +36,95 @@ enum TargetStatus {
   INVALID
 }
 
+enum MetaConnectionStatus {
+  ACTIVE
+  REAUTH_REQUIRED
+  REVOKED
+  ERROR
+}
+
+enum EventType {
+  NEW_MEDIA
+  MEDIA_UPDATED
+  PROFILE_CHANGED
+  FOLLOWER_COUNT_CHANGED
+  FOLLOWING_COUNT_CHANGED
+  NEW_STORY
+  NEW_REEL
+  FOLLOWER_CHURN
+  COLLAB_POST_LEAKED
+  ACCOUNT_UNAVAILABLE
+  ACCOUNT_RENAMED
+  RATE_LIMITED
+  SESSION_FLAGGED
+}
+
+enum EventStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum JobType {
+  TARGET_CHECK
+  NOTIFICATION_DISPATCH
+  RETENTION_CLEANUP
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model User {
+  id                    String                @id @default(cuid())
+  email                 String                @unique
+  passwordHash          String
+  name                  String?
+  timezone              String                @default("UTC")
+  retentionDays         Int                   @default(90)
+  role                  String                @default("USER")
+  maxTargets            Int                   @default(10)
+  targetQuotaAlertLevel String?
+  // Human-like "sleep": no scheduled checks between these local hours
+  // (user's timezone). Window may cross midnight, e.g. 1 -> 7 or 23 -> 6.
+  sleepEnabled          Boolean               @default(true)
+  sleepStartHour        Int                   @default(1)
+  sleepEndHour          Int                   @default(7)
+  emailVerified         DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  metaConnections       MetaConnection[]
+  instagramSessions     InstagramSession[]
+  targets               Target[]
+  notificationChannels  NotificationChannel[]
+  authRateLimits        AuthRateLimit[]
+
+  @@map("users")
+}
+
+model MetaConnection {
+  id                   String               @id @default(cuid())
+  userId               String
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider             String               @default("meta")
+  externalUserId       String
+  accountType          String?
+  encryptedAccessToken String
+  encryptedTokenIv     String
+  scopes               String[]
+  status               MetaConnectionStatus @default(ACTIVE)
+  expiresAt            DateTime?
+  lastVerifiedAt       DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([userId])
+  @@map("meta_connections")
+}
+
 model Target {
   id                  String            @id @default(cuid())
   userId              String
@@ -99,6 +141,11 @@ model Target {
   lastCheckedAt       DateTime?
   lastSuccessAt       DateTime?
   consecutiveFailures Int               @default(0)
+  // Lease held while a check is running. Overlapping schedulers (cron,
+  // GitHub Actions, dev poller, "Run check now") skip a target whose lease
+  // is still valid, so the same account is never scraped twice at once.
+  // Expires on its own if a run crashes.
+  lockedUntil         DateTime?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
@@ -115,27 +162,27 @@ model Target {
 }
 
 model InstagramSession {
-  id                   String    @id @default(cuid())
-  userId               String
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  username             String
-  authMethod           String    @default("COOKIE_IMPORT")
-  encryptedCookies     String
-  encryptedCookiesIv   String
-  userAgent            String?
-  deviceId             String?
-  impersonateTarget    String    @default("auto")
-  proxyUrl             String?
-  status               String    @default("ACTIVE")
-  lastTestedAt         DateTime?
-  lastSuccessAt        DateTime?
-  lastErrorMessage     String?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  lastUsedAt           DateTime?
-  cooldownUntil        DateTime?
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username           String
+  authMethod         String    @default("COOKIE_IMPORT")
+  encryptedCookies   String
+  encryptedCookiesIv String
+  userAgent          String?
+  deviceId           String?
+  impersonateTarget  String    @default("auto")
+  proxyUrl           String?
+  status             String    @default("ACTIVE")
+  lastTestedAt       DateTime?
+  lastSuccessAt      DateTime?
+  lastErrorMessage   String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  lastUsedAt         DateTime?
+  cooldownUntil      DateTime?
 
-  monitors             Monitor[]
+  monitors Monitor[]
 
   @@index([userId])
   @@index([userId, status, lastUsedAt])
@@ -175,30 +222,30 @@ model Monitor {
 }
 
 model TargetSnapshot {
-  id                   String    @id @default(cuid())
-  targetId             String
-  target               Target    @relation(fields: [targetId], references: [id], onDelete: Cascade)
-  capturedAt           DateTime  @default(now())
-  username             String
-  name                 String?
-  biography            String?
-  website              String?
-  profilePictureUrl         String?
-  profilePictureStorageUrl  String?
-  profilePictureStorageId   String?
-  followersCount            Int?
-  followsCount              Int?
-  mediaCount                Int?
-  reelsCount                Int?
-  hasStory                  Boolean   @default(false)
-  storiesCount              Int?
-  latestMediaId             String?
-  latestMediaTimestamp      DateTime?
-  followersListHash         String?
-  followingListHash         String?
-  followersListJson         Json?
-  followingListJson         Json?
-  rawHash                   String
+  id                       String    @id @default(cuid())
+  targetId                 String
+  target                   Target    @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  capturedAt               DateTime  @default(now())
+  username                 String
+  name                     String?
+  biography                String?
+  website                  String?
+  profilePictureUrl        String?
+  profilePictureStorageUrl String?
+  profilePictureStorageId  String?
+  followersCount           Int?
+  followsCount             Int?
+  mediaCount               Int?
+  reelsCount               Int?
+  hasStory                 Boolean   @default(false)
+  storiesCount             Int?
+  latestMediaId            String?
+  latestMediaTimestamp     DateTime?
+  followersListHash        String?
+  followingListHash        String?
+  followersListJson        Json?
+  followingListJson        Json?
+  rawHash                  String
 
   @@index([targetId, capturedAt])
   @@map("target_snapshots")
@@ -215,8 +262,15 @@ model Media {
   caption         String?
   mediaUrl        String?
   videoUrl        String?
+  sourceMediaUrl  String?
+  sourceVideoUrl  String?
   storageUrl      String?
   storageFileId   String?
+  storedAt        DateTime?
+  thumbnailUrl    String?
+  thumbnailFileId String?
+  isExpired       Boolean   @default(false)
+  expiredAt       DateTime?
   isStory         Boolean   @default(false)
   isCollab        Boolean   @default(false)
   collaborators   String[]  @default([])
@@ -224,29 +278,8 @@ model Media {
 
   @@unique([targetId, externalMediaId])
   @@index([targetId])
+  @@index([isExpired, storedAt])
   @@map("media")
-}
-
-enum EventType {
-  NEW_MEDIA
-  MEDIA_UPDATED
-  PROFILE_CHANGED
-  FOLLOWER_COUNT_CHANGED
-  FOLLOWING_COUNT_CHANGED
-  NEW_STORY
-  NEW_REEL
-  FOLLOWER_CHURN
-  COLLAB_POST_LEAKED
-  ACCOUNT_UNAVAILABLE
-  ACCOUNT_RENAMED
-  RATE_LIMITED
-  SESSION_FLAGGED
-}
-
-enum EventStatus {
-  PENDING
-  PROCESSED
-  FAILED
 }
 
 model Event {
@@ -324,19 +357,6 @@ model Notification {
   @@map("notifications")
 }
 
-enum JobType {
-  TARGET_CHECK
-  NOTIFICATION_DISPATCH
-  RETENTION_CLEANUP
-}
-
-enum JobStatus {
-  QUEUED
-  RUNNING
-  SUCCEEDED
-  FAILED
-}
-
 model Job {
   id            String    @id @default(cuid())
   type          JobType
@@ -367,4 +387,32 @@ model AuthRateLimit {
 
   @@unique([key])
   @@map("auth_rate_limits")
+}
+
+model R2UsageCounter {
+  id               String    @id @default("singleton")
+  billingMonth     String
+  aClassOps        Int       @default(0)
+  bClassOps        Int       @default(0)
+  storageBytesEst  BigInt    @default(0)
+  lastReconciledAt DateTime?
+  updatedAt        DateTime  @updatedAt
+
+  @@map("r2_usage_counters")
+}
+
+// App-wide scrape pacing. One row per key ("global" in production); every
+// check leaves through the same proxy IP, so pacing is shared, not per user.
+model ScrapeThrottle {
+  id                   String    @id
+  day                  String // UTC date, "YYYY-MM-DD"
+  profileViews         Int       @default(0)
+  // Circuit breaker: consecutive soft-blocked checks, and how many pauses in
+  // a row have already happened (drives exponential pause length).
+  consecutiveSoftFails Int       @default(0)
+  pauseLevel           Int       @default(0)
+  pausedUntil          DateTime?
+  updatedAt            DateTime  @updatedAt
+
+  @@map("scrape_throttle")
 }

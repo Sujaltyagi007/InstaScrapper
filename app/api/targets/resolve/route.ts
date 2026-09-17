@@ -6,6 +6,7 @@ import { resolveTargetSchema } from "@/lib/validation/target";
 import { eligibilityMessage } from "@/lib/meta/capability.service";
 import { resolveTargetUsername, normalizeUsername } from "@/lib/services/target.service";
 import { peekSession } from "@/lib/meta/session-pool";
+import { assertCanAddTarget } from "@/lib/services/quota.service";
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +16,10 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
     }
+
+    // Block at the preview step too, so a user at their limit learns it
+    // before waiting on an Instagram lookup they can't act on.
+    await assertCanAddTarget(userId);
 
     const existing = await prisma.target.findUnique({
       where: {
