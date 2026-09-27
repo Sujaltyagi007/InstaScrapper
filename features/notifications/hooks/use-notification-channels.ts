@@ -1,5 +1,4 @@
 "use client";
-
 import useSWR from "swr";
 import { useCallback } from "react";
 import { CHANNELS_KEY } from "@/lib/swr-keys";

@@ -1,18 +1,18 @@
 "use client";
 import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/common/error-state";
+import { EmptyState } from "@/components/common/empty-state";
+import { LoadingState } from "@/components/common/loading-state";
 import { useTargets } from "@/features/targets/hooks/use-targets";
 import { useEvents } from "@/features/monitoring/hooks/use-events";
 import { useMetaStatus } from "@/features/account/hooks/use-meta-status";
-import { formatDistanceToNow } from "date-fns";
-import { EmptyState } from "@/components/common/empty-state";
-import { LoadingState } from "@/components/common/loading-state";
-import { ErrorState } from "@/components/common/error-state";
+import { Radar, Bell, AlertTriangle, Activity, Plus } from "lucide-react";
 import { EventTypeBadge } from "@/features/monitoring/components/event-type-badge";
 import { TargetStatusBadge } from "@/features/targets/components/target-status-badge";
-import { Radar, Bell, AlertTriangle, Activity, Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SystemHealthBadge } from "@/features/monitoring/components/system-health-badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 /** All the interactivity for the dashboard. Rendered by the server page below, inside an SWRConfig that already has targets/events for the first paint. */
 export function DashboardPageClient() {

@@ -1,16 +1,15 @@
 "use client";
-import { friendlyError } from "@/lib/friendly-error";
-
+import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { friendlyError } from "@/lib/friendly-error";
+import { TargetQuotaBanner } from "./target-quota-banner";
 import { LoadingState } from "@/components/common/loading-state";
 import { useTargetQuota, type TargetQuota } from "../hooks/use-target-quota";
-import { TargetQuotaBanner } from "./target-quota-banner";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 /**
  * Self-service control for how many accounts the user may monitor. The

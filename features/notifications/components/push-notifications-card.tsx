@@ -1,20 +1,19 @@
 "use client";
-
-import useSWR, { mutate as globalMutate } from "swr";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { BellRing, Loader2, Monitor, Send, Smartphone, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/fetcher";
-import { CHANNELS_KEY, PUSH_KEY } from "@/lib/swr-keys";
-import { friendlyError } from "@/lib/friendly-error";
+import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { friendlyError } from "@/lib/friendly-error";
+import useSWR, { mutate as globalMutate } from "swr";
+import { CHANNELS_KEY, PUSH_KEY } from "@/lib/swr-keys";
 import { ErrorState } from "@/components/common/error-state";
 import { LoadingState } from "@/components/common/loading-state";
 import { InstallAppButton } from "@/components/pwa/install-app-button";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { BellRing, Loader2, Monitor, Send, Smartphone, X } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { currentPushSubscription, isIos, isStandalone, pushSupported, subscribeThisDevice } from "@/lib/pwa/client";
 
 interface Device {

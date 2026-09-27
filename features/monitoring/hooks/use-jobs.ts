@@ -1,8 +1,8 @@
 "use client";
 import useSWR from "swr";
 import { useCallback } from "react";
-import type { JobWithTarget } from "@/types/domain";
 import { JOBS_KEY } from "@/lib/swr-keys";
+import type { JobWithTarget } from "@/types/domain";
 import { friendlyError } from "@/lib/friendly-error";
 
 export function useJobs() {

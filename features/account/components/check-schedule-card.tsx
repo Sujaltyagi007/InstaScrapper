@@ -1,14 +1,14 @@
 "use client";
-import { friendlyError } from "@/lib/friendly-error";
+import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { friendlyError } from "@/lib/friendly-error";
 import type { UserSettings } from "@/hooks/use-settings";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 

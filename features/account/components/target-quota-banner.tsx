@@ -1,19 +1,12 @@
 "use client";
-
 import Link from "next/link";
 import { AlertTriangle, Ban } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { TargetQuota } from "../hooks/use-target-quota";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-/**
- * In-app quota warning. Renders nothing below the warning threshold, an amber
- * notice at 80%, and a blocking notice at 100%. Presentational only — the
- * caller owns the data, so it can sit on any page.
- */
 export function TargetQuotaBanner({ quota }: { quota: TargetQuota | null }) {
   if (!quota || quota.level === "OK") return null;
-
   const full = quota.level === "FULL";
   const canRaise = quota.limit < quota.maxLimit;
 
@@ -42,9 +35,7 @@ export function TargetQuotaBanner({ quota }: { quota: TargetQuota | null }) {
       </AlertTitle>
       <AlertDescription>
         <span>
-          {canRaise
-            ? `Raise your limit (up to ${quota.maxLimit}) to add more accounts.`
-            : `${quota.maxLimit} is the maximum. Remove an account to add another.`}
+          {canRaise ? `Raise your limit (up to ${quota.maxLimit}) to add more accounts.` : `${quota.maxLimit} is the maximum. Remove an account to add another.`}
         </span>
         {canRaise && (
           <Button asChild size="sm" variant="outline" className="mt-2 w-fit">

@@ -1,10 +1,9 @@
 "use client";
-
 import useSWR from "swr";
-import { useCallback, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
-import type { EventWithTarget } from "@/types/domain";
 import { EVENTS_KEY } from "@/lib/swr-keys";
+import { useCallback, useState } from "react";
+import type { EventWithTarget } from "@/types/domain";
 import { friendlyError } from "@/lib/friendly-error";
 
 export { EVENTS_KEY };
@@ -12,15 +11,12 @@ export { EVENTS_KEY };
 type EventsPage = { events: EventWithTarget[]; nextCursor: string | null };
 
 export function useEvents() {
-  // Pages beyond the first are appended client-side; SWR only caches page 1
-  // (shared with anything else that reads /api/events, e.g. the dashboard).
   const { data, error, isLoading, mutate } = useSWR<EventsPage>(EVENTS_KEY);
   const [extra, setExtra] = useState<EventWithTarget[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [cursorInitialized, setCursorInitialized] = useState<string | null | undefined>(undefined);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // First page's cursor arrives async; seed our "more pages" cursor once.
   if (data && cursorInitialized === undefined) {
     setCursorInitialized(data.nextCursor);
     setNextCursor(data.nextCursor);

@@ -15,6 +15,7 @@ import { ErrorState } from "@/components/common/error-state";
 import { useSessions } from "@/features/sessions/hooks/use-sessions";
 import { useSettings, type UserSettings } from "@/hooks/use-settings";
 import { TargetLimitCard } from "@/features/account/components/target-limit-card";
+import { AppearanceCard } from "@/features/account/components/appearance-card";
 import { useMetaStatus } from "@/features/account/hooks/use-meta-status";
 import { AddSessionDialog } from "@/features/sessions/components/add-session-dialog";
 import { CheckScheduleCard } from "@/features/account/components/check-schedule-card";
@@ -100,6 +101,8 @@ export default function SettingsPage() {
         <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">Manage your account, integrations, and data retention.</p>
       </div>
+
+      <AppearanceCard />
 
       <Card size="sm">
         <CardHeader>

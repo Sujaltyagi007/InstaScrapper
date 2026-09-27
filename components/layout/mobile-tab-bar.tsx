@@ -24,7 +24,13 @@ export function MobileTabBar() {
       className="pointer-events-none fixed inset-x-0 bottom-0 z-45 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] md:hidden"
     >
       <div
-        className="pointer-events-auto relative mx-auto grid max-w-sm rounded-full bg-neutral-900 p-1.5 shadow-xl shadow-black/25 ring-1 ring-white/10 dark:bg-neutral-800"
+        // A floating card in the page's own surface colors — same `bg-card`/`border`
+        // language as every other panel in the app (Card, popovers, dropdowns) — instead
+        // of a separately-styled dark dock. In light mode this is a light bar with a
+        // subtle border, matching the page around it; in dark mode it's the dark card
+        // color. The active pill uses `bg-primary`, the same token the sidebar's active
+        // nav link uses, so "selected" looks the same concept in both places.
+        className="pointer-events-auto relative mx-auto grid max-w-sm rounded-full border bg-card p-1.5 shadow-xl shadow-black/10 dark:shadow-black/40"
         style={{ gridTemplateColumns: `repeat(${COUNT}, minmax(0, 1fr))` }}
       >
         {index >= 0 && (
@@ -33,7 +39,7 @@ export function MobileTabBar() {
             className="absolute inset-y-1.5 left-1.5 flex items-center justify-center transition-transform duration-500 ease-[cubic-bezier(0.34,1.3,0.64,1)] motion-reduce:transition-none"
             style={{ width: `calc((100% - 0.75rem) / ${COUNT})`, transform: `translateX(${index * 100}%)` }}
           >
-            <span className="size-10 rounded-full bg-white shadow-md shadow-black/20" />
+            <span className="size-10 rounded-full bg-primary" />
           </span>
         )}
         {NAV_ITEMS.map((item, i) => {
@@ -48,8 +54,8 @@ export function MobileTabBar() {
               aria-current={i === routeIndex ? "page" : undefined}
               onClick={() => setTapped({ href: item.href, from: pathname })}
               className={cn(
-                "relative z-10 flex h-10 items-center justify-center rounded-full outline-none transition-[color,transform] duration-300 active:scale-90 focus-visible:ring-2 focus-visible:ring-white/60",
-                active ? "text-neutral-900" : "text-neutral-400 hover:text-white",
+                "relative z-10 flex h-10 items-center justify-center rounded-full outline-none transition-[color,transform] duration-300 active:scale-90 focus-visible:ring-2 focus-visible:ring-ring",
+                active ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="size-4.5" strokeWidth={active ? 2.25 : 2} />
