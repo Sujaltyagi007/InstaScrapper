@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { decryptSecret } from "@/lib/crypto";
 import type { StealthSessionConfig } from "./types";
+import { assignStickyProxy, isRotatingProxy } from "./proxy-identity";
 
 const POOL_CANDIDATE_LIMIT = 5;
 const COOLDOWN_MINUTES = 15;
@@ -17,7 +18,7 @@ function buildSessionConfig(sessionRecord: any): StealthSessionConfig {
   });
   const rawParsed = JSON.parse(decryptedCookiesJson);
   const cookies = (rawParsed && typeof rawParsed === "object" ? rawParsed : {}) as Record<string, string>;
-  
+
   return {
     username: sessionRecord.username,
     cookies,
@@ -28,10 +29,31 @@ function buildSessionConfig(sessionRecord: any): StealthSessionConfig {
   };
 }
 
-export async function peekSession(
-  userId: string,
-  opts?: { pinnedSessionId?: string | null }
-): Promise<PickedSession | null> {
+/**
+ * Gives every burner of this user a fixed proxy before it's used. Sessions
+ * saved before that rule existed (no proxy, or the rotating one) would
+ * otherwise log in from this server's own connection or hop IPs per request.
+ * A session that can't get a fixed proxy is paused rather than used unsafely.
+ */
+async function pinSessionProxies(userId: string): Promise<void> {
+  const sessions = await prisma.instagramSession.findMany({
+    where: { userId, status: "ACTIVE" },
+    select: { id: true, proxyUrl: true },
+  });
+  for (const session of sessions) {
+    if (session.proxyUrl && !isRotatingProxy(session.proxyUrl)) continue;
+    const sticky = (await assignStickyProxy(session.id)) ?? null;
+    const fallback = process.env.DEFAULT_PROXY_URL?.trim();
+    const fixed = sticky ?? (fallback && !isRotatingProxy(fallback) ? fallback : null);
+    await prisma.instagramSession.update({
+      where: { id: session.id },
+      data: fixed ? { proxyUrl: fixed } : { status: "PAUSED" },
+    });
+  }
+}
+
+export async function peekSession(userId: string, opts?: { pinnedSessionId?: string | null }): Promise<PickedSession | null> {
+  await pinSessionProxies(userId);
   if (opts?.pinnedSessionId) {
     const pinned = await prisma.instagramSession.findFirst({
       where: {
@@ -73,6 +95,7 @@ export async function pickSession(
   userId: string,
   opts?: { pinnedSessionId?: string | null }
 ): Promise<PickedSession | null> {
+  await pinSessionProxies(userId);
   if (opts?.pinnedSessionId) {
     const pinned = await prisma.instagramSession.findFirst({
       where: {

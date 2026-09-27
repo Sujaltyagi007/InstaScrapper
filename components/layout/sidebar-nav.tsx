@@ -4,12 +4,14 @@ import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/common/theme-toggle";
-import { LayoutDashboard, Target, Bell, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Target, Clapperboard, HardDrive, Bell, Settings, LogOut } from "lucide-react";
 import { SystemHealthBadge } from "@/features/monitoring/components/system-health-badge";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/targets", label: "Targets", icon: Target },
+  { href: "/studio", label: "Studio", icon: Clapperboard },
+  { href: "/storage", label: "Storage", icon: HardDrive },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

@@ -1,13 +1,12 @@
 "use client";
-
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Fragment, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { apiFetch } from "@/lib/fetcher";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiFetch } from "@/lib/fetcher";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface CreateChannelDialogProps {
   open: boolean;
@@ -71,22 +70,13 @@ export function CreateChannelDialog({ open, onOpenChange, onCreated }: CreateCha
           <div className="flex flex-col gap-4 py-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="name">Channel Name</Label>
-              <Input
-                id="name"
-                placeholder="e.g. My Discord Alerts"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+              <Input id="name" placeholder="e.g. My Discord Alerts" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="provider">Provider</Label>
-              <select
-                id="provider"
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={provider}
-                onChange={(e) => setProvider(e.target.value as "DISCORD" | "NTFY" | "WEBHOOK")}
+              <select id="provider" className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                value={provider} onChange={(e) => setProvider(e.target.value as "DISCORD" | "NTFY" | "WEBHOOK")}
               >
                 <option value="DISCORD">Discord</option>
                 <option value="NTFY">ntfy</option>
@@ -97,18 +87,13 @@ export function CreateChannelDialog({ open, onOpenChange, onCreated }: CreateCha
             {provider === "DISCORD" && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="discordUrl">Discord Webhook URL</Label>
-                <Input
-                  id="discordUrl"
-                  placeholder="https://discord.com/api/webhooks/..."
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                  required
+                <Input id="discordUrl" placeholder="https://discord.com/api/webhooks/..." value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} required
                 />
               </div>
             )}
 
             {provider === "NTFY" && (
-              <>
+              <Fragment>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="ntfyServer">ntfy Server URL</Label>
                   <Input
@@ -128,7 +113,7 @@ export function CreateChannelDialog({ open, onOpenChange, onCreated }: CreateCha
                     required
                   />
                 </div>
-              </>
+              </Fragment>
             )}
 
             {provider === "WEBHOOK" && (

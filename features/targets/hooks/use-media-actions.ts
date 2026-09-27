@@ -1,15 +1,9 @@
 "use client";
-
-import { useState } from "react";
 import { toast } from "sonner";
+import { useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
 import type { Media } from "@prisma/client";
 
-/**
- * The two actions available on an expired media item: re-download the full
- * file on demand, or wipe it permanently. Shared so the dashboard gallery and
- * the mobile simulator can't drift apart.
- */
 export function useMediaActions(onChanged?: () => void) {
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -46,11 +40,7 @@ export function useMediaActions(onChanged?: () => void) {
         method: "DELETE",
       });
       if (res.storageFailures?.length) {
-        // Reported rather than hidden — the record is gone but these files
-        // remain in cloud storage.
-        toast.warning(
-          `Item deleted, but ${res.storageFailures.length} storage file(s) could not be removed.`
-        );
+        toast.warning(`Item deleted, but ${res.storageFailures.length} storage file(s) could not be removed.`);
       } else {
         toast.success("Item permanently deleted.");
       }

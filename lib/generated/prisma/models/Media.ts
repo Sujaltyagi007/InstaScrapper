@@ -20,8 +20,22 @@ export type MediaModel = runtime.Types.Result.DefaultSelection<Prisma.$MediaPayl
 
 export type AggregateMedia = {
   _count: MediaCountAggregateOutputType | null
+  _avg: MediaAvgAggregateOutputType | null
+  _sum: MediaSumAggregateOutputType | null
   _min: MediaMinAggregateOutputType | null
   _max: MediaMaxAggregateOutputType | null
+}
+
+export type MediaAvgAggregateOutputType = {
+  playCount: number | null
+  likeCount: number | null
+  commentCount: number | null
+}
+
+export type MediaSumAggregateOutputType = {
+  playCount: number | null
+  likeCount: number | null
+  commentCount: number | null
 }
 
 export type MediaMinAggregateOutputType = {
@@ -46,6 +60,13 @@ export type MediaMinAggregateOutputType = {
   isStory: boolean | null
   isCollab: boolean | null
   firstSeenAt: Date | null
+  playCount: number | null
+  likeCount: number | null
+  commentCount: number | null
+  audioTitle: string | null
+  audioArtist: string | null
+  audioIsOriginal: boolean | null
+  metricsUpdatedAt: Date | null
 }
 
 export type MediaMaxAggregateOutputType = {
@@ -70,6 +91,13 @@ export type MediaMaxAggregateOutputType = {
   isStory: boolean | null
   isCollab: boolean | null
   firstSeenAt: Date | null
+  playCount: number | null
+  likeCount: number | null
+  commentCount: number | null
+  audioTitle: string | null
+  audioArtist: string | null
+  audioIsOriginal: boolean | null
+  metricsUpdatedAt: Date | null
 }
 
 export type MediaCountAggregateOutputType = {
@@ -95,9 +123,28 @@ export type MediaCountAggregateOutputType = {
   isCollab: number
   collaborators: number
   firstSeenAt: number
+  playCount: number
+  likeCount: number
+  commentCount: number
+  audioTitle: number
+  audioArtist: number
+  audioIsOriginal: number
+  metricsUpdatedAt: number
   _all: number
 }
 
+
+export type MediaAvgAggregateInputType = {
+  playCount?: true
+  likeCount?: true
+  commentCount?: true
+}
+
+export type MediaSumAggregateInputType = {
+  playCount?: true
+  likeCount?: true
+  commentCount?: true
+}
 
 export type MediaMinAggregateInputType = {
   id?: true
@@ -121,6 +168,13 @@ export type MediaMinAggregateInputType = {
   isStory?: true
   isCollab?: true
   firstSeenAt?: true
+  playCount?: true
+  likeCount?: true
+  commentCount?: true
+  audioTitle?: true
+  audioArtist?: true
+  audioIsOriginal?: true
+  metricsUpdatedAt?: true
 }
 
 export type MediaMaxAggregateInputType = {
@@ -145,6 +199,13 @@ export type MediaMaxAggregateInputType = {
   isStory?: true
   isCollab?: true
   firstSeenAt?: true
+  playCount?: true
+  likeCount?: true
+  commentCount?: true
+  audioTitle?: true
+  audioArtist?: true
+  audioIsOriginal?: true
+  metricsUpdatedAt?: true
 }
 
 export type MediaCountAggregateInputType = {
@@ -170,6 +231,13 @@ export type MediaCountAggregateInputType = {
   isCollab?: true
   collaborators?: true
   firstSeenAt?: true
+  playCount?: true
+  likeCount?: true
+  commentCount?: true
+  audioTitle?: true
+  audioArtist?: true
+  audioIsOriginal?: true
+  metricsUpdatedAt?: true
   _all?: true
 }
 
@@ -211,6 +279,18 @@ export type MediaAggregateArgs<ExtArgs extends runtime.Types.Extensions.Internal
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: MediaAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: MediaSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: MediaMinAggregateInputType
@@ -241,6 +321,8 @@ export type MediaGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   _count?: MediaCountAggregateInputType | true
+  _avg?: MediaAvgAggregateInputType
+  _sum?: MediaSumAggregateInputType
   _min?: MediaMinAggregateInputType
   _max?: MediaMaxAggregateInputType
 }
@@ -268,7 +350,16 @@ export type MediaGroupByOutputType = {
   isCollab: boolean
   collaborators: string[]
   firstSeenAt: Date
+  playCount: number | null
+  likeCount: number | null
+  commentCount: number | null
+  audioTitle: string | null
+  audioArtist: string | null
+  audioIsOriginal: boolean | null
+  metricsUpdatedAt: Date | null
   _count: MediaCountAggregateOutputType | null
+  _avg: MediaAvgAggregateOutputType | null
+  _sum: MediaSumAggregateOutputType | null
   _min: MediaMinAggregateOutputType | null
   _max: MediaMaxAggregateOutputType | null
 }
@@ -314,7 +405,15 @@ export type MediaWhereInput = {
   isCollab?: Prisma.BoolFilter<"Media"> | boolean
   collaborators?: Prisma.StringNullableListFilter<"Media">
   firstSeenAt?: Prisma.DateTimeFilter<"Media"> | Date | string
+  playCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  likeCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  commentCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  audioTitle?: Prisma.StringNullableFilter<"Media"> | string | null
+  audioArtist?: Prisma.StringNullableFilter<"Media"> | string | null
+  audioIsOriginal?: Prisma.BoolNullableFilter<"Media"> | boolean | null
+  metricsUpdatedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
   target?: Prisma.XOR<Prisma.TargetScalarRelationFilter, Prisma.TargetWhereInput>
+  metricSnapshots?: Prisma.MediaMetricSnapshotListRelationFilter
 }
 
 export type MediaOrderByWithRelationInput = {
@@ -340,7 +439,15 @@ export type MediaOrderByWithRelationInput = {
   isCollab?: Prisma.SortOrder
   collaborators?: Prisma.SortOrder
   firstSeenAt?: Prisma.SortOrder
+  playCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  likeCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  commentCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  audioTitle?: Prisma.SortOrderInput | Prisma.SortOrder
+  audioArtist?: Prisma.SortOrderInput | Prisma.SortOrder
+  audioIsOriginal?: Prisma.SortOrderInput | Prisma.SortOrder
+  metricsUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   target?: Prisma.TargetOrderByWithRelationInput
+  metricSnapshots?: Prisma.MediaMetricSnapshotOrderByRelationAggregateInput
 }
 
 export type MediaWhereUniqueInput = Prisma.AtLeast<{
@@ -370,7 +477,15 @@ export type MediaWhereUniqueInput = Prisma.AtLeast<{
   isCollab?: Prisma.BoolFilter<"Media"> | boolean
   collaborators?: Prisma.StringNullableListFilter<"Media">
   firstSeenAt?: Prisma.DateTimeFilter<"Media"> | Date | string
+  playCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  likeCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  commentCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  audioTitle?: Prisma.StringNullableFilter<"Media"> | string | null
+  audioArtist?: Prisma.StringNullableFilter<"Media"> | string | null
+  audioIsOriginal?: Prisma.BoolNullableFilter<"Media"> | boolean | null
+  metricsUpdatedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
   target?: Prisma.XOR<Prisma.TargetScalarRelationFilter, Prisma.TargetWhereInput>
+  metricSnapshots?: Prisma.MediaMetricSnapshotListRelationFilter
 }, "id" | "targetId_externalMediaId">
 
 export type MediaOrderByWithAggregationInput = {
@@ -396,9 +511,18 @@ export type MediaOrderByWithAggregationInput = {
   isCollab?: Prisma.SortOrder
   collaborators?: Prisma.SortOrder
   firstSeenAt?: Prisma.SortOrder
+  playCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  likeCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  commentCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  audioTitle?: Prisma.SortOrderInput | Prisma.SortOrder
+  audioArtist?: Prisma.SortOrderInput | Prisma.SortOrder
+  audioIsOriginal?: Prisma.SortOrderInput | Prisma.SortOrder
+  metricsUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.MediaCountOrderByAggregateInput
+  _avg?: Prisma.MediaAvgOrderByAggregateInput
   _max?: Prisma.MediaMaxOrderByAggregateInput
   _min?: Prisma.MediaMinOrderByAggregateInput
+  _sum?: Prisma.MediaSumOrderByAggregateInput
 }
 
 export type MediaScalarWhereWithAggregatesInput = {
@@ -427,6 +551,13 @@ export type MediaScalarWhereWithAggregatesInput = {
   isCollab?: Prisma.BoolWithAggregatesFilter<"Media"> | boolean
   collaborators?: Prisma.StringNullableListFilter<"Media">
   firstSeenAt?: Prisma.DateTimeWithAggregatesFilter<"Media"> | Date | string
+  playCount?: Prisma.IntNullableWithAggregatesFilter<"Media"> | number | null
+  likeCount?: Prisma.IntNullableWithAggregatesFilter<"Media"> | number | null
+  commentCount?: Prisma.IntNullableWithAggregatesFilter<"Media"> | number | null
+  audioTitle?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
+  audioArtist?: Prisma.StringNullableWithAggregatesFilter<"Media"> | string | null
+  audioIsOriginal?: Prisma.BoolNullableWithAggregatesFilter<"Media"> | boolean | null
+  metricsUpdatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Media"> | Date | string | null
 }
 
 export type MediaCreateInput = {
@@ -451,7 +582,15 @@ export type MediaCreateInput = {
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
   firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
   target: Prisma.TargetCreateNestedOneWithoutMediaInput
+  metricSnapshots?: Prisma.MediaMetricSnapshotCreateNestedManyWithoutMediaInput
 }
 
 export type MediaUncheckedCreateInput = {
@@ -477,6 +616,14 @@ export type MediaUncheckedCreateInput = {
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
   firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
+  metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedCreateNestedManyWithoutMediaInput
 }
 
 export type MediaUpdateInput = {
@@ -501,7 +648,15 @@ export type MediaUpdateInput = {
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
   firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   target?: Prisma.TargetUpdateOneRequiredWithoutMediaNestedInput
+  metricSnapshots?: Prisma.MediaMetricSnapshotUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaUncheckedUpdateInput = {
@@ -527,6 +682,14 @@ export type MediaUncheckedUpdateInput = {
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
   firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaCreateManyInput = {
@@ -552,6 +715,13 @@ export type MediaCreateManyInput = {
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
   firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
 }
 
 export type MediaUpdateManyMutationInput = {
@@ -576,6 +746,13 @@ export type MediaUpdateManyMutationInput = {
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
   firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type MediaUncheckedUpdateManyInput = {
@@ -601,6 +778,18 @@ export type MediaUncheckedUpdateManyInput = {
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
   firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type MediaScalarRelationFilter = {
+  is?: Prisma.MediaWhereInput
+  isNot?: Prisma.MediaWhereInput
 }
 
 export type MediaListRelationFilter = {
@@ -641,6 +830,19 @@ export type MediaCountOrderByAggregateInput = {
   isCollab?: Prisma.SortOrder
   collaborators?: Prisma.SortOrder
   firstSeenAt?: Prisma.SortOrder
+  playCount?: Prisma.SortOrder
+  likeCount?: Prisma.SortOrder
+  commentCount?: Prisma.SortOrder
+  audioTitle?: Prisma.SortOrder
+  audioArtist?: Prisma.SortOrder
+  audioIsOriginal?: Prisma.SortOrder
+  metricsUpdatedAt?: Prisma.SortOrder
+}
+
+export type MediaAvgOrderByAggregateInput = {
+  playCount?: Prisma.SortOrder
+  likeCount?: Prisma.SortOrder
+  commentCount?: Prisma.SortOrder
 }
 
 export type MediaMaxOrderByAggregateInput = {
@@ -665,6 +867,13 @@ export type MediaMaxOrderByAggregateInput = {
   isStory?: Prisma.SortOrder
   isCollab?: Prisma.SortOrder
   firstSeenAt?: Prisma.SortOrder
+  playCount?: Prisma.SortOrder
+  likeCount?: Prisma.SortOrder
+  commentCount?: Prisma.SortOrder
+  audioTitle?: Prisma.SortOrder
+  audioArtist?: Prisma.SortOrder
+  audioIsOriginal?: Prisma.SortOrder
+  metricsUpdatedAt?: Prisma.SortOrder
 }
 
 export type MediaMinOrderByAggregateInput = {
@@ -689,6 +898,33 @@ export type MediaMinOrderByAggregateInput = {
   isStory?: Prisma.SortOrder
   isCollab?: Prisma.SortOrder
   firstSeenAt?: Prisma.SortOrder
+  playCount?: Prisma.SortOrder
+  likeCount?: Prisma.SortOrder
+  commentCount?: Prisma.SortOrder
+  audioTitle?: Prisma.SortOrder
+  audioArtist?: Prisma.SortOrder
+  audioIsOriginal?: Prisma.SortOrder
+  metricsUpdatedAt?: Prisma.SortOrder
+}
+
+export type MediaSumOrderByAggregateInput = {
+  playCount?: Prisma.SortOrder
+  likeCount?: Prisma.SortOrder
+  commentCount?: Prisma.SortOrder
+}
+
+export type MediaCreateNestedOneWithoutMetricSnapshotsInput = {
+  create?: Prisma.XOR<Prisma.MediaCreateWithoutMetricSnapshotsInput, Prisma.MediaUncheckedCreateWithoutMetricSnapshotsInput>
+  connectOrCreate?: Prisma.MediaCreateOrConnectWithoutMetricSnapshotsInput
+  connect?: Prisma.MediaWhereUniqueInput
+}
+
+export type MediaUpdateOneRequiredWithoutMetricSnapshotsNestedInput = {
+  create?: Prisma.XOR<Prisma.MediaCreateWithoutMetricSnapshotsInput, Prisma.MediaUncheckedCreateWithoutMetricSnapshotsInput>
+  connectOrCreate?: Prisma.MediaCreateOrConnectWithoutMetricSnapshotsInput
+  upsert?: Prisma.MediaUpsertWithoutMetricSnapshotsInput
+  connect?: Prisma.MediaWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MediaUpdateToOneWithWhereWithoutMetricSnapshotsInput, Prisma.MediaUpdateWithoutMetricSnapshotsInput>, Prisma.MediaUncheckedUpdateWithoutMetricSnapshotsInput>
 }
 
 export type MediaCreateNestedManyWithoutTargetInput = {
@@ -742,6 +978,154 @@ export type MediaUpdatecollaboratorsInput = {
   push?: string | string[]
 }
 
+export type NullableBoolFieldUpdateOperationsInput = {
+  set?: boolean | null
+}
+
+export type MediaCreateWithoutMetricSnapshotsInput = {
+  id?: string
+  externalMediaId: string
+  mediaType: string
+  permalink?: string | null
+  timestamp?: Date | string | null
+  caption?: string | null
+  mediaUrl?: string | null
+  videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
+  storageUrl?: string | null
+  storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
+  isStory?: boolean
+  isCollab?: boolean
+  collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
+  firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
+  target: Prisma.TargetCreateNestedOneWithoutMediaInput
+}
+
+export type MediaUncheckedCreateWithoutMetricSnapshotsInput = {
+  id?: string
+  targetId: string
+  externalMediaId: string
+  mediaType: string
+  permalink?: string | null
+  timestamp?: Date | string | null
+  caption?: string | null
+  mediaUrl?: string | null
+  videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
+  storageUrl?: string | null
+  storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
+  isStory?: boolean
+  isCollab?: boolean
+  collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
+  firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
+}
+
+export type MediaCreateOrConnectWithoutMetricSnapshotsInput = {
+  where: Prisma.MediaWhereUniqueInput
+  create: Prisma.XOR<Prisma.MediaCreateWithoutMetricSnapshotsInput, Prisma.MediaUncheckedCreateWithoutMetricSnapshotsInput>
+}
+
+export type MediaUpsertWithoutMetricSnapshotsInput = {
+  update: Prisma.XOR<Prisma.MediaUpdateWithoutMetricSnapshotsInput, Prisma.MediaUncheckedUpdateWithoutMetricSnapshotsInput>
+  create: Prisma.XOR<Prisma.MediaCreateWithoutMetricSnapshotsInput, Prisma.MediaUncheckedCreateWithoutMetricSnapshotsInput>
+  where?: Prisma.MediaWhereInput
+}
+
+export type MediaUpdateToOneWithWhereWithoutMetricSnapshotsInput = {
+  where?: Prisma.MediaWhereInput
+  data: Prisma.XOR<Prisma.MediaUpdateWithoutMetricSnapshotsInput, Prisma.MediaUncheckedUpdateWithoutMetricSnapshotsInput>
+}
+
+export type MediaUpdateWithoutMetricSnapshotsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  externalMediaId?: Prisma.StringFieldUpdateOperationsInput | string
+  mediaType?: Prisma.StringFieldUpdateOperationsInput | string
+  permalink?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
+  firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  target?: Prisma.TargetUpdateOneRequiredWithoutMediaNestedInput
+}
+
+export type MediaUncheckedUpdateWithoutMetricSnapshotsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  targetId?: Prisma.StringFieldUpdateOperationsInput | string
+  externalMediaId?: Prisma.StringFieldUpdateOperationsInput | string
+  mediaType?: Prisma.StringFieldUpdateOperationsInput | string
+  permalink?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
+  firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
 export type MediaCreateWithoutTargetInput = {
   id?: string
   externalMediaId: string
@@ -764,6 +1148,14 @@ export type MediaCreateWithoutTargetInput = {
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
   firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
+  metricSnapshots?: Prisma.MediaMetricSnapshotCreateNestedManyWithoutMediaInput
 }
 
 export type MediaUncheckedCreateWithoutTargetInput = {
@@ -788,6 +1180,14 @@ export type MediaUncheckedCreateWithoutTargetInput = {
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
   firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
+  metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedCreateNestedManyWithoutMediaInput
 }
 
 export type MediaCreateOrConnectWithoutTargetInput = {
@@ -842,6 +1242,13 @@ export type MediaScalarWhereInput = {
   isCollab?: Prisma.BoolFilter<"Media"> | boolean
   collaborators?: Prisma.StringNullableListFilter<"Media">
   firstSeenAt?: Prisma.DateTimeFilter<"Media"> | Date | string
+  playCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  likeCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  commentCount?: Prisma.IntNullableFilter<"Media"> | number | null
+  audioTitle?: Prisma.StringNullableFilter<"Media"> | string | null
+  audioArtist?: Prisma.StringNullableFilter<"Media"> | string | null
+  audioIsOriginal?: Prisma.BoolNullableFilter<"Media"> | boolean | null
+  metricsUpdatedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
 }
 
 export type MediaCreateManyTargetInput = {
@@ -866,6 +1273,13 @@ export type MediaCreateManyTargetInput = {
   isCollab?: boolean
   collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
   firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
 }
 
 export type MediaUpdateWithoutTargetInput = {
@@ -890,6 +1304,14 @@ export type MediaUpdateWithoutTargetInput = {
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
   firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metricSnapshots?: Prisma.MediaMetricSnapshotUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaUncheckedUpdateWithoutTargetInput = {
@@ -914,6 +1336,14 @@ export type MediaUncheckedUpdateWithoutTargetInput = {
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
   firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaUncheckedUpdateManyWithoutTargetInput = {
@@ -938,8 +1368,44 @@ export type MediaUncheckedUpdateManyWithoutTargetInput = {
   isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
   collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
   firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
+
+/**
+ * Count Type MediaCountOutputType
+ */
+
+export type MediaCountOutputType = {
+  metricSnapshots: number
+}
+
+export type MediaCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  metricSnapshots?: boolean | MediaCountOutputTypeCountMetricSnapshotsArgs
+}
+
+/**
+ * MediaCountOutputType without action
+ */
+export type MediaCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MediaCountOutputType
+   */
+  select?: Prisma.MediaCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * MediaCountOutputType without action
+ */
+export type MediaCountOutputTypeCountMetricSnapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MediaMetricSnapshotWhereInput
+}
 
 
 export type MediaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -965,7 +1431,16 @@ export type MediaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   isCollab?: boolean
   collaborators?: boolean
   firstSeenAt?: boolean
+  playCount?: boolean
+  likeCount?: boolean
+  commentCount?: boolean
+  audioTitle?: boolean
+  audioArtist?: boolean
+  audioIsOriginal?: boolean
+  metricsUpdatedAt?: boolean
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
+  metricSnapshots?: boolean | Prisma.Media$metricSnapshotsArgs<ExtArgs>
+  _count?: boolean | Prisma.MediaCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["media"]>
 
 export type MediaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -991,6 +1466,13 @@ export type MediaSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   isCollab?: boolean
   collaborators?: boolean
   firstSeenAt?: boolean
+  playCount?: boolean
+  likeCount?: boolean
+  commentCount?: boolean
+  audioTitle?: boolean
+  audioArtist?: boolean
+  audioIsOriginal?: boolean
+  metricsUpdatedAt?: boolean
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["media"]>
 
@@ -1017,6 +1499,13 @@ export type MediaSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   isCollab?: boolean
   collaborators?: boolean
   firstSeenAt?: boolean
+  playCount?: boolean
+  likeCount?: boolean
+  commentCount?: boolean
+  audioTitle?: boolean
+  audioArtist?: boolean
+  audioIsOriginal?: boolean
+  metricsUpdatedAt?: boolean
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["media"]>
 
@@ -1043,11 +1532,20 @@ export type MediaSelectScalar = {
   isCollab?: boolean
   collaborators?: boolean
   firstSeenAt?: boolean
+  playCount?: boolean
+  likeCount?: boolean
+  commentCount?: boolean
+  audioTitle?: boolean
+  audioArtist?: boolean
+  audioIsOriginal?: boolean
+  metricsUpdatedAt?: boolean
 }
 
-export type MediaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "targetId" | "externalMediaId" | "mediaType" | "permalink" | "timestamp" | "caption" | "mediaUrl" | "videoUrl" | "sourceMediaUrl" | "sourceVideoUrl" | "storageUrl" | "storageFileId" | "storedAt" | "thumbnailUrl" | "thumbnailFileId" | "isExpired" | "expiredAt" | "isStory" | "isCollab" | "collaborators" | "firstSeenAt", ExtArgs["result"]["media"]>
+export type MediaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "targetId" | "externalMediaId" | "mediaType" | "permalink" | "timestamp" | "caption" | "mediaUrl" | "videoUrl" | "sourceMediaUrl" | "sourceVideoUrl" | "storageUrl" | "storageFileId" | "storedAt" | "thumbnailUrl" | "thumbnailFileId" | "isExpired" | "expiredAt" | "isStory" | "isCollab" | "collaborators" | "firstSeenAt" | "playCount" | "likeCount" | "commentCount" | "audioTitle" | "audioArtist" | "audioIsOriginal" | "metricsUpdatedAt", ExtArgs["result"]["media"]>
 export type MediaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
+  metricSnapshots?: boolean | Prisma.Media$metricSnapshotsArgs<ExtArgs>
+  _count?: boolean | Prisma.MediaCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type MediaIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
@@ -1060,6 +1558,7 @@ export type $MediaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   name: "Media"
   objects: {
     target: Prisma.$TargetPayload<ExtArgs>
+    metricSnapshots: Prisma.$MediaMetricSnapshotPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1084,6 +1583,13 @@ export type $MediaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     isCollab: boolean
     collaborators: string[]
     firstSeenAt: Date
+    playCount: number | null
+    likeCount: number | null
+    commentCount: number | null
+    audioTitle: string | null
+    audioArtist: string | null
+    audioIsOriginal: boolean | null
+    metricsUpdatedAt: Date | null
   }, ExtArgs["result"]["media"]>
   composites: {}
 }
@@ -1479,6 +1985,7 @@ readonly fields: MediaFieldRefs;
 export interface Prisma__MediaClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   target<T extends Prisma.TargetDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TargetDefaultArgs<ExtArgs>>): Prisma.Prisma__TargetClient<runtime.Types.Result.GetResult<Prisma.$TargetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  metricSnapshots<T extends Prisma.Media$metricSnapshotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Media$metricSnapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MediaMetricSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1530,6 +2037,13 @@ export interface MediaFieldRefs {
   readonly isCollab: Prisma.FieldRef<"Media", 'Boolean'>
   readonly collaborators: Prisma.FieldRef<"Media", 'String[]'>
   readonly firstSeenAt: Prisma.FieldRef<"Media", 'DateTime'>
+  readonly playCount: Prisma.FieldRef<"Media", 'Int'>
+  readonly likeCount: Prisma.FieldRef<"Media", 'Int'>
+  readonly commentCount: Prisma.FieldRef<"Media", 'Int'>
+  readonly audioTitle: Prisma.FieldRef<"Media", 'String'>
+  readonly audioArtist: Prisma.FieldRef<"Media", 'String'>
+  readonly audioIsOriginal: Prisma.FieldRef<"Media", 'Boolean'>
+  readonly metricsUpdatedAt: Prisma.FieldRef<"Media", 'DateTime'>
 }
     
 
@@ -1928,6 +2442,30 @@ export type MediaDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Limit how many Media to delete.
    */
   limit?: number
+}
+
+/**
+ * Media.metricSnapshots
+ */
+export type Media$metricSnapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MediaMetricSnapshot
+   */
+  select?: Prisma.MediaMetricSnapshotSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MediaMetricSnapshot
+   */
+  omit?: Prisma.MediaMetricSnapshotOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MediaMetricSnapshotInclude<ExtArgs> | null
+  where?: Prisma.MediaMetricSnapshotWhereInput
+  orderBy?: Prisma.MediaMetricSnapshotOrderByWithRelationInput | Prisma.MediaMetricSnapshotOrderByWithRelationInput[]
+  cursor?: Prisma.MediaMetricSnapshotWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MediaMetricSnapshotScalarFieldEnum | Prisma.MediaMetricSnapshotScalarFieldEnum[]
 }
 
 /**

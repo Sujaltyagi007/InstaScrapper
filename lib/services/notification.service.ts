@@ -195,19 +195,6 @@ export async function sendTestNotification(channelId: string, userId: string) {
   });
 }
 
-/**
- * Sends an account-level alert (not tied to a target or Event) straight to
- * every enabled channel the user has.
- *
- * Why not the Event queue: Events belong to a target (`targetId` is required
- * and cascades on delete), and an account alert like "limit reached" isn't
- * about any one target. Delivery here is best-effort and immediate; failures
- * are logged per channel and never thrown, so an unreachable webhook can't
- * break the action that triggered the alert.
- *
- * Channel `eventTypeFilter`s are intentionally ignored: they select which
- * *target* events a channel wants, and account alerts aren't one of those.
- */
 export async function sendAccountAlert(
   userId: string,
   message: { title: string; body: string; kind: string; url?: string }

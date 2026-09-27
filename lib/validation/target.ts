@@ -6,7 +6,10 @@ export const resolveTargetSchema = z.object({
 
 export const createTargetSchema = z.object({
   username: z.string().min(1).max(60),
+  /** Signed result of the preview lookup (from /api/targets/resolve), so saving doesn't look it up again. */
+  resolutionToken: z.string().max(8000).optional(),
   engineType: z.enum(["STEALTH_SCRAPER", "META_GRAPH"]).default("STEALTH_SCRAPER"),
+  triggerMode: z.enum(["NEW_POSTS_ONLY", "FULL"]).default("NEW_POSTS_ONLY"),
   watchNewMedia: z.boolean().default(true),
   watchProfile: z.boolean().default(true),
   watchFollowerCount: z.boolean().default(false),
@@ -15,6 +18,7 @@ export const createTargetSchema = z.object({
   watchReels: z.boolean().default(true),
   watchFollowerChurn: z.boolean().default(false),
   watchCollabPosts: z.boolean().default(true),
+  autoRepost: z.boolean().default(false),
   jitterEnabled: z.boolean().default(true),
   humanSimEnabled: z.boolean().default(false),
   restrictedHoursEnabled: z.boolean().default(false),
@@ -28,6 +32,7 @@ export const createTargetSchema = z.object({
 
 export const updateMonitorSchema = z.object({
   engineType: z.enum(["STEALTH_SCRAPER", "META_GRAPH"]).optional(),
+  triggerMode: z.enum(["NEW_POSTS_ONLY", "FULL"]).optional(),
   watchNewMedia: z.boolean().optional(),
   watchProfile: z.boolean().optional(),
   watchFollowerCount: z.boolean().optional(),
@@ -36,6 +41,7 @@ export const updateMonitorSchema = z.object({
   watchReels: z.boolean().optional(),
   watchFollowerChurn: z.boolean().optional(),
   watchCollabPosts: z.boolean().optional(),
+  autoRepost: z.boolean().optional(),
   jitterEnabled: z.boolean().optional(),
   humanSimEnabled: z.boolean().optional(),
   restrictedHoursEnabled: z.boolean().optional(),

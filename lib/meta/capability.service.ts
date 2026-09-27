@@ -24,7 +24,6 @@ export function toPrismaEligibility(result: TargetEligibilityResult): TargetElig
   return ELIGIBILITY_MAP[result];
 }
 
-/** Human-readable one-liner for the UI, matching the plan's failure-case copy. */
 export function eligibilityMessage(resolution: TargetResolution): string {
   switch (resolution.eligibility) {
     case "SUPPORTED":

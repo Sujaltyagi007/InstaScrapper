@@ -1,7 +1,6 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
+import { useCallback, useEffect, useState } from "react";
 
 export interface InstagramSessionSummary {
   id: string;

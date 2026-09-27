@@ -6,38 +6,10 @@ export interface HtmlScrapeResult {
   deviceId?: string;
 }
 
-/** A single fetch of an arbitrary URL, injected by the caller. */
 export type HtmlFetcher = (url: string) => Promise<{ status: number; text: string } | null>;
-
-/**
- * Synthetic status meaning "Instagram served the logged-out wall every time."
- * Distinct from 401/403 so callers don't mistake it for a flagged session —
- * it says nothing about credentials, and the correct response is to retry
- * later, not to tell the user their session is broken.
- */
 export const LOGIN_SHELL_STATUS = 503;
-
-/**
- * A logged-out profile request lands on the real page only ~15% of the time;
- * the rest draw the login shell. Eight attempts (each on a fresh cookie jar,
- * supplied by the caller's fetcher) gets that to a usable success rate without
- * letting one lookup stall for too long. Neither jar reuse nor a crawler
- * user-agent raises the per-attempt odds — see the bridge's jar-policy note.
- */
 const MAX_ATTEMPTS = 14;
-/**
- * Short, near-flat delays. A soft-blocked attempt is a bare 302 with no body,
- * so it costs a few hundred ms — cheap enough that many quick tries beat a few
- * slow ones. 14 attempts at ~20% each is ~95%, in ~13s worst case.
- */
-const RETRY_DELAY_MS = [
-  300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000,
-];
-
-/**
- * Brace-matches the JSON object that follows `"<key>":` in `src`.
- * String-aware, so braces inside string literals don't break nesting.
- */
+const RETRY_DELAY_MS = [300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000];
 function extractObjectAfter(src: string, key: string, from = 0): string | null {
   const needle = `"${key}":`;
   const at = src.indexOf(needle, from);
@@ -126,24 +98,11 @@ function looksLikeRealProfile(html: string, username: string): boolean {
   return /Followers/i.test(desc) || html.includes('"follower_count"');
 }
 
-/**
- * True when the page carries the full Relay prefetch payload (exact counts,
- * bio, bio_links). Instagram also serves a "lite" real profile page (~700KB
- * vs ~813KB) that has the og: tags but no such payload, so this distinguishes
- * the two and lets the retry loop hold out for the richer one.
- */
+
 function hasFullPayload(html: string): boolean {
   return html.includes('"xig_user_by_username"');
 }
 
-/**
- * Recovers the numeric user id from a page without the Relay payload.
- *
- * This matters more than it looks: the id is what the app stores as a
- * target's externalId, so a page that yields no id resolves "successfully"
- * but cannot actually be saved as a target. All three of these keys were
- * observed carrying the same id on a lite page.
- */
 function extractUserIdFallback(html: string): string | null {
   const patterns = [
     /"profile_id":"(\d+)"/,
@@ -210,7 +169,24 @@ const ATTEMPT_RESERVE_MS = 11_000;
 export interface ScrapeOptions {
   /** Epoch ms after which no new attempt may start (see StealthFetchOptions). */
   deadlineAt?: number;
+  /**
+   * Attempts in flight at once. Only for logged-out requests through a
+   * rotating proxy, where every attempt leaves from a different IP, so running
+   * them side by side doesn't concentrate load on any one IP. Requests carrying
+   * a logged-in session must stay at 1: one account firing parallel requests
+   * from several IPs is exactly what gets it flagged.
+   */
+  concurrency?: number;
+  /**
+   * Stop at the first real profile page even if it's the lite variant. Enough
+   * to resolve an account (existence, type, id); checks that need exact counts,
+   * bio and posts leave this off and hold out for the full page.
+   */
+  acceptLite?: boolean;
 }
+
+/** Spacing between parallel launches, so hedged attempts never leave as one burst. */
+const HEDGE_STAGGER_MS = 250;
 
 export async function scrapeProfileHtml(
   username: string,
@@ -219,34 +195,35 @@ export async function scrapeProfileHtml(
 ): Promise<HtmlScrapeResult | null> {
   const cleanUser = username.trim().toLowerCase().replace(/^@/, "");
   const url = `https://www.instagram.com/${cleanUser}/`;
+  const concurrency = Math.max(1, Math.min(options.concurrency ?? 1, 6));
 
   let lastStatus = 0;
   let shells = 0;
   let rateLimits = 0;
-  let html: string | null = null;
-  let liteHtml: string | null = null;
-
+  let html = null as string | null;
+  let liteHtml = null as string | null;
+  let early = null as HtmlScrapeResult | null;
+  let done = false;
   let stoppedForDeadline = false;
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const delay = attempt > 0 ? (RETRY_DELAY_MS[attempt - 1] ?? 6000) : 0;
-
-    // Out of time: stop cleanly rather than let the platform kill the
-    // function mid-request. The first attempt always runs.
-    if (attempt > 0 && options.deadlineAt && Date.now() + delay + ATTEMPT_RESERVE_MS > options.deadlineAt) {
-      stoppedForDeadline = true;
-      break;
-    }
-
-    if (delay) await new Promise((r) => setTimeout(r, delay));
+  async function runAttempt(attempt: number): Promise<void> {
+    const attemptStarted = Date.now();
     const res = await fetcher(url);
-    if (!res) continue;
+    if (process.env.SCRAPER_DEBUG) {
+      console.log(
+        `[html-scraper] @${cleanUser} attempt ${attempt + 1}: ${res ? `HTTP ${res.status}, ${Math.round(res.text.length / 1024)}KB` : "no response"} in ${Date.now() - attemptStarted}ms`,
+      );
+    }
+    // A sibling attempt already settled it; ignore late arrivals.
+    if (done || !res) return;
     lastStatus = res.status;
 
     // A genuine 404 is authoritative — stop retrying, report it upward so the
     // caller can surface NOT_FOUND instead of a misleading rate-limit.
     if (res.status === 404) {
-      return { status: 404, text: res.text, data: { status: "fail", message: "not_found" } };
+      early = { status: 404, text: res.text, data: { status: "fail", message: "not_found" } };
+      done = true;
+      return;
     }
 
     // 429 means the egress IP is out of budget. Retrying only deepens the
@@ -256,42 +233,63 @@ export async function scrapeProfileHtml(
       rateLimits++;
       if (rateLimits >= 2) {
         console.warn(`[html-scraper] @${cleanUser}: rate-limited (HTTP 429) — backing off`);
-        return { status: 429, text: res.text, data: { status: "fail", message: "rate_limited" } };
+        early = { status: 429, text: res.text, data: { status: "fail", message: "rate_limited" } };
+        done = true;
       }
-      continue;
+      return;
     }
-
-    // 3xx: Instagram redirects logged-out profile requests to its login page.
-    // The transport deliberately does not follow it, so a redirect IS the
-    // soft-block signal — same meaning as the login shell, detected instantly
-    // instead of after downloading a ~500KB page.
     if (res.status >= 300 && res.status < 400) {
       shells++;
-      continue;
+      return;
     }
-
-    if (res.status !== 200) continue;
+    if (res.status !== 200) return;
 
     if (looksLikeRealProfile(res.text, cleanUser)) {
       if (hasFullPayload(res.text)) {
         html = res.text;
-        break;
+        done = true;
+        return;
       }
-      // A "lite" real page: og: tags but no Relay payload, so counts are
-      // abbreviated and bio/website are absent. Keep it as a fallback and
-      // spend remaining attempts trying for the full version.
       if (!liteHtml) liteHtml = res.text;
-      continue;
+      if (options.acceptLite) done = true;
+      return;
     }
-
-    // A 200 that isn't the real profile is the inline login shell — same soft
-    // block. Just try again; each attempt is an independent ~15% roll.
     shells++;
   }
 
-  // Never got the full payload — fall back to the lite page rather than
-  // failing outright. Degraded (abbreviated counts, no bio) but still enough
-  // to identify and add the target.
+  // Keeps up to `concurrency` attempts in flight; each finished attempt that
+  // didn't settle the result makes room for the next one.
+  const inFlight = new Set<Promise<void>>();
+  let launched = 0;
+  while (!done) {
+    while (!done && inFlight.size < concurrency && launched < MAX_ATTEMPTS) {
+      const attempt = launched;
+      const delay =
+        concurrency > 1
+          ? (attempt < concurrency ? attempt * HEDGE_STAGGER_MS : HEDGE_STAGGER_MS)
+          : attempt > 0
+            ? (RETRY_DELAY_MS[attempt - 1] ?? 6000)
+            : 0;
+
+      // Out of time: stop cleanly rather than let the platform kill the
+      // function mid-request. The first attempt always runs.
+      if (attempt > 0 && options.deadlineAt && Date.now() + delay + ATTEMPT_RESERVE_MS > options.deadlineAt) {
+        stoppedForDeadline = true;
+        break;
+      }
+      launched++;
+      const task: Promise<void> = (async () => {
+        if (delay) await new Promise((r) => setTimeout(r, delay));
+        if (!done) await runAttempt(attempt);
+      })().finally(() => inFlight.delete(task));
+      inFlight.add(task);
+    }
+    if (inFlight.size === 0) break;
+    await Promise.race(inFlight);
+    if (stoppedForDeadline && inFlight.size === 0) break;
+  }
+  if (early) return early;
+
   if (!html && liteHtml) {
     console.warn(
       `[html-scraper] @${cleanUser}: using lite profile page (no Relay payload) — ` +
@@ -306,8 +304,6 @@ export async function scrapeProfileHtml(
       (stoppedForDeadline ? `(stopped early for time budget) ` : `after ${MAX_ATTEMPTS} attempts `) +
       `(${shells} login shells, last status ${lastStatus})`
     );
-    // Every attempt was the logged-out wall: report that specifically, so the
-    // caller doesn't fall through and blame the user's session.
     if (shells > 0) {
       return {
         status: LOGIN_SHELL_STATUS,
@@ -321,8 +317,6 @@ export async function scrapeProfileHtml(
   const profile = parseObjectAfter(html, "xig_user_by_username");
   const og = parseOgCounts(html);
 
-  // The posts payload lives in a *second* xig_user_by_username occurrence, so
-  // search forward from just past the first one.
   const firstAt = html.indexOf('"xig_user_by_username":');
   const timeline =
     parseObjectAfter(html, "polaris_ordered_timeline_connection", firstAt + 1) ?? null;
@@ -335,9 +329,6 @@ export async function scrapeProfileHtml(
 
   const posts = nodes.filter((n) => n.__productType !== "clips");
   const reels = nodes.filter((n) => n.__productType === "clips");
-
-  // Fall back to og:title ("NASA (@nasa) • Instagram photos and videos") when
-  // the embedded JSON is missing, which happens on some shell variants.
   const ogTitle = readMeta(html, "og:title") ?? "";
   const nameFromTitle = ogTitle.split("(@")[0].trim() || null;
 
@@ -346,11 +337,6 @@ export async function scrapeProfileHtml(
     return null;
   }
 
-  // The numeric user id. `pk` from the Relay payload is authoritative; the
-  // lite page has no payload, so recover it from the page's other id keys.
-  // Without an id the caller can resolve the profile but cannot save it as a
-  // target, so treat a missing id as a parse failure rather than returning a
-  // half-usable result.
   const userId = profile?.pk ? String(profile.pk) : extractUserIdFallback(html);
   if (!userId) {
     console.warn(`[html-scraper] @${cleanUser}: profile page had no recoverable user id`);
@@ -364,9 +350,6 @@ export async function scrapeProfileHtml(
   const bioLink = Array.isArray(profile?.bio_links) ? profile.bio_links[0] : null;
 
   const user = {
-    // The numeric user id used by the friendships/stories endpoints. Note the
-    // Relay payload's sibling `id` field is the IG-business id and is NOT
-    // interchangeable with this one.
     id: userId,
     pk: userId,
     username: profile?.username ?? cleanUser,
@@ -378,8 +361,6 @@ export async function scrapeProfileHtml(
     is_private: Boolean(profile?.is_private),
     is_verified: Boolean(profile?.is_verified),
     is_business_account: false,
-    // Anonymous requests can't see stories; the bridge gates hasStory on auth
-    // anyway, so reporting false here is honest rather than lossy.
     has_public_story: false,
     edge_followed_by: { count: followers ?? null },
     edge_follow: { count: following ?? null },

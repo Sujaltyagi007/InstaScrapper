@@ -53,6 +53,14 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   MetaConnection: 'MetaConnection',
+  IgAccount: 'IgAccount',
+  MediaMetricSnapshot: 'MediaMetricSnapshot',
+  Niche: 'Niche',
+  ReelIdea: 'ReelIdea',
+  ReelProject: 'ReelProject',
+  StoredFile: 'StoredFile',
+  SoundAsset: 'SoundAsset',
+  NicheAccount: 'NicheAccount',
   Target: 'Target',
   InstagramSession: 'InstagramSession',
   Monitor: 'Monitor',
@@ -64,7 +72,8 @@ export const ModelName = {
   Job: 'Job',
   AuthRateLimit: 'AuthRateLimit',
   R2UsageCounter: 'R2UsageCounter',
-  ScrapeThrottle: 'ScrapeThrottle'
+  ScrapeThrottle: 'ScrapeThrottle',
+  Repost: 'Repost'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -96,6 +105,7 @@ export const UserScalarFieldEnum = {
   sleepEnabled: 'sleepEnabled',
   sleepStartHour: 'sleepStartHour',
   sleepEndHour: 'sleepEndHour',
+  mediaKeepHours: 'mediaKeepHours',
   emailVerified: 'emailVerified',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -110,6 +120,8 @@ export const MetaConnectionScalarFieldEnum = {
   provider: 'provider',
   externalUserId: 'externalUserId',
   accountType: 'accountType',
+  igUsername: 'igUsername',
+  pageId: 'pageId',
   encryptedAccessToken: 'encryptedAccessToken',
   encryptedTokenIv: 'encryptedTokenIv',
   scopes: 'scopes',
@@ -121,6 +133,154 @@ export const MetaConnectionScalarFieldEnum = {
 } as const
 
 export type MetaConnectionScalarFieldEnum = (typeof MetaConnectionScalarFieldEnum)[keyof typeof MetaConnectionScalarFieldEnum]
+
+
+export const IgAccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  igUserId: 'igUserId',
+  username: 'username',
+  accountType: 'accountType',
+  encryptedAccessToken: 'encryptedAccessToken',
+  encryptedTokenIv: 'encryptedTokenIv',
+  scopes: 'scopes',
+  status: 'status',
+  tokenExpiresAt: 'tokenExpiresAt',
+  tokenRefreshedAt: 'tokenRefreshedAt',
+  postingPaused: 'postingPaused',
+  pausedReason: 'pausedReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IgAccountScalarFieldEnum = (typeof IgAccountScalarFieldEnum)[keyof typeof IgAccountScalarFieldEnum]
+
+
+export const MediaMetricSnapshotScalarFieldEnum = {
+  id: 'id',
+  mediaId: 'mediaId',
+  playCount: 'playCount',
+  likeCount: 'likeCount',
+  commentCount: 'commentCount',
+  capturedAt: 'capturedAt'
+} as const
+
+export type MediaMetricSnapshotScalarFieldEnum = (typeof MediaMetricSnapshotScalarFieldEnum)[keyof typeof MediaMetricSnapshotScalarFieldEnum]
+
+
+export const NicheScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  description: 'description',
+  language: 'language',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NicheScalarFieldEnum = (typeof NicheScalarFieldEnum)[keyof typeof NicheScalarFieldEnum]
+
+
+export const ReelIdeaScalarFieldEnum = {
+  id: 'id',
+  nicheId: 'nicheId',
+  title: 'title',
+  angle: 'angle',
+  hook: 'hook',
+  whyTrending: 'whyTrending',
+  score: 'score',
+  sourceMediaIds: 'sourceMediaIds',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ReelIdeaScalarFieldEnum = (typeof ReelIdeaScalarFieldEnum)[keyof typeof ReelIdeaScalarFieldEnum]
+
+
+export const ReelProjectScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  ideaId: 'ideaId',
+  stage: 'stage',
+  failedStage: 'failedStage',
+  script: 'script',
+  voiceUrl: 'voiceUrl',
+  voiceFileId: 'voiceFileId',
+  voiceTiming: 'voiceTiming',
+  audioBlueprint: 'audioBlueprint',
+  mixUrl: 'mixUrl',
+  mixFileId: 'mixFileId',
+  clips: 'clips',
+  renderUrl: 'renderUrl',
+  renderFileId: 'renderFileId',
+  coverUrl: 'coverUrl',
+  coverFileId: 'coverFileId',
+  caption: 'caption',
+  hashtags: 'hashtags',
+  scheduledFor: 'scheduledFor',
+  sentAt: 'sentAt',
+  postedAt: 'postedAt',
+  postedUrl: 'postedUrl',
+  attempts: 'attempts',
+  nextAttemptAt: 'nextAttemptAt',
+  lockedUntil: 'lockedUntil',
+  error: 'error',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ReelProjectScalarFieldEnum = (typeof ReelProjectScalarFieldEnum)[keyof typeof ReelProjectScalarFieldEnum]
+
+
+export const StoredFileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  fileId: 'fileId',
+  url: 'url',
+  kind: 'kind',
+  label: 'label',
+  targetId: 'targetId',
+  targetUsername: 'targetUsername',
+  contentType: 'contentType',
+  sizeBytes: 'sizeBytes',
+  contentHash: 'contentHash',
+  visualHash: 'visualHash',
+  createdAt: 'createdAt'
+} as const
+
+export type StoredFileScalarFieldEnum = (typeof StoredFileScalarFieldEnum)[keyof typeof StoredFileScalarFieldEnum]
+
+
+export const SoundAssetScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  kind: 'kind',
+  title: 'title',
+  source: 'source',
+  licenseUrl: 'licenseUrl',
+  moodTags: 'moodTags',
+  bpm: 'bpm',
+  energy: 'energy',
+  description: 'description',
+  durationMs: 'durationMs',
+  storageUrl: 'storageUrl',
+  storageFileId: 'storageFileId',
+  createdAt: 'createdAt'
+} as const
+
+export type SoundAssetScalarFieldEnum = (typeof SoundAssetScalarFieldEnum)[keyof typeof SoundAssetScalarFieldEnum]
+
+
+export const NicheAccountScalarFieldEnum = {
+  id: 'id',
+  nicheId: 'nicheId',
+  targetId: 'targetId',
+  source: 'source',
+  createdAt: 'createdAt'
+} as const
+
+export type NicheAccountScalarFieldEnum = (typeof NicheAccountScalarFieldEnum)[keyof typeof NicheAccountScalarFieldEnum]
 
 
 export const TargetScalarFieldEnum = {
@@ -175,6 +335,8 @@ export const MonitorScalarFieldEnum = {
   targetId: 'targetId',
   userId: 'userId',
   engineType: 'engineType',
+  triggerMode: 'triggerMode',
+  purpose: 'purpose',
   watchNewMedia: 'watchNewMedia',
   watchProfile: 'watchProfile',
   watchFollowerCount: 'watchFollowerCount',
@@ -183,6 +345,7 @@ export const MonitorScalarFieldEnum = {
   watchReels: 'watchReels',
   watchFollowerChurn: 'watchFollowerChurn',
   watchCollabPosts: 'watchCollabPosts',
+  autoRepost: 'autoRepost',
   jitterEnabled: 'jitterEnabled',
   humanSimEnabled: 'humanSimEnabled',
   restrictedHoursEnabled: 'restrictedHoursEnabled',
@@ -251,7 +414,14 @@ export const MediaScalarFieldEnum = {
   isStory: 'isStory',
   isCollab: 'isCollab',
   collaborators: 'collaborators',
-  firstSeenAt: 'firstSeenAt'
+  firstSeenAt: 'firstSeenAt',
+  playCount: 'playCount',
+  likeCount: 'likeCount',
+  commentCount: 'commentCount',
+  audioTitle: 'audioTitle',
+  audioArtist: 'audioArtist',
+  audioIsOriginal: 'audioIsOriginal',
+  metricsUpdatedAt: 'metricsUpdatedAt'
 } as const
 
 export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
@@ -360,6 +530,22 @@ export const ScrapeThrottleScalarFieldEnum = {
 } as const
 
 export type ScrapeThrottleScalarFieldEnum = (typeof ScrapeThrottleScalarFieldEnum)[keyof typeof ScrapeThrottleScalarFieldEnum]
+
+
+export const RepostScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sourceMediaId: 'sourceMediaId',
+  sessionId: 'sessionId',
+  status: 'status',
+  instagramMediaId: 'instagramMediaId',
+  caption: 'caption',
+  error: 'error',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RepostScalarFieldEnum = (typeof RepostScalarFieldEnum)[keyof typeof RepostScalarFieldEnum]
 
 
 export const SortOrder = {

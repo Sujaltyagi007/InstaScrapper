@@ -2,10 +2,6 @@ import crypto from "crypto";
 import type { Monitor, TargetSnapshot, EventType } from "@prisma/client";
 import type { NormalizedProfile, NormalizedMediaItem } from "@/lib/meta/types";
 
-// `type` is the full EventType enum (not just the subset this file's diffing
-// logic produces) so that monitoring.service.ts can also use this shape for
-// out-of-band events like RATE_LIMITED / ACCOUNT_UNAVAILABLE that aren't the
-// result of a profile/media diff.
 export interface DetectedChange {
   type: EventType;
   fingerprint: string;
@@ -17,13 +13,6 @@ export function hashProfile(profile: NormalizedProfile): string {
   return crypto.createHash("sha256").update(JSON.stringify(profile)).digest("hex");
 }
 
-/**
- * Compares a freshly fetched profile against the last stored snapshot and
- * this target's known media, and returns the set of domain-level changes
- * per plan section 13 (Change Detection Rules). Returns [] when nothing
- * meaningful changed - a snapshot with an unchanged hash never produces an
- * event on its own.
- */
 export function detectProfileChanges(
   monitor: Pick<
     Monitor,

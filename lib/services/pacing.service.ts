@@ -1,23 +1,5 @@
 import { prisma } from "@/lib/prisma";
 
-/**
- * App-wide scrape pacing: a daily cap and a circuit breaker.
- * ---------------------------------------------------------------------------
- * Every check leaves through the same proxy IP, so this is shared across all
- * users rather than per user. Two rules:
- *
- *  1. DAILY CAP — at most SCRAPE_DAILY_LIMIT profile views per UTC day, so a
- *     large target list can't turn into hundreds of requests. Reserved
- *     atomically (conditional UPDATE), so concurrent runners can't overshoot.
- *
- *  2. CIRCUIT BREAKER — after SOFT_FAIL_THRESHOLD soft-blocked checks in a row
- *     (rate limited / login wall), ALL scheduled checks pause, and each
- *     consecutive pause doubles in length. A person who hits a wall stops;
- *     retrying harder is what makes an IP look automated. One success resets it.
- *
- * `key` exists only so tests can use an isolated row; production uses "global".
- */
-
 const GLOBAL_KEY = "global";
 const SOFT_FAIL_THRESHOLD = 3;
 const BASE_PAUSE_MS = 15 * 60 * 1000; // 15 min, doubling: 15m, 30m, 1h, 2h, 4h

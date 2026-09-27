@@ -1,8 +1,7 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
 import type { JobWithTarget } from "@/types/domain";
+import { useCallback, useEffect, useState } from "react";
 
 export function useJobs() {
   const [jobs, setJobs] = useState<JobWithTarget[] | null>(null);

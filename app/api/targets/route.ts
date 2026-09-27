@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { requireUserId, jsonError } from "@/lib/api-helpers";
 import { createTargetSchema } from "@/lib/validation/target";
 import {
@@ -6,11 +6,15 @@ import {
   normalizeUsername,
   createTarget,
   listTargets,
+  verifiedResolution,
 } from "@/lib/services/target.service";
 import { isMonitorable, eligibilityMessage } from "@/lib/meta/capability.service";
 import { prisma } from "@/lib/prisma";
-import { peekSession } from "@/lib/meta/session-pool";
 import { assertCanAddTarget } from "@/lib/services/quota.service";
+import { checkNeedsSession, processTarget } from "@/lib/services/monitoring.service";
+
+// The first check runs right after the response (see below).
+export const maxDuration = 120;
 
 export async function GET() {
   try {
@@ -44,9 +48,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "You're already monitoring this account." }, { status: 409 });
     }
 
-    const picked = await peekSession(userId, { pinnedSessionId: parsed.data.instagramSessionId });
-    const sessionConfig = picked?.config ?? null;
-    const resolution = await resolveTargetUsername(parsed.data.username, sessionConfig);
+    // Reuse the preview's lookup when the browser hands back its signed result;
+    // otherwise look the account up (logged out, never with the burner).
+    const resolution =
+      verifiedResolution(userId, parsed.data.username, parsed.data.resolutionToken) ??
+      (await resolveTargetUsername(parsed.data.username, null, userId));
     if (!isMonitorable(resolution)) {
       return NextResponse.json(
         { error: eligibilityMessage(resolution), resolution },
@@ -59,6 +65,7 @@ export async function POST(req: Request) {
       username: parsed.data.username,
       resolution,
       engineType: parsed.data.engineType,
+      triggerMode: parsed.data.triggerMode,
       watchNewMedia: parsed.data.watchNewMedia,
       watchProfile: parsed.data.watchProfile,
       watchFollowerCount: parsed.data.watchFollowerCount,
@@ -77,6 +84,13 @@ export async function POST(req: Request) {
       intervalSeconds: parsed.data.intervalSeconds,
       notificationChannelIds: parsed.data.notificationChannelIds,
     });
+
+    // Fill the new target's profile and posts now instead of at the next
+    // scheduler pass, but only for logged-out checks: a burner check stays on
+    // the paced scheduler so adding several accounts can't burst it.
+    if (target.status === "ACTIVE" && !(await checkNeedsSession(target))) {
+      after(() => processTarget(target.id).catch((err) => console.error("[targets] first check failed:", err)));
+    }
 
     return NextResponse.json({ target }, { status: 201 });
   } catch (err) {

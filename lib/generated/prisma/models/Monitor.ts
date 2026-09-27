@@ -45,6 +45,8 @@ export type MonitorMinAggregateOutputType = {
   targetId: string | null
   userId: string | null
   engineType: string | null
+  triggerMode: string | null
+  purpose: string | null
   watchNewMedia: boolean | null
   watchProfile: boolean | null
   watchFollowerCount: boolean | null
@@ -53,6 +55,7 @@ export type MonitorMinAggregateOutputType = {
   watchReels: boolean | null
   watchFollowerChurn: boolean | null
   watchCollabPosts: boolean | null
+  autoRepost: boolean | null
   jitterEnabled: boolean | null
   humanSimEnabled: boolean | null
   restrictedHoursEnabled: boolean | null
@@ -71,6 +74,8 @@ export type MonitorMaxAggregateOutputType = {
   targetId: string | null
   userId: string | null
   engineType: string | null
+  triggerMode: string | null
+  purpose: string | null
   watchNewMedia: boolean | null
   watchProfile: boolean | null
   watchFollowerCount: boolean | null
@@ -79,6 +84,7 @@ export type MonitorMaxAggregateOutputType = {
   watchReels: boolean | null
   watchFollowerChurn: boolean | null
   watchCollabPosts: boolean | null
+  autoRepost: boolean | null
   jitterEnabled: boolean | null
   humanSimEnabled: boolean | null
   restrictedHoursEnabled: boolean | null
@@ -97,6 +103,8 @@ export type MonitorCountAggregateOutputType = {
   targetId: number
   userId: number
   engineType: number
+  triggerMode: number
+  purpose: number
   watchNewMedia: number
   watchProfile: number
   watchFollowerCount: number
@@ -105,6 +113,7 @@ export type MonitorCountAggregateOutputType = {
   watchReels: number
   watchFollowerChurn: number
   watchCollabPosts: number
+  autoRepost: number
   jitterEnabled: number
   humanSimEnabled: number
   restrictedHoursEnabled: number
@@ -140,6 +149,8 @@ export type MonitorMinAggregateInputType = {
   targetId?: true
   userId?: true
   engineType?: true
+  triggerMode?: true
+  purpose?: true
   watchNewMedia?: true
   watchProfile?: true
   watchFollowerCount?: true
@@ -148,6 +159,7 @@ export type MonitorMinAggregateInputType = {
   watchReels?: true
   watchFollowerChurn?: true
   watchCollabPosts?: true
+  autoRepost?: true
   jitterEnabled?: true
   humanSimEnabled?: true
   restrictedHoursEnabled?: true
@@ -166,6 +178,8 @@ export type MonitorMaxAggregateInputType = {
   targetId?: true
   userId?: true
   engineType?: true
+  triggerMode?: true
+  purpose?: true
   watchNewMedia?: true
   watchProfile?: true
   watchFollowerCount?: true
@@ -174,6 +188,7 @@ export type MonitorMaxAggregateInputType = {
   watchReels?: true
   watchFollowerChurn?: true
   watchCollabPosts?: true
+  autoRepost?: true
   jitterEnabled?: true
   humanSimEnabled?: true
   restrictedHoursEnabled?: true
@@ -192,6 +207,8 @@ export type MonitorCountAggregateInputType = {
   targetId?: true
   userId?: true
   engineType?: true
+  triggerMode?: true
+  purpose?: true
   watchNewMedia?: true
   watchProfile?: true
   watchFollowerCount?: true
@@ -200,6 +217,7 @@ export type MonitorCountAggregateInputType = {
   watchReels?: true
   watchFollowerChurn?: true
   watchCollabPosts?: true
+  autoRepost?: true
   jitterEnabled?: true
   humanSimEnabled?: true
   restrictedHoursEnabled?: true
@@ -306,6 +324,8 @@ export type MonitorGroupByOutputType = {
   targetId: string
   userId: string
   engineType: string
+  triggerMode: string
+  purpose: string
   watchNewMedia: boolean
   watchProfile: boolean
   watchFollowerCount: boolean
@@ -314,6 +334,7 @@ export type MonitorGroupByOutputType = {
   watchReels: boolean
   watchFollowerChurn: boolean
   watchCollabPosts: boolean
+  autoRepost: boolean
   jitterEnabled: boolean
   humanSimEnabled: boolean
   restrictedHoursEnabled: boolean
@@ -356,6 +377,8 @@ export type MonitorWhereInput = {
   targetId?: Prisma.StringFilter<"Monitor"> | string
   userId?: Prisma.StringFilter<"Monitor"> | string
   engineType?: Prisma.StringFilter<"Monitor"> | string
+  triggerMode?: Prisma.StringFilter<"Monitor"> | string
+  purpose?: Prisma.StringFilter<"Monitor"> | string
   watchNewMedia?: Prisma.BoolFilter<"Monitor"> | boolean
   watchProfile?: Prisma.BoolFilter<"Monitor"> | boolean
   watchFollowerCount?: Prisma.BoolFilter<"Monitor"> | boolean
@@ -364,6 +387,7 @@ export type MonitorWhereInput = {
   watchReels?: Prisma.BoolFilter<"Monitor"> | boolean
   watchFollowerChurn?: Prisma.BoolFilter<"Monitor"> | boolean
   watchCollabPosts?: Prisma.BoolFilter<"Monitor"> | boolean
+  autoRepost?: Prisma.BoolFilter<"Monitor"> | boolean
   jitterEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
   humanSimEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
   restrictedHoursEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
@@ -385,6 +409,8 @@ export type MonitorOrderByWithRelationInput = {
   targetId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   engineType?: Prisma.SortOrder
+  triggerMode?: Prisma.SortOrder
+  purpose?: Prisma.SortOrder
   watchNewMedia?: Prisma.SortOrder
   watchProfile?: Prisma.SortOrder
   watchFollowerCount?: Prisma.SortOrder
@@ -393,6 +419,7 @@ export type MonitorOrderByWithRelationInput = {
   watchReels?: Prisma.SortOrder
   watchFollowerChurn?: Prisma.SortOrder
   watchCollabPosts?: Prisma.SortOrder
+  autoRepost?: Prisma.SortOrder
   jitterEnabled?: Prisma.SortOrder
   humanSimEnabled?: Prisma.SortOrder
   restrictedHoursEnabled?: Prisma.SortOrder
@@ -417,6 +444,8 @@ export type MonitorWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.MonitorWhereInput | Prisma.MonitorWhereInput[]
   userId?: Prisma.StringFilter<"Monitor"> | string
   engineType?: Prisma.StringFilter<"Monitor"> | string
+  triggerMode?: Prisma.StringFilter<"Monitor"> | string
+  purpose?: Prisma.StringFilter<"Monitor"> | string
   watchNewMedia?: Prisma.BoolFilter<"Monitor"> | boolean
   watchProfile?: Prisma.BoolFilter<"Monitor"> | boolean
   watchFollowerCount?: Prisma.BoolFilter<"Monitor"> | boolean
@@ -425,6 +454,7 @@ export type MonitorWhereUniqueInput = Prisma.AtLeast<{
   watchReels?: Prisma.BoolFilter<"Monitor"> | boolean
   watchFollowerChurn?: Prisma.BoolFilter<"Monitor"> | boolean
   watchCollabPosts?: Prisma.BoolFilter<"Monitor"> | boolean
+  autoRepost?: Prisma.BoolFilter<"Monitor"> | boolean
   jitterEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
   humanSimEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
   restrictedHoursEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
@@ -446,6 +476,8 @@ export type MonitorOrderByWithAggregationInput = {
   targetId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   engineType?: Prisma.SortOrder
+  triggerMode?: Prisma.SortOrder
+  purpose?: Prisma.SortOrder
   watchNewMedia?: Prisma.SortOrder
   watchProfile?: Prisma.SortOrder
   watchFollowerCount?: Prisma.SortOrder
@@ -454,6 +486,7 @@ export type MonitorOrderByWithAggregationInput = {
   watchReels?: Prisma.SortOrder
   watchFollowerChurn?: Prisma.SortOrder
   watchCollabPosts?: Prisma.SortOrder
+  autoRepost?: Prisma.SortOrder
   jitterEnabled?: Prisma.SortOrder
   humanSimEnabled?: Prisma.SortOrder
   restrictedHoursEnabled?: Prisma.SortOrder
@@ -481,6 +514,8 @@ export type MonitorScalarWhereWithAggregatesInput = {
   targetId?: Prisma.StringWithAggregatesFilter<"Monitor"> | string
   userId?: Prisma.StringWithAggregatesFilter<"Monitor"> | string
   engineType?: Prisma.StringWithAggregatesFilter<"Monitor"> | string
+  triggerMode?: Prisma.StringWithAggregatesFilter<"Monitor"> | string
+  purpose?: Prisma.StringWithAggregatesFilter<"Monitor"> | string
   watchNewMedia?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
   watchProfile?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
   watchFollowerCount?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
@@ -489,6 +524,7 @@ export type MonitorScalarWhereWithAggregatesInput = {
   watchReels?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
   watchFollowerChurn?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
   watchCollabPosts?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
+  autoRepost?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
   jitterEnabled?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
   humanSimEnabled?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
   restrictedHoursEnabled?: Prisma.BoolWithAggregatesFilter<"Monitor"> | boolean
@@ -507,6 +543,8 @@ export type MonitorCreateInput = {
   id?: string
   userId: string
   engineType?: string
+  triggerMode?: string
+  purpose?: string
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -515,6 +553,7 @@ export type MonitorCreateInput = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -535,6 +574,8 @@ export type MonitorUncheckedCreateInput = {
   targetId: string
   userId: string
   engineType?: string
+  triggerMode?: string
+  purpose?: string
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -543,6 +584,7 @@ export type MonitorUncheckedCreateInput = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -561,6 +603,8 @@ export type MonitorUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -569,6 +613,7 @@ export type MonitorUpdateInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -589,6 +634,8 @@ export type MonitorUncheckedUpdateInput = {
   targetId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -597,6 +644,7 @@ export type MonitorUncheckedUpdateInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -616,6 +664,8 @@ export type MonitorCreateManyInput = {
   targetId: string
   userId: string
   engineType?: string
+  triggerMode?: string
+  purpose?: string
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -624,6 +674,7 @@ export type MonitorCreateManyInput = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -642,6 +693,8 @@ export type MonitorUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -650,6 +703,7 @@ export type MonitorUpdateManyMutationInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -668,6 +722,8 @@ export type MonitorUncheckedUpdateManyInput = {
   targetId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -676,6 +732,7 @@ export type MonitorUncheckedUpdateManyInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -710,6 +767,8 @@ export type MonitorCountOrderByAggregateInput = {
   targetId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   engineType?: Prisma.SortOrder
+  triggerMode?: Prisma.SortOrder
+  purpose?: Prisma.SortOrder
   watchNewMedia?: Prisma.SortOrder
   watchProfile?: Prisma.SortOrder
   watchFollowerCount?: Prisma.SortOrder
@@ -718,6 +777,7 @@ export type MonitorCountOrderByAggregateInput = {
   watchReels?: Prisma.SortOrder
   watchFollowerChurn?: Prisma.SortOrder
   watchCollabPosts?: Prisma.SortOrder
+  autoRepost?: Prisma.SortOrder
   jitterEnabled?: Prisma.SortOrder
   humanSimEnabled?: Prisma.SortOrder
   restrictedHoursEnabled?: Prisma.SortOrder
@@ -744,6 +804,8 @@ export type MonitorMaxOrderByAggregateInput = {
   targetId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   engineType?: Prisma.SortOrder
+  triggerMode?: Prisma.SortOrder
+  purpose?: Prisma.SortOrder
   watchNewMedia?: Prisma.SortOrder
   watchProfile?: Prisma.SortOrder
   watchFollowerCount?: Prisma.SortOrder
@@ -752,6 +814,7 @@ export type MonitorMaxOrderByAggregateInput = {
   watchReels?: Prisma.SortOrder
   watchFollowerChurn?: Prisma.SortOrder
   watchCollabPosts?: Prisma.SortOrder
+  autoRepost?: Prisma.SortOrder
   jitterEnabled?: Prisma.SortOrder
   humanSimEnabled?: Prisma.SortOrder
   restrictedHoursEnabled?: Prisma.SortOrder
@@ -770,6 +833,8 @@ export type MonitorMinOrderByAggregateInput = {
   targetId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   engineType?: Prisma.SortOrder
+  triggerMode?: Prisma.SortOrder
+  purpose?: Prisma.SortOrder
   watchNewMedia?: Prisma.SortOrder
   watchProfile?: Prisma.SortOrder
   watchFollowerCount?: Prisma.SortOrder
@@ -778,6 +843,7 @@ export type MonitorMinOrderByAggregateInput = {
   watchReels?: Prisma.SortOrder
   watchFollowerChurn?: Prisma.SortOrder
   watchCollabPosts?: Prisma.SortOrder
+  autoRepost?: Prisma.SortOrder
   jitterEnabled?: Prisma.SortOrder
   humanSimEnabled?: Prisma.SortOrder
   restrictedHoursEnabled?: Prisma.SortOrder
@@ -876,14 +942,6 @@ export type MonitorCreatenotificationChannelIdsInput = {
   set: string[]
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type MonitorUpdatenotificationChannelIdsInput = {
   set?: string[]
   push?: string | string[]
@@ -893,6 +951,8 @@ export type MonitorCreateWithoutTargetInput = {
   id?: string
   userId: string
   engineType?: string
+  triggerMode?: string
+  purpose?: string
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -901,6 +961,7 @@ export type MonitorCreateWithoutTargetInput = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -919,6 +980,8 @@ export type MonitorUncheckedCreateWithoutTargetInput = {
   id?: string
   userId: string
   engineType?: string
+  triggerMode?: string
+  purpose?: string
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -927,6 +990,7 @@ export type MonitorUncheckedCreateWithoutTargetInput = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -961,6 +1025,8 @@ export type MonitorUpdateWithoutTargetInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -969,6 +1035,7 @@ export type MonitorUpdateWithoutTargetInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -987,6 +1054,8 @@ export type MonitorUncheckedUpdateWithoutTargetInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -995,6 +1064,7 @@ export type MonitorUncheckedUpdateWithoutTargetInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1013,6 +1083,8 @@ export type MonitorCreateWithoutInstagramSessionInput = {
   id?: string
   userId: string
   engineType?: string
+  triggerMode?: string
+  purpose?: string
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -1021,6 +1093,7 @@ export type MonitorCreateWithoutInstagramSessionInput = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -1040,6 +1113,8 @@ export type MonitorUncheckedCreateWithoutInstagramSessionInput = {
   targetId: string
   userId: string
   engineType?: string
+  triggerMode?: string
+  purpose?: string
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -1048,6 +1123,7 @@ export type MonitorUncheckedCreateWithoutInstagramSessionInput = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -1095,6 +1171,8 @@ export type MonitorScalarWhereInput = {
   targetId?: Prisma.StringFilter<"Monitor"> | string
   userId?: Prisma.StringFilter<"Monitor"> | string
   engineType?: Prisma.StringFilter<"Monitor"> | string
+  triggerMode?: Prisma.StringFilter<"Monitor"> | string
+  purpose?: Prisma.StringFilter<"Monitor"> | string
   watchNewMedia?: Prisma.BoolFilter<"Monitor"> | boolean
   watchProfile?: Prisma.BoolFilter<"Monitor"> | boolean
   watchFollowerCount?: Prisma.BoolFilter<"Monitor"> | boolean
@@ -1103,6 +1181,7 @@ export type MonitorScalarWhereInput = {
   watchReels?: Prisma.BoolFilter<"Monitor"> | boolean
   watchFollowerChurn?: Prisma.BoolFilter<"Monitor"> | boolean
   watchCollabPosts?: Prisma.BoolFilter<"Monitor"> | boolean
+  autoRepost?: Prisma.BoolFilter<"Monitor"> | boolean
   jitterEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
   humanSimEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
   restrictedHoursEnabled?: Prisma.BoolFilter<"Monitor"> | boolean
@@ -1122,6 +1201,8 @@ export type MonitorCreateManyInstagramSessionInput = {
   targetId: string
   userId: string
   engineType?: string
+  triggerMode?: string
+  purpose?: string
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -1130,6 +1211,7 @@ export type MonitorCreateManyInstagramSessionInput = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -1147,6 +1229,8 @@ export type MonitorUpdateWithoutInstagramSessionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1155,6 +1239,7 @@ export type MonitorUpdateWithoutInstagramSessionInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1174,6 +1259,8 @@ export type MonitorUncheckedUpdateWithoutInstagramSessionInput = {
   targetId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1182,6 +1269,7 @@ export type MonitorUncheckedUpdateWithoutInstagramSessionInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1200,6 +1288,8 @@ export type MonitorUncheckedUpdateManyWithoutInstagramSessionInput = {
   targetId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   engineType?: Prisma.StringFieldUpdateOperationsInput | string
+  triggerMode?: Prisma.StringFieldUpdateOperationsInput | string
+  purpose?: Prisma.StringFieldUpdateOperationsInput | string
   watchNewMedia?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchProfile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerCount?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1208,6 +1298,7 @@ export type MonitorUncheckedUpdateManyWithoutInstagramSessionInput = {
   watchReels?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchFollowerChurn?: Prisma.BoolFieldUpdateOperationsInput | boolean
   watchCollabPosts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoRepost?: Prisma.BoolFieldUpdateOperationsInput | boolean
   jitterEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   humanSimEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   restrictedHoursEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1228,6 +1319,8 @@ export type MonitorSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   targetId?: boolean
   userId?: boolean
   engineType?: boolean
+  triggerMode?: boolean
+  purpose?: boolean
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -1236,6 +1329,7 @@ export type MonitorSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -1257,6 +1351,8 @@ export type MonitorSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   targetId?: boolean
   userId?: boolean
   engineType?: boolean
+  triggerMode?: boolean
+  purpose?: boolean
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -1265,6 +1361,7 @@ export type MonitorSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -1286,6 +1383,8 @@ export type MonitorSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   targetId?: boolean
   userId?: boolean
   engineType?: boolean
+  triggerMode?: boolean
+  purpose?: boolean
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -1294,6 +1393,7 @@ export type MonitorSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -1315,6 +1415,8 @@ export type MonitorSelectScalar = {
   targetId?: boolean
   userId?: boolean
   engineType?: boolean
+  triggerMode?: boolean
+  purpose?: boolean
   watchNewMedia?: boolean
   watchProfile?: boolean
   watchFollowerCount?: boolean
@@ -1323,6 +1425,7 @@ export type MonitorSelectScalar = {
   watchReels?: boolean
   watchFollowerChurn?: boolean
   watchCollabPosts?: boolean
+  autoRepost?: boolean
   jitterEnabled?: boolean
   humanSimEnabled?: boolean
   restrictedHoursEnabled?: boolean
@@ -1337,7 +1440,7 @@ export type MonitorSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MonitorOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "targetId" | "userId" | "engineType" | "watchNewMedia" | "watchProfile" | "watchFollowerCount" | "watchFollowingCount" | "watchStories" | "watchReels" | "watchFollowerChurn" | "watchCollabPosts" | "jitterEnabled" | "humanSimEnabled" | "restrictedHoursEnabled" | "restrictedHoursStart" | "restrictedHoursEnd" | "instagramSessionId" | "followerThreshold" | "intervalSeconds" | "active" | "notificationChannelIds" | "createdAt" | "updatedAt", ExtArgs["result"]["monitor"]>
+export type MonitorOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "targetId" | "userId" | "engineType" | "triggerMode" | "purpose" | "watchNewMedia" | "watchProfile" | "watchFollowerCount" | "watchFollowingCount" | "watchStories" | "watchReels" | "watchFollowerChurn" | "watchCollabPosts" | "autoRepost" | "jitterEnabled" | "humanSimEnabled" | "restrictedHoursEnabled" | "restrictedHoursStart" | "restrictedHoursEnd" | "instagramSessionId" | "followerThreshold" | "intervalSeconds" | "active" | "notificationChannelIds" | "createdAt" | "updatedAt", ExtArgs["result"]["monitor"]>
 export type MonitorInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
   instagramSession?: boolean | Prisma.Monitor$instagramSessionArgs<ExtArgs>
@@ -1362,6 +1465,8 @@ export type $MonitorPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     targetId: string
     userId: string
     engineType: string
+    triggerMode: string
+    purpose: string
     watchNewMedia: boolean
     watchProfile: boolean
     watchFollowerCount: boolean
@@ -1370,6 +1475,7 @@ export type $MonitorPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     watchReels: boolean
     watchFollowerChurn: boolean
     watchCollabPosts: boolean
+    autoRepost: boolean
     jitterEnabled: boolean
     humanSimEnabled: boolean
     restrictedHoursEnabled: boolean
@@ -1811,6 +1917,8 @@ export interface MonitorFieldRefs {
   readonly targetId: Prisma.FieldRef<"Monitor", 'String'>
   readonly userId: Prisma.FieldRef<"Monitor", 'String'>
   readonly engineType: Prisma.FieldRef<"Monitor", 'String'>
+  readonly triggerMode: Prisma.FieldRef<"Monitor", 'String'>
+  readonly purpose: Prisma.FieldRef<"Monitor", 'String'>
   readonly watchNewMedia: Prisma.FieldRef<"Monitor", 'Boolean'>
   readonly watchProfile: Prisma.FieldRef<"Monitor", 'Boolean'>
   readonly watchFollowerCount: Prisma.FieldRef<"Monitor", 'Boolean'>
@@ -1819,6 +1927,7 @@ export interface MonitorFieldRefs {
   readonly watchReels: Prisma.FieldRef<"Monitor", 'Boolean'>
   readonly watchFollowerChurn: Prisma.FieldRef<"Monitor", 'Boolean'>
   readonly watchCollabPosts: Prisma.FieldRef<"Monitor", 'Boolean'>
+  readonly autoRepost: Prisma.FieldRef<"Monitor", 'Boolean'>
   readonly jitterEnabled: Prisma.FieldRef<"Monitor", 'Boolean'>
   readonly humanSimEnabled: Prisma.FieldRef<"Monitor", 'Boolean'>
   readonly restrictedHoursEnabled: Prisma.FieldRef<"Monitor", 'Boolean'>

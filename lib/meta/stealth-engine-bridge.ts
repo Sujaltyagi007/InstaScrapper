@@ -4,6 +4,7 @@ import { Capability } from "./types";
 import type { TargetResolution, TargetFetchResult, StealthSessionConfig, StealthFetchOptions, NormalizedMediaItem, CapabilityCheck, } from "./types";
 import { scrapeProfileHtml, LOGIN_SHELL_STATUS } from "./html-profile-scraper";
 import { scrapePostMedia } from "./post-page-scraper";
+import { mergeFeedMetrics, parseFeedItems } from "./feed-metrics";
 
 const CHROME_DESKTOP_VERSIONS = ["116", "117", "119", "120"] as const;
 
@@ -423,14 +424,28 @@ async function stealthRequestWithRetry(
   return null;
 }
 
-async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthSessionConfig | null | undefined, options: { jitter?: boolean; deadlineAt?: number } = {}): Promise<{ status: number; text: string; data?: any; deviceId?: string } | null> {
+/**
+ * Parallel HTML attempts for logged-out lookups (SCRAPER_PARALLEL, default 3).
+ * Safe only because the default proxy rotates: each attempt leaves from its own
+ * IP. Logged-in requests never run in parallel (see ScrapeOptions.concurrency).
+ */
+function anonymousConcurrency(): number {
+  const n = Number(process.env.SCRAPER_PARALLEL ?? 3);
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 3;
+}
+
+async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthSessionConfig | null | undefined, options: { jitter?: boolean; deadlineAt?: number; acceptLite?: boolean } = {}): Promise<{ status: number; text: string; data?: any; deviceId?: string } | null> {
   const isUsable = (res: { status: number; data?: any } | null) =>
     Boolean(res && res.status !== 404 && res.status !== 429 && res.data?.status !== "fail" && res.data?.data?.user);
 
   const isAuthenticated = Boolean(session?.cookies?.sessionid);
 
   const tryHtml = () =>
-    scrapeProfileHtml(cleanUser, (url) => htmlPageFetch(url, session), { deadlineAt: options.deadlineAt });
+    scrapeProfileHtml(cleanUser, (url) => htmlPageFetch(url, session), {
+      deadlineAt: options.deadlineAt,
+      concurrency: isAuthenticated ? 1 : anonymousConcurrency(),
+      acceptLite: options.acceptLite,
+    });
 
 
   let htmlFirst: Awaited<ReturnType<typeof tryHtml>> = null;
@@ -446,6 +461,9 @@ async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthS
     if (options.deadlineAt && options.deadlineAt - Date.now() < 20_000) {
       return htmlFirst;
     }
+    // Resolving (acceptLite) is interactive: the walled JSON endpoints would add
+    // several seconds for a near-certain failure, so report the HTML verdict.
+    if (options.acceptLite) return htmlFirst;
     // Fall through: maybe the JSON API is reachable after all.
   }
 
@@ -611,7 +629,8 @@ export async function stealthResolveTarget(
   const cleanUser = username.trim().toLowerCase().replace(/^@/, "");
 
   try {
-    const res = await fetchProfileInfoWithFallback(cleanUser, effectiveSession);
+    // Resolving only needs existence, type and id, which the lite page has.
+    const res = await fetchProfileInfoWithFallback(cleanUser, effectiveSession, { acceptLite: true });
     if (!res) {
       return {
         username: cleanUser,
@@ -1013,6 +1032,23 @@ export async function stealthFetchTargetData(params: {
       }
     }
 
+    // Play counts and audio only exist on the logged-in mobile feed. One extra
+    // request; a failure just means this check has no metrics.
+    let finalMedia = media;
+    if (isAuthenticated && options?.collectMetrics && fetchedExternalId && hasTimeForExtras) {
+      const feedRes = await stealthRequestWithRetry(
+        `https://i.instagram.com/api/v1/feed/user/${fetchedExternalId}/?count=24`,
+        { session, isAjax: true, referer: `https://www.instagram.com/${cleanUser}/` },
+      );
+      if (feedRes && feedRes.status === 200) {
+        const feed = parseFeedItems(feedRes.data);
+        finalMedia = mergeFeedMetrics(media, feed);
+        if (feed.length === 0) console.warn(`[metrics] @${cleanUser}: feed returned no parseable items`);
+      } else {
+        console.warn(`[metrics] @${cleanUser}: feed request failed (${feedRes?.status ?? "no response"})`);
+      }
+    }
+
     let followersList: string[] | undefined = undefined;
     let followingList: string[] | undefined = undefined;
     if (isAuthenticated && options?.watchFollowerChurn && fetchedExternalId && hasTimeForExtras) {
@@ -1035,7 +1071,7 @@ export async function stealthFetchTargetData(params: {
         hasStory: isAuthenticated ? Boolean(userData.has_public_story) : false,
         isPrivate: Boolean(userData.is_private),
       },
-      media,
+      media: finalMedia,
       stories,
       followersList,
       followingList,
@@ -1070,7 +1106,11 @@ export async function stealthTestSession(params: {
   message?: string;
 }> {
   try {
-    const res = await stealthRequest("https://www.instagram.com/api/v1/users/web_profile_info/?username=instagram", {
+    // A login-only endpoint: it returns the account's own settings when the
+    // cookies are logged in and redirects to the login page when they aren't.
+    // (The public profile endpoint used before answered even fake cookies, so
+    // dead sessions were saved as ACTIVE — verified 2026-09-27.)
+    const res = await stealthRequest("https://www.instagram.com/api/v1/accounts/edit/web_form_data/", {
       session: {
         username: "",
         cookies: params.cookies,
@@ -1078,15 +1118,14 @@ export async function stealthTestSession(params: {
         proxyUrl: params.proxyUrl,
       },
       isAjax: true,
-      referer: "https://www.instagram.com/",
+      referer: "https://www.instagram.com/accounts/edit/",
     });
 
-    const dsUserId = params.cookies["ds_user_id"] || params.cookies["ds_user"];
-
-    if (res.status === 200 && res.data?.status !== "fail") {
+    const loggedInAs: unknown = res.data?.form_data?.username;
+    if (res.status === 200 && typeof loggedInAs === "string" && loggedInAs.length > 0) {
       return {
         ok: true,
-        username: dsUserId ? `user_${dsUserId}` : "active_user",
+        username: loggedInAs,
         sessionActive: true,
         message: "Session is active and authenticated.",
       };

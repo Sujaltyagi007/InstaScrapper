@@ -41,8 +41,11 @@ export default function NewTargetPage() {
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [resolution, setResolution] = useState<TargetResolution | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Signed preview result: lets saving skip a second Instagram lookup.
+  const [resolutionToken, setResolutionToken] = useState<string | null>(null);
 
   const [instagramSessionId, setInstagramSessionId] = useState<string | null>(null);
+  const [newPostsOnly, setNewPostsOnly] = useState(true);
   const [watchNewMedia, setWatchNewMedia] = useState(true);
   const [watchProfile, setWatchProfile] = useState(true);
   const [watchFollowerCount, setWatchFollowerCount] = useState(false);
@@ -51,6 +54,7 @@ export default function NewTargetPage() {
   const [watchReels, setWatchReels] = useState(true);
   const [watchFollowerChurn, setWatchFollowerChurn] = useState(false);
   const [watchCollabPosts, setWatchCollabPosts] = useState(true);
+  const [autoRepost, setAutoRepost] = useState(false);
   const [jitterEnabled, setJitterEnabled] = useState(true);
   const [intervalMinutes, setIntervalMinutes] = useState(90);
   const [creating, setCreating] = useState(false);
@@ -64,12 +68,16 @@ export default function NewTargetPage() {
     setResolution(null);
     setResolving(true);
     try {
-      const data = await apiFetch<{ resolution: TargetResolution; message: string }>("/api/targets/resolve", {
-        method: "POST",
-        body: JSON.stringify({ username }),
-      });
+      const data = await apiFetch<{ resolution: TargetResolution; message: string; resolutionToken: string | null }>(
+        "/api/targets/resolve",
+        {
+          method: "POST",
+          body: JSON.stringify({ username }),
+        },
+      );
       setResolution(data.resolution);
       setMessage(data.message);
+      setResolutionToken(data.resolutionToken);
     } catch (err) {
       if (err instanceof FetchError && err.status === 409) {
         setResolveError("You're already monitoring this account.");
@@ -97,15 +105,20 @@ export default function NewTargetPage() {
         method: "POST",
         body: JSON.stringify({
           username: resolution.username,
+          resolutionToken: resolutionToken ?? undefined,
           instagramSessionId,
+          triggerMode: newPostsOnly ? "NEW_POSTS_ONLY" : "FULL",
           watchNewMedia,
-          watchProfile,
-          watchFollowerCount,
-          watchFollowingCount: hasSession && watchFollowingCount,
-          watchStories: hasSession && watchStories,
+          // In new-posts-only mode the follower/profile/story flags are ignored
+          // server-side; send them off so the stored config matches the UI.
+          watchProfile: !newPostsOnly && watchProfile,
+          watchFollowerCount: !newPostsOnly && watchFollowerCount,
+          watchFollowingCount: !newPostsOnly && hasSession && watchFollowingCount,
+          watchStories: !newPostsOnly && hasSession && watchStories,
           watchReels,
-          watchFollowerChurn: hasSession && watchFollowerChurn,
+          watchFollowerChurn: !newPostsOnly && hasSession && watchFollowerChurn,
           watchCollabPosts,
+          autoRepost,
           jitterEnabled,
           intervalSeconds: intervalMinutes * 60,
           notificationChannelIds: [],
@@ -220,6 +233,17 @@ export default function NewTargetPage() {
               </p>
             </div>
 
+            <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/30 p-3">
+              <div>
+                <p className="text-sm font-medium">Only act on new posts &amp; reels</p>
+                <p className="text-xs text-muted-foreground">
+                  Recommended. Ignores follower counts, stories, and profile edits — they never
+                  trigger a check result or notification. Turn off for full monitoring.
+                </p>
+              </div>
+              <Switch checked={newPostsOnly} onCheckedChange={setNewPostsOnly} />
+            </div>
+
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-2">
               Basic (no login required)
             </p>
@@ -240,18 +264,28 @@ export default function NewTargetPage() {
               description="Notify when name, bio, website, or photo changes."
               checked={watchProfile}
               onCheckedChange={setWatchProfile}
+              disabled={newPostsOnly}
+              disabledReason="Ignored in new-posts-only mode."
             />
             <ToggleRow
               label="Follower count"
               description="Notify when follower count changes."
               checked={watchFollowerCount}
               onCheckedChange={setWatchFollowerCount}
+              disabled={newPostsOnly}
+              disabledReason="Ignored in new-posts-only mode."
             />
             <ToggleRow
               label="Private collab posts probe"
               description="Detect leaked posts co-authored with public accounts."
               checked={watchCollabPosts}
               onCheckedChange={setWatchCollabPosts}
+            />
+            <ToggleRow
+              label="Auto-repost new posts to my Instagram"
+              description="When this account posts, publish it to your connected Instagram account automatically (max 2 per check). Only enable for content you have the rights to repost."
+              checked={autoRepost}
+              onCheckedChange={setAutoRepost}
             />
             <ToggleRow
               label="Anti-bot request jitter"
@@ -326,25 +360,30 @@ function ToggleRow({
   checked,
   onCheckedChange,
   locked,
+  disabled,
+  disabledReason,
 }: {
   label: string;
   description: string;
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
   locked?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
 }) {
+  const off = Boolean(locked || disabled);
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className={"flex items-center justify-between gap-4" + (off ? " opacity-60" : "")}>
       <div>
         <p className="flex items-center gap-1.5 text-sm font-medium">
           {label}
           {locked && <Lock className="size-3 text-muted-foreground" />}
         </p>
         <p className="text-xs text-muted-foreground">
-          {locked ? "Requires an Instagram session." : description}
+          {locked ? "Requires an Instagram session." : disabled && disabledReason ? disabledReason : description}
         </p>
       </div>
-      <Switch checked={locked ? false : checked} disabled={locked} onCheckedChange={onCheckedChange} />
+      <Switch checked={off ? false : checked} disabled={off} onCheckedChange={onCheckedChange} />
     </div>
   );
 }

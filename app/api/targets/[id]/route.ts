@@ -3,6 +3,9 @@ import { requireUserId, jsonError, ApiError } from "@/lib/api-helpers";
 import { updateMonitorSchema } from "@/lib/validation/target";
 import { getTargetDetail, updateTargetMonitor, deleteTarget } from "@/lib/services/target.service";
 
+// Deleting an account with many stored files can take a while.
+export const maxDuration = 120;
+
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await requireUserId();
@@ -31,11 +34,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+// ?deleteFiles=1 also deletes the account's stored media (see deleteTarget).
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await requireUserId();
     const { id } = await params;
-    await deleteTarget(userId, id);
+    const deleteFiles = new URL(req.url).searchParams.get("deleteFiles") === "1";
+    await deleteTarget(userId, id, { deleteFiles });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return jsonError(err);

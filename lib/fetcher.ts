@@ -13,7 +13,11 @@ export class FetchError extends Error {
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    // FormData needs the browser to set its own multipart boundary.
+    headers:
+      init?.body instanceof FormData
+        ? { ...(init?.headers ?? {}) }
+        : { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { resolveSessionProxy, UnsafeSessionProxyError } from "@/lib/meta/proxy-identity";
 import { requireUserId, jsonError } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { encryptJson } from "@/lib/crypto";
@@ -79,10 +80,19 @@ export async function POST(req: Request) {
       authMethod = "COOKIE_INPUT", // "COOKIE_INPUT" | "BROWSER"
       browser = "firefox",
       rawCookies,
-      proxyUrl,
       userAgent,
       impersonateTarget = "auto",
     } = body;
+
+    // Every burner gets one fixed IP of its own and never uses this server's
+    // own connection (see lib/meta/proxy-identity.ts).
+    let proxyUrl: string;
+    try {
+      proxyUrl = await resolveSessionProxy(body.proxyUrl);
+    } catch (err) {
+      if (err instanceof UnsafeSessionProxyError) return NextResponse.json({ error: err.message }, { status: 400 });
+      throw err;
+    }
 
     let cookies: Record<string, string> = {};
     let detectedUsername = "";

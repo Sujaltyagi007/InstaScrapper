@@ -1,27 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import {
-  createCompressedThumbnail,
-  deleteStoredObject,
-  isStorageEnabled,
-  fetchToBuffer,
-  uploadBuffer,
-} from "@/lib/storage";
 import { stealthResolvePostMedia } from "@/lib/meta/stealth-engine-bridge";
+import { createCompressedThumbnail, deleteStoredObject, isStorageEnabled, fetchToBuffer, uploadBuffer, type FileOwner, } from "@/lib/storage";
 
-/**
- * Tiered media storage with a 48-hour heavy-file policy backed by the storage facade (lib/storage — Appwrite or R2).
- * ---------------------------------------------------------------------------
- * Each media row can hold three things:
- *
- *   1. the heavy full-resolution file   (storageUrl / storageFileId)
- *   2. a super-compressed thumbnail     (thumbnailUrl / thumbnailFileId)
- *   3. the original upstream links      (sourceMediaUrl / sourceVideoUrl / permalink)
- *
- * After HEAVY_RETENTION_HOURS the heavy file is deleted from cloud storage to
- * reclaim space, while the row and its thumbnail survive — so the feed still
- * renders, just flagged `isExpired`. The user can then either re-download the
- * full file on demand or wipe the item outright.
- */
+/** Human label for a scraped post in the file register, e.g. "@nasa reel DdHyaY". */
+export function mediaLabel(username: string, mediaType: string, permalink: string | null): string {
+  const code = permalink?.match(/\/(?:p|reel|tv)\/([^/?#]+)/)?.[1];
+  return `@${username} ${mediaType.toLowerCase()}${code ? ` ${code}` : ""}`;
+}
 
 export const HEAVY_RETENTION_HOURS = 48;
 
@@ -33,10 +18,6 @@ export interface StoredAssetFields {
   storedAt: Date | null;
   isExpired: boolean;
   expiredAt: Date | null;
-}
-
-function heavyCutoff(): Date {
-  return new Date(Date.now() - HEAVY_RETENTION_HOURS * 60 * 60 * 1000);
 }
 
 /**
@@ -51,6 +32,8 @@ export async function uploadHeavyAndThumbnail(params: {
   isVideo?: boolean;
   /** Reuse an existing thumbnail instead of regenerating it. */
   existingThumbnail?: { url: string | null; fileId: string | null };
+  /** File register owner; the thumbnail is recorded as kind THUMBNAIL. */
+  owner?: FileOwner;
 }): Promise<StoredAssetFields | null> {
   if (!isStorageEnabled()) return null;
 
@@ -68,6 +51,7 @@ export async function uploadHeavyAndThumbnail(params: {
     fileName: `${fileNameBase}.${ext}`,
     folder,
     contentType,
+    owner: params.owner,
   });
   if (!heavy) return null;
 
@@ -81,6 +65,7 @@ export async function uploadHeavyAndThumbnail(params: {
       fileName: `${fileNameBase}_thumb.jpg`,
       folder: `${folder}/thumbs`,
       isVideo,
+      owner: params.owner,
     });
     thumbnailUrl = thumb?.url ?? null;
     thumbnailFileId = thumb?.fileId ?? null;
@@ -98,20 +83,33 @@ export async function uploadHeavyAndThumbnail(params: {
 }
 
 /**
- * Deletes heavy originals older than the retention window, keeping each row
+ * Deletes heavy originals older than each user's keep-for setting
+ * (User.mediaKeepHours; null = keep until deleted by hand), keeping each row
  * and its thumbnail.
  */
 export async function expireStaleMedia(limit = 200) {
-  const stale = await prisma.media.findMany({
-    where: {
-      isExpired: false,
-      storageFileId: { not: null },
-      storedAt: { lt: heavyCutoff() },
-    },
-    select: { id: true, storageFileId: true, thumbnailUrl: true },
-    orderBy: { storedAt: "asc" },
-    take: limit,
+  const users = await prisma.user.findMany({
+    where: { mediaKeepHours: { not: null } },
+    select: { id: true, mediaKeepHours: true },
   });
+  const stale: { id: string; storageFileId: string | null; thumbnailUrl: string | null }[] = [];
+  for (const user of users) {
+    if (stale.length >= limit) break;
+    const hours = user.mediaKeepHours ?? HEAVY_RETENTION_HOURS;
+    stale.push(
+      ...(await prisma.media.findMany({
+        where: {
+          target: { userId: user.id },
+          isExpired: false,
+          storageFileId: { not: null },
+          storedAt: { lt: new Date(Date.now() - hours * 60 * 60 * 1000) },
+        },
+        select: { id: true, storageFileId: true, thumbnailUrl: true },
+        orderBy: { storedAt: "asc" },
+        take: limit - stale.length,
+      })),
+    );
+  }
 
   let expired = 0;
   let failed = 0;
@@ -183,6 +181,13 @@ export async function redownloadMedia(userId: string, mediaId: string) {
       tags: [media.target.normalizedUsername, media.mediaType, "redownload"],
       isVideo: candidate.video,
       existingThumbnail: { url: media.thumbnailUrl, fileId: media.thumbnailFileId },
+      owner: {
+        userId,
+        kind: "MEDIA",
+        label: mediaLabel(media.target.normalizedUsername, media.mediaType, media.permalink),
+        targetId: media.targetId,
+        targetUsername: media.target.normalizedUsername,
+      },
     });
     if (!stored) continue;
 

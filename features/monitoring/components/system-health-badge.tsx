@@ -1,8 +1,7 @@
 "use client";
-
+import { cn } from "@/lib/utils";
 import { Fragment, useEffect, useState, useTransition } from "react";
 import { Activity, CheckCircle2, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface HealthData {
   status: "healthy" | "operational" | "degraded" | "down";
@@ -55,11 +54,9 @@ export function SystemHealthBadge({ direction = "up" }: { direction?: "up" | "do
     }, 20000);
 
     const handleVisibility = () => {
-      if (document.visibilityState === "visible") {        checkHealth();
-      }
+      if (document.visibilityState === "visible") { checkHealth(); }
     };
     document.addEventListener("visibilitychange", handleVisibility);
-
     return () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibility);

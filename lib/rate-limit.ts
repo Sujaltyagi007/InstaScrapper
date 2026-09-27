@@ -9,11 +9,6 @@ export interface RateLimitResult {
   retryAfterSeconds?: number;
 }
 
-/**
- * Simple DB-backed fixed-window rate limiter for sensitive unauthenticated
- * endpoints (login, register). No Redis dependency, consistent with the
- * chosen cron/scheduling approach for this deployment.
- */
 export async function checkRateLimit(key: string): Promise<RateLimitResult> {
   const now = new Date();
   const existing = await prisma.authRateLimit.findUnique({ where: { key } });

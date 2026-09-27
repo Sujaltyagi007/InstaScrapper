@@ -68,6 +68,18 @@ export interface NormalizedMediaItem {
   isStory?: boolean;
   isCollab?: boolean;
   collaborators?: string[];
+  /** Engagement, present only when the logged-in feed was fetched. */
+  metrics?: MediaMetrics;
+}
+
+export interface MediaMetrics {
+  playCount: number | null;
+  likeCount: number | null;
+  commentCount: number | null;
+  audioTitle: string | null;
+  audioArtist: string | null;
+  /** true = the creator's own sound, false = licensed music, null = unknown. */
+  audioIsOriginal: boolean | null;
 }
 
 export interface TargetFetchResult {
@@ -95,12 +107,29 @@ export interface StealthFetchOptions {
   jitterEnabled?: boolean;
   humanSimEnabled?: boolean;
   proxyUrl?: string | null;
+  /** Fetch the logged-in mobile feed for play/like/comment counts (niche accounts). */
+  collectMetrics?: boolean;
   /**
    * Epoch ms by which the check must be done. Scheduled runs pass their time
    * budget so retries stop early instead of the serverless function being
    * killed mid-request (Vercel Hobby caps functions at ~60s).
    */
   deadlineAt?: number;
+}
+
+/**
+ * The user's OWN connected Instagram professional account, used as the caller
+ * for official Graph API requests (Business Discovery reads, content
+ * publishing). Facebook Login path — see lib/services/meta-connection.service.ts.
+ */
+export interface GraphAccountConfig {
+  /** Instagram professional account ID (NOT the Facebook user or Page id). */
+  igUserId: string;
+  /** Decrypted long-lived access token. Never log this. */
+  accessToken: string;
+  igUsername?: string | null;
+  /** Which Graph host issued the token; defaults to Facebook Login. */
+  host?: "facebook" | "instagram";
 }
 
 export interface StealthSessionConfig {
@@ -114,12 +143,18 @@ export interface StealthSessionConfig {
 }
 
 export interface MetaProvider {
-  resolveTarget(username: string, session?: StealthSessionConfig | null): Promise<TargetResolution>;
+  resolveTarget(
+    username: string,
+    session?: StealthSessionConfig | null,
+    graphAccount?: GraphAccountConfig | null,
+  ): Promise<TargetResolution>;
   fetchTargetData(params: {
     username: string;
     externalId: string | null;
     accessToken?: string;
     session?: StealthSessionConfig | null;
+    /** Required by GraphMetaProvider; ignored by the mock/stealth providers. */
+    graphAccount?: GraphAccountConfig | null;
     options?: StealthFetchOptions;
   }): Promise<TargetFetchResult>;
 }

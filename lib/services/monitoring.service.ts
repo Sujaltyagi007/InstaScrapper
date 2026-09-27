@@ -1,14 +1,17 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getMetaProvider } from "@/lib/meta/provider-factory";
-import { decryptSecret } from "@/lib/crypto";
+import { getMetaProvider, getProviderMode } from "@/lib/meta/provider-factory";
+import { getActiveGraphAccount, markConnectionReauthRequired } from "@/lib/services/meta-connection.service";
+import { autoRepostNewMedia } from "@/lib/services/auto-repost.service";
 import { hashProfile, detectProfileChanges, findNewMedia } from "./diff.service";
 import { recordEvent } from "./event.service";
+import { saveMediaMetrics } from "./media-metrics.service";
 import { nextRunAtFromInterval, clampIntervalSeconds } from "./target.service";
 import { pickSession, reportSessionOutcome } from "@/lib/meta/session-pool";
 import type { TargetFetchResult } from "@/lib/meta/types";
-import { uploadHeavyAndThumbnail } from "@/lib/services/media-storage.service";
-import { isStorageEnabled, fetchToBuffer, uploadBuffer } from "@/lib/storage";
+import { mediaLabel, uploadHeavyAndThumbnail } from "@/lib/services/media-storage.service";
+import { contentHash } from "@/lib/storage/ledger";
+import { downloadStoredObject, isStorageEnabled, fetchToBuffer, uploadBuffer, visualDistance, visualHash } from "@/lib/storage";
 import { getPacingGate, reserveProfileView, recordCheckOutcome } from "./pacing.service";
 import {
   humanIntervalSeconds,
@@ -229,6 +232,34 @@ export interface ProcessTargetOptions {
  * same account at the same time. The lease is claimed atomically and released
  * only if still ours; if the process dies it simply expires.
  */
+/** Same picture at another size/compression differs by ~12 of 256 bits; different pictures by 70+ (measured). */
+const SAME_PICTURE_MAX_BITS = 24;
+
+/**
+ * Whether a check has to be logged in. Only then is a burner used: trend
+ * (niche) accounts need view counts, a pinned session is the user's explicit
+ * choice, and stories / follower lists are login-only. Plain new-post
+ * monitoring stays logged out, so the burner makes as few requests as possible.
+ */
+export async function checkNeedsSession(target: {
+  id: string;
+  monitor: {
+    instagramSessionId: string | null;
+    purpose?: string | null;
+    triggerMode?: string | null;
+    watchStories: boolean;
+    watchFollowerChurn: boolean;
+  } | null;
+}): Promise<boolean> {
+  const monitor = target.monitor;
+  if (!monitor) return false;
+  if (monitor.instagramSessionId) return true;
+  if (monitor.purpose === "TREND") return true;
+  if ((await prisma.nicheAccount.count({ where: { targetId: target.id } })) > 0) return true;
+  const full = (monitor.triggerMode ?? "NEW_POSTS_ONLY") === "FULL";
+  return full && (monitor.watchStories || monitor.watchFollowerChurn);
+}
+
 export async function processTarget(targetId: string, options: ProcessTargetOptions = {}) {
   const now = new Date();
   const leaseUntil = new Date(now.getTime() + CHECK_LEASE_MS);
@@ -281,54 +312,67 @@ async function runClaimedCheck(targetId: string, options: ProcessTargetOptions) 
       return { targetId, outcome: "SKIPPED_DAILY_LIMIT" as const };
     }
 
-    const isStealth = (target.monitor.engineType ?? "STEALTH_SCRAPER") === "STEALTH_SCRAPER";
+    // The provider mode is authoritative: existing rows all carry the legacy
+    // "STEALTH_SCRAPER" engineType default, so deciding off engineType alone
+    // would keep scraping even after switching the app to the official API.
+    const useGraph =
+      getProviderMode() === "GRAPH" || (target.monitor.engineType ?? "") === "GRAPH_API";
+    // Default mode: only new posts/reels trigger work or notifications.
+    const newPostsOnly = (target.monitor.triggerMode ?? "NEW_POSTS_ONLY") === "NEW_POSTS_ONLY";
 
     let sessionConfig = null;
-    let accessToken = "";
+    let graphAccount = null;
     let usedSessionId: string | null = null;
 
-    if (isStealth) {
+    if (useGraph) {
+      // Official Graph API path: Business Discovery is performed AS the user's
+      // own connected Instagram professional account.
+      graphAccount = await getActiveGraphAccount(target.userId);
+      if (!graphAccount) {
+        await prisma.target.update({
+          where: { id: target.id },
+          data: {
+            status: "REAUTH_REQUIRED",
+            nextRunAt: null,
+            lastCheckedAt: new Date(),
+            errorCode: "NO_META_CONNECTION",
+            errorMessage: "Connect your Instagram professional account in Settings.",
+          },
+        });
+        await finishJob(job.id, "FAILED", "No active Meta connection");
+        return { targetId, outcome: "REAUTH_REQUIRED" as const };
+      }
+    } else if (await checkNeedsSession(target)) {
       const picked = await pickSession(target.userId, { pinnedSessionId: target.monitor.instagramSessionId });
       if (picked) {
         usedSessionId = picked.id;
         sessionConfig = picked.config;
       }
-    } else {
-      // Official Meta Graph API mode requires active MetaConnection
-      const connection = await prisma.metaConnection.findFirst({
-        where: { userId: target.userId, status: "ACTIVE" },
-        orderBy: { createdAt: "desc" },
-      });
-
-      if (!connection) {
-        await prisma.target.update({
-          where: { id: target.id },
-          data: { status: "REAUTH_REQUIRED", nextRunAt: null, lastCheckedAt: new Date() },
-        });
-        await finishJob(job.id, "FAILED", "No active Meta connection");
-        return { targetId, outcome: "REAUTH_REQUIRED" as const };
-      }
-
-      accessToken = decryptSecret({
-        ciphertext: connection.encryptedAccessToken,
-        iv: connection.encryptedTokenIv,
-      });
     }
+
+    // Engagement metrics are only for niche (trend) accounts, and only exist on
+    // logged-in scrapes, so anonymous checks never pay for the extra request.
+    const collectMetrics =
+      sessionConfig !== null && (await prisma.nicheAccount.count({ where: { targetId: target.id } })) > 0;
 
     const provider = getMetaProvider();
     const fetchResult = await provider.fetchTargetData({
       username: target.normalizedUsername,
       externalId: target.externalId,
-      accessToken,
       session: sessionConfig,
+      graphAccount,
       options: {
-        watchStories: target.monitor.watchStories,
+        // NEW_POSTS_ONLY forces the extra-request work off at the source, so
+        // no story fetch (+1 request) and no follower/following list fetch
+        // (~20 requests) ever fire — only a new post or reel does anything.
+        watchStories: newPostsOnly ? false : target.monitor.watchStories,
         watchReels: target.monitor.watchReels,
-        watchFollowerChurn: target.monitor.watchFollowerChurn,
+        watchFollowerChurn: newPostsOnly ? false : target.monitor.watchFollowerChurn,
         watchCollabPosts: target.monitor.watchCollabPosts,
         jitterEnabled: target.monitor.jitterEnabled,
         humanSimEnabled: target.monitor.humanSimEnabled,
         proxyUrl: sessionConfig?.proxyUrl,
+        collectMetrics,
         deadlineAt: options.deadlineAt,
       },
     });
@@ -446,10 +490,7 @@ async function handleFailedFetch(
   }
 
   if (fetchResult.authError) {
-    await prisma.metaConnection.updateMany({
-      where: { userId: target.userId, status: "ACTIVE" },
-      data: { status: "REAUTH_REQUIRED" },
-    });
+    await markConnectionReauthRequired(target.userId);
     await prisma.target.update({
       where: { id: target.id },
       data: { status: "REAUTH_REQUIRED", nextRunAt: null, lastCheckedAt: now, errorCode: "AUTH_ERROR" },
@@ -531,6 +572,13 @@ async function handleSuccessfulFetch(
   // media rows (so dedupe and events stay correct) but skip storing files;
   // the UI falls back to the source URL.
   const hasTimeToUpload = () => !deadlineAt || deadlineAt - Date.now() > 8_000;
+  // In NEW_POSTS_ONLY mode, only new posts/reels below produce events; the
+  // profile/follower/following/churn diffs are skipped so a follower change
+  // or bio edit never triggers a notification.
+  const newPostsOnly = (target.monitor.triggerMode ?? "NEW_POSTS_ONLY") === "NEW_POSTS_ONLY";
+  // Niche accounts watched only for trend data: keep the rows (dedupe + metrics)
+  // but never upload files, raise events, or repost.
+  const trendOnly = target.monitor.purpose === "TREND";
   const profile = fetchResult.profile!;
   const media = fetchResult.media ?? [];
   const stories = fetchResult.stories ?? [];
@@ -547,23 +595,32 @@ async function handleSuccessfulFetch(
     });
     const knownIds = new Set(known.map((m) => m.externalMediaId));
     const newItems = findNewMedia(media, knownIds);
+    // Collected for auto-repost below, after every row is safely written.
+    const createdMediaIds: string[] = [];
 
     for (const item of newItems) {
       // Upload the full-resolution file plus an independently-stored
       // compressed thumbnail. The thumbnail is what keeps the feed rendering
       // after the 48h policy deletes the heavy original.
       const sourceUrl = item.videoUrl || item.mediaUrl;
-      const stored = sourceUrl && hasTimeToUpload()
+      const stored = sourceUrl && !trendOnly && hasTimeToUpload()
         ? await uploadHeavyAndThumbnail({
           sourceUrl,
           fileNameBase: `${target.normalizedUsername}_${item.externalMediaId}`,
           folder: `/instascrapper/targets/${target.normalizedUsername}/media`,
           tags: [target.normalizedUsername, item.mediaType],
           isVideo: Boolean(item.videoUrl),
+          owner: {
+            userId: target.userId,
+            kind: "MEDIA",
+            label: mediaLabel(target.normalizedUsername, item.mediaType, item.permalink ?? null),
+            targetId: target.id,
+            targetUsername: target.normalizedUsername,
+          },
         })
         : null;
 
-      await prisma.media.create({
+      const createdMedia = await prisma.media.create({
         data: {
           targetId: target.id,
           externalMediaId: item.externalMediaId,
@@ -589,7 +646,10 @@ async function handleSuccessfulFetch(
           collaborators: item.collaborators ?? [],
         },
       });
-      if (previousSnapshot) {
+      // Only repost genuinely new posts — never the first-check backfill, which
+      // would dump a target's whole recent feed onto the user's account at once.
+      if (previousSnapshot && !trendOnly) createdMediaIds.push(createdMedia.id);
+      if (previousSnapshot && !trendOnly) {
         await recordEvent({
           targetId: target.id,
           userId: target.userId,
@@ -629,6 +689,36 @@ async function handleSuccessfulFetch(
         }
       }
     }
+
+    try {
+      await saveMediaMetrics(target.id, media);
+    } catch (error) {
+      // Metrics are a bonus on top of the check; never fail the check over them.
+      console.warn(
+        `[metrics] ${target.normalizedUsername}: save failed: ${error instanceof Error ? error.message : "unknown"}`,
+      );
+    }
+
+    // Auto-repost the new posts to the user's own account, if enabled for this
+    // target. Wrapped so a publishing failure can never fail the check that
+    // found the post — the Repost row records what happened either way.
+    if (target.monitor.autoRepost && createdMediaIds.length > 0) {
+      try {
+        const reposted = await autoRepostNewMedia({
+          userId: target.userId,
+          mediaIds: createdMediaIds,
+        });
+        if (reposted.posted > 0 || reposted.failed > 0) {
+          console.log(
+            `[auto-repost] ${target.normalizedUsername}: posted=${reposted.posted} failed=${reposted.failed} skipped=${reposted.skipped}`,
+          );
+        }
+      } catch (error) {
+        console.warn(
+          `[auto-repost] ${target.normalizedUsername} failed: ${error instanceof Error ? error.message : "unknown"}`,
+        );
+      }
+    }
   }
 
   // Stories
@@ -655,6 +745,13 @@ async function handleSuccessfulFetch(
                 fileName: `${target.normalizedUsername}_story_${story.externalMediaId}.${ext}`,
                 folder: `/instascrapper/targets/${target.normalizedUsername}/stories`,
                 contentType: story.videoUrl ? "video/mp4" : "image/jpeg",
+                owner: {
+                  userId: target.userId,
+                  kind: "STORY",
+                  label: `@${target.normalizedUsername} story`,
+                  targetId: target.id,
+                  targetUsername: target.normalizedUsername,
+                },
               });
               if (res) {
                 storyStorageUrl = res.url;
@@ -703,7 +800,7 @@ async function handleSuccessfulFetch(
   // against the lists stored on the previous snapshot (the bridge only
   // returns lists at all when watchFollowerChurn is on and the session is
   // authenticated; anonymous/unwatched runs skip this block entirely).
-  if (target.monitor.watchFollowerChurn && (fetchResult.followersList || fetchResult.followingList)) {
+  if (!newPostsOnly && target.monitor.watchFollowerChurn && (fetchResult.followersList || fetchResult.followingList)) {
     const prevFollowers = new Set((previousSnapshot?.followersListJson as string[] | null) ?? []);
     const prevFollowing = new Set((previousSnapshot?.followingListJson as string[] | null) ?? []);
     const currFollowers = fetchResult.followersList ?? [];
@@ -734,11 +831,14 @@ async function handleSuccessfulFetch(
     }
   }
 
-  // Profile / follower / following diffing.
-  const changes = detectProfileChanges(target.monitor, previousSnapshot, profile);
-  for (const change of changes) {
-    await recordEvent({ targetId: target.id, userId: target.userId, change });
-    eventsCreated++;
+  // Profile / follower / following diffing — skipped entirely in
+  // NEW_POSTS_ONLY mode (a follower count or bio change must not notify).
+  if (!newPostsOnly) {
+    const changes = detectProfileChanges(target.monitor, previousSnapshot, profile);
+    for (const change of changes) {
+      await recordEvent({ targetId: target.id, userId: target.userId, change });
+      eventsCreated++;
+    }
   }
 
   // Upload profile picture if storage is configured
@@ -747,12 +847,43 @@ async function handleSuccessfulFetch(
   if (isStorageEnabled() && hasTimeToUpload() && profile.profilePictureUrl) {
     const buffer = await fetchToBuffer(profile.profilePictureUrl);
     if (buffer) {
-      const res = await uploadBuffer({
-        buffer,
-        fileName: `${target.normalizedUsername}_profile_${Date.now()}.jpg`,
-        folder: `/instascrapper/targets/${target.normalizedUsername}/profile`,
-        contentType: "image/jpeg",
+      // Profile pictures rarely change, but used to be uploaded again on every
+      // check (hundreds of copies a day). Reuse the stored copy when the bytes match.
+      // Instagram serves the same picture in different sizes between checks, so
+      // compare what it looks like, not its bytes.
+      const look = await visualHash(buffer);
+      const stored = await prisma.storedFile.findMany({
+        where: { targetId: target.id, kind: "PROFILE_PIC" },
+        select: { url: true, fileId: true, contentHash: true, visualHash: true },
       });
+      // Copies stored before fingerprints existed get one now (they're a few KB each).
+      for (const f of stored.filter((s) => !s.visualHash)) {
+        const bytes = await downloadStoredObject(f.fileId);
+        f.visualHash = bytes ? await visualHash(bytes) : null;
+        if (f.visualHash) await prisma.storedFile.updateMany({ where: { fileId: f.fileId }, data: { visualHash: f.visualHash } });
+      }
+      const sha = contentHash(buffer);
+      const same = stored.find(
+        (f) =>
+          f.contentHash === sha ||
+          (look !== null && f.visualHash !== null && visualDistance(look, f.visualHash) <= SAME_PICTURE_MAX_BITS),
+      );
+      const res =
+        same ??
+        (await uploadBuffer({
+          buffer,
+          fileName: `${target.normalizedUsername}_profile_${Date.now()}.jpg`,
+          folder: `/instascrapper/targets/${target.normalizedUsername}/profile`,
+          contentType: "image/jpeg",
+          owner: {
+            userId: target.userId,
+            kind: "PROFILE_PIC",
+            label: `@${target.normalizedUsername} profile picture`,
+            targetId: target.id,
+            targetUsername: target.normalizedUsername,
+            visualHash: look,
+          },
+        }));
       if (res) {
         profilePicStorageUrl = res.url;
         profilePicStorageId = res.fileId;

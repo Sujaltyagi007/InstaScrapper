@@ -30,6 +30,8 @@ export type MetaConnectionMinAggregateOutputType = {
   provider: string | null
   externalUserId: string | null
   accountType: string | null
+  igUsername: string | null
+  pageId: string | null
   encryptedAccessToken: string | null
   encryptedTokenIv: string | null
   status: $Enums.MetaConnectionStatus | null
@@ -45,6 +47,8 @@ export type MetaConnectionMaxAggregateOutputType = {
   provider: string | null
   externalUserId: string | null
   accountType: string | null
+  igUsername: string | null
+  pageId: string | null
   encryptedAccessToken: string | null
   encryptedTokenIv: string | null
   status: $Enums.MetaConnectionStatus | null
@@ -60,6 +64,8 @@ export type MetaConnectionCountAggregateOutputType = {
   provider: number
   externalUserId: number
   accountType: number
+  igUsername: number
+  pageId: number
   encryptedAccessToken: number
   encryptedTokenIv: number
   scopes: number
@@ -78,6 +84,8 @@ export type MetaConnectionMinAggregateInputType = {
   provider?: true
   externalUserId?: true
   accountType?: true
+  igUsername?: true
+  pageId?: true
   encryptedAccessToken?: true
   encryptedTokenIv?: true
   status?: true
@@ -93,6 +101,8 @@ export type MetaConnectionMaxAggregateInputType = {
   provider?: true
   externalUserId?: true
   accountType?: true
+  igUsername?: true
+  pageId?: true
   encryptedAccessToken?: true
   encryptedTokenIv?: true
   status?: true
@@ -108,6 +118,8 @@ export type MetaConnectionCountAggregateInputType = {
   provider?: true
   externalUserId?: true
   accountType?: true
+  igUsername?: true
+  pageId?: true
   encryptedAccessToken?: true
   encryptedTokenIv?: true
   scopes?: true
@@ -197,6 +209,8 @@ export type MetaConnectionGroupByOutputType = {
   provider: string
   externalUserId: string
   accountType: string | null
+  igUsername: string | null
+  pageId: string | null
   encryptedAccessToken: string
   encryptedTokenIv: string
   scopes: string[]
@@ -234,6 +248,8 @@ export type MetaConnectionWhereInput = {
   provider?: Prisma.StringFilter<"MetaConnection"> | string
   externalUserId?: Prisma.StringFilter<"MetaConnection"> | string
   accountType?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
+  igUsername?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
+  pageId?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
   encryptedAccessToken?: Prisma.StringFilter<"MetaConnection"> | string
   encryptedTokenIv?: Prisma.StringFilter<"MetaConnection"> | string
   scopes?: Prisma.StringNullableListFilter<"MetaConnection">
@@ -251,6 +267,8 @@ export type MetaConnectionOrderByWithRelationInput = {
   provider?: Prisma.SortOrder
   externalUserId?: Prisma.SortOrder
   accountType?: Prisma.SortOrderInput | Prisma.SortOrder
+  igUsername?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageId?: Prisma.SortOrderInput | Prisma.SortOrder
   encryptedAccessToken?: Prisma.SortOrder
   encryptedTokenIv?: Prisma.SortOrder
   scopes?: Prisma.SortOrder
@@ -271,6 +289,8 @@ export type MetaConnectionWhereUniqueInput = Prisma.AtLeast<{
   provider?: Prisma.StringFilter<"MetaConnection"> | string
   externalUserId?: Prisma.StringFilter<"MetaConnection"> | string
   accountType?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
+  igUsername?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
+  pageId?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
   encryptedAccessToken?: Prisma.StringFilter<"MetaConnection"> | string
   encryptedTokenIv?: Prisma.StringFilter<"MetaConnection"> | string
   scopes?: Prisma.StringNullableListFilter<"MetaConnection">
@@ -288,6 +308,8 @@ export type MetaConnectionOrderByWithAggregationInput = {
   provider?: Prisma.SortOrder
   externalUserId?: Prisma.SortOrder
   accountType?: Prisma.SortOrderInput | Prisma.SortOrder
+  igUsername?: Prisma.SortOrderInput | Prisma.SortOrder
+  pageId?: Prisma.SortOrderInput | Prisma.SortOrder
   encryptedAccessToken?: Prisma.SortOrder
   encryptedTokenIv?: Prisma.SortOrder
   scopes?: Prisma.SortOrder
@@ -310,6 +332,8 @@ export type MetaConnectionScalarWhereWithAggregatesInput = {
   provider?: Prisma.StringWithAggregatesFilter<"MetaConnection"> | string
   externalUserId?: Prisma.StringWithAggregatesFilter<"MetaConnection"> | string
   accountType?: Prisma.StringNullableWithAggregatesFilter<"MetaConnection"> | string | null
+  igUsername?: Prisma.StringNullableWithAggregatesFilter<"MetaConnection"> | string | null
+  pageId?: Prisma.StringNullableWithAggregatesFilter<"MetaConnection"> | string | null
   encryptedAccessToken?: Prisma.StringWithAggregatesFilter<"MetaConnection"> | string
   encryptedTokenIv?: Prisma.StringWithAggregatesFilter<"MetaConnection"> | string
   scopes?: Prisma.StringNullableListFilter<"MetaConnection">
@@ -325,6 +349,8 @@ export type MetaConnectionCreateInput = {
   provider?: string
   externalUserId: string
   accountType?: string | null
+  igUsername?: string | null
+  pageId?: string | null
   encryptedAccessToken: string
   encryptedTokenIv: string
   scopes?: Prisma.MetaConnectionCreatescopesInput | string[]
@@ -342,6 +368,8 @@ export type MetaConnectionUncheckedCreateInput = {
   provider?: string
   externalUserId: string
   accountType?: string | null
+  igUsername?: string | null
+  pageId?: string | null
   encryptedAccessToken: string
   encryptedTokenIv: string
   scopes?: Prisma.MetaConnectionCreatescopesInput | string[]
@@ -357,6 +385,8 @@ export type MetaConnectionUpdateInput = {
   provider?: Prisma.StringFieldUpdateOperationsInput | string
   externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
   accountType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  igUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   encryptedAccessToken?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedTokenIv?: Prisma.StringFieldUpdateOperationsInput | string
   scopes?: Prisma.MetaConnectionUpdatescopesInput | string[]
@@ -374,6 +404,8 @@ export type MetaConnectionUncheckedUpdateInput = {
   provider?: Prisma.StringFieldUpdateOperationsInput | string
   externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
   accountType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  igUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   encryptedAccessToken?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedTokenIv?: Prisma.StringFieldUpdateOperationsInput | string
   scopes?: Prisma.MetaConnectionUpdatescopesInput | string[]
@@ -390,6 +422,8 @@ export type MetaConnectionCreateManyInput = {
   provider?: string
   externalUserId: string
   accountType?: string | null
+  igUsername?: string | null
+  pageId?: string | null
   encryptedAccessToken: string
   encryptedTokenIv: string
   scopes?: Prisma.MetaConnectionCreatescopesInput | string[]
@@ -405,6 +439,8 @@ export type MetaConnectionUpdateManyMutationInput = {
   provider?: Prisma.StringFieldUpdateOperationsInput | string
   externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
   accountType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  igUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   encryptedAccessToken?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedTokenIv?: Prisma.StringFieldUpdateOperationsInput | string
   scopes?: Prisma.MetaConnectionUpdatescopesInput | string[]
@@ -421,6 +457,8 @@ export type MetaConnectionUncheckedUpdateManyInput = {
   provider?: Prisma.StringFieldUpdateOperationsInput | string
   externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
   accountType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  igUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   encryptedAccessToken?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedTokenIv?: Prisma.StringFieldUpdateOperationsInput | string
   scopes?: Prisma.MetaConnectionUpdatescopesInput | string[]
@@ -455,6 +493,8 @@ export type MetaConnectionCountOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   externalUserId?: Prisma.SortOrder
   accountType?: Prisma.SortOrder
+  igUsername?: Prisma.SortOrder
+  pageId?: Prisma.SortOrder
   encryptedAccessToken?: Prisma.SortOrder
   encryptedTokenIv?: Prisma.SortOrder
   scopes?: Prisma.SortOrder
@@ -471,6 +511,8 @@ export type MetaConnectionMaxOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   externalUserId?: Prisma.SortOrder
   accountType?: Prisma.SortOrder
+  igUsername?: Prisma.SortOrder
+  pageId?: Prisma.SortOrder
   encryptedAccessToken?: Prisma.SortOrder
   encryptedTokenIv?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -486,6 +528,8 @@ export type MetaConnectionMinOrderByAggregateInput = {
   provider?: Prisma.SortOrder
   externalUserId?: Prisma.SortOrder
   accountType?: Prisma.SortOrder
+  igUsername?: Prisma.SortOrder
+  pageId?: Prisma.SortOrder
   encryptedAccessToken?: Prisma.SortOrder
   encryptedTokenIv?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -555,6 +599,8 @@ export type MetaConnectionCreateWithoutUserInput = {
   provider?: string
   externalUserId: string
   accountType?: string | null
+  igUsername?: string | null
+  pageId?: string | null
   encryptedAccessToken: string
   encryptedTokenIv: string
   scopes?: Prisma.MetaConnectionCreatescopesInput | string[]
@@ -570,6 +616,8 @@ export type MetaConnectionUncheckedCreateWithoutUserInput = {
   provider?: string
   externalUserId: string
   accountType?: string | null
+  igUsername?: string | null
+  pageId?: string | null
   encryptedAccessToken: string
   encryptedTokenIv: string
   scopes?: Prisma.MetaConnectionCreatescopesInput | string[]
@@ -615,6 +663,8 @@ export type MetaConnectionScalarWhereInput = {
   provider?: Prisma.StringFilter<"MetaConnection"> | string
   externalUserId?: Prisma.StringFilter<"MetaConnection"> | string
   accountType?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
+  igUsername?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
+  pageId?: Prisma.StringNullableFilter<"MetaConnection"> | string | null
   encryptedAccessToken?: Prisma.StringFilter<"MetaConnection"> | string
   encryptedTokenIv?: Prisma.StringFilter<"MetaConnection"> | string
   scopes?: Prisma.StringNullableListFilter<"MetaConnection">
@@ -630,6 +680,8 @@ export type MetaConnectionCreateManyUserInput = {
   provider?: string
   externalUserId: string
   accountType?: string | null
+  igUsername?: string | null
+  pageId?: string | null
   encryptedAccessToken: string
   encryptedTokenIv: string
   scopes?: Prisma.MetaConnectionCreatescopesInput | string[]
@@ -645,6 +697,8 @@ export type MetaConnectionUpdateWithoutUserInput = {
   provider?: Prisma.StringFieldUpdateOperationsInput | string
   externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
   accountType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  igUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   encryptedAccessToken?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedTokenIv?: Prisma.StringFieldUpdateOperationsInput | string
   scopes?: Prisma.MetaConnectionUpdatescopesInput | string[]
@@ -660,6 +714,8 @@ export type MetaConnectionUncheckedUpdateWithoutUserInput = {
   provider?: Prisma.StringFieldUpdateOperationsInput | string
   externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
   accountType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  igUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   encryptedAccessToken?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedTokenIv?: Prisma.StringFieldUpdateOperationsInput | string
   scopes?: Prisma.MetaConnectionUpdatescopesInput | string[]
@@ -675,6 +731,8 @@ export type MetaConnectionUncheckedUpdateManyWithoutUserInput = {
   provider?: Prisma.StringFieldUpdateOperationsInput | string
   externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
   accountType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  igUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   encryptedAccessToken?: Prisma.StringFieldUpdateOperationsInput | string
   encryptedTokenIv?: Prisma.StringFieldUpdateOperationsInput | string
   scopes?: Prisma.MetaConnectionUpdatescopesInput | string[]
@@ -693,6 +751,8 @@ export type MetaConnectionSelect<ExtArgs extends runtime.Types.Extensions.Intern
   provider?: boolean
   externalUserId?: boolean
   accountType?: boolean
+  igUsername?: boolean
+  pageId?: boolean
   encryptedAccessToken?: boolean
   encryptedTokenIv?: boolean
   scopes?: boolean
@@ -710,6 +770,8 @@ export type MetaConnectionSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   provider?: boolean
   externalUserId?: boolean
   accountType?: boolean
+  igUsername?: boolean
+  pageId?: boolean
   encryptedAccessToken?: boolean
   encryptedTokenIv?: boolean
   scopes?: boolean
@@ -727,6 +789,8 @@ export type MetaConnectionSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   provider?: boolean
   externalUserId?: boolean
   accountType?: boolean
+  igUsername?: boolean
+  pageId?: boolean
   encryptedAccessToken?: boolean
   encryptedTokenIv?: boolean
   scopes?: boolean
@@ -744,6 +808,8 @@ export type MetaConnectionSelectScalar = {
   provider?: boolean
   externalUserId?: boolean
   accountType?: boolean
+  igUsername?: boolean
+  pageId?: boolean
   encryptedAccessToken?: boolean
   encryptedTokenIv?: boolean
   scopes?: boolean
@@ -754,7 +820,7 @@ export type MetaConnectionSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MetaConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "provider" | "externalUserId" | "accountType" | "encryptedAccessToken" | "encryptedTokenIv" | "scopes" | "status" | "expiresAt" | "lastVerifiedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["metaConnection"]>
+export type MetaConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "provider" | "externalUserId" | "accountType" | "igUsername" | "pageId" | "encryptedAccessToken" | "encryptedTokenIv" | "scopes" | "status" | "expiresAt" | "lastVerifiedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["metaConnection"]>
 export type MetaConnectionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -776,6 +842,8 @@ export type $MetaConnectionPayload<ExtArgs extends runtime.Types.Extensions.Inte
     provider: string
     externalUserId: string
     accountType: string | null
+    igUsername: string | null
+    pageId: string | null
     encryptedAccessToken: string
     encryptedTokenIv: string
     scopes: string[]
@@ -1213,6 +1281,8 @@ export interface MetaConnectionFieldRefs {
   readonly provider: Prisma.FieldRef<"MetaConnection", 'String'>
   readonly externalUserId: Prisma.FieldRef<"MetaConnection", 'String'>
   readonly accountType: Prisma.FieldRef<"MetaConnection", 'String'>
+  readonly igUsername: Prisma.FieldRef<"MetaConnection", 'String'>
+  readonly pageId: Prisma.FieldRef<"MetaConnection", 'String'>
   readonly encryptedAccessToken: Prisma.FieldRef<"MetaConnection", 'String'>
   readonly encryptedTokenIv: Prisma.FieldRef<"MetaConnection", 'String'>
   readonly scopes: Prisma.FieldRef<"MetaConnection", 'String[]'>

@@ -1,46 +1,42 @@
 import { NextResponse } from "next/server";
-import { requireUserId, jsonError, ApiError } from "@/lib/api-helpers";
-import { exchangeCodeForToken } from "@/lib/meta/oauth.service";
-import { encryptSecret } from "@/lib/crypto";
-import { prisma } from "@/lib/prisma";
+import { completeMetaConnection, MetaConnectionError } from "@/lib/services/meta-connection.service";
+import { verifyOAuthState } from "@/lib/security/oauth-state";
+
+function settingsRedirect(req: Request, params: Record<string, string>): NextResponse {
+  const url = new URL("/settings", req.url);
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+  return NextResponse.redirect(url);
+}
 
 export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
+  const error = url.searchParams.get("error_description") || url.searchParams.get("error");
+
+  if (error) {
+    return settingsRedirect(req, { meta_error: error });
+  }
+  if (!code || !state) {
+    return settingsRedirect(req, { meta_error: "Instagram did not return an authorization code." });
+  }
+
+  const userId = verifyOAuthState(state);
+  if (!userId) {
+    return settingsRedirect(req, { meta_error: "This connection link expired. Please try again." });
+  }
+
   try {
-    const userId = await requireUserId();
-    const url = new URL(req.url);
-    const code = url.searchParams.get("code");
-    const state = url.searchParams.get("state");
-    const cookieState = req.headers
-      .get("cookie")
-      ?.split(";")
-      .map((c) => c.trim())
-      .find((c) => c.startsWith("meta_oauth_state="))
-      ?.split("=")[1];
-
-    if (!code) throw new ApiError(400, "Missing authorization code.");
-    if (!state || !cookieState || state !== cookieState) {
-      throw new ApiError(400, "Invalid OAuth state.");
-    }
-
-    const token = await exchangeCodeForToken(code);
-    const encrypted = encryptSecret(token.access_token);
-
-    await prisma.metaConnection.create({
-      data: {
-        userId,
-        provider: "meta",
-        externalUserId: "unknown", // populate from a /me call once real Graph API integration is implemented
-        encryptedAccessToken: encrypted.ciphertext,
-        encryptedTokenIv: encrypted.iv,
-        scopes: [],
-        status: "ACTIVE",
-        expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : null,
-        lastVerifiedAt: new Date(),
-      },
-    });
-
-    return NextResponse.redirect(new URL("/settings?connected=1", req.url));
+    const { igUsername } = await completeMetaConnection(userId, code);
+    return settingsRedirect(req, { meta_connected: igUsername ?? "1" });
   } catch (err) {
-    return jsonError(err);
+    const message =
+      err instanceof MetaConnectionError
+        ? err.message
+        : err instanceof Error
+          ? err.message
+          : "Failed to connect your Instagram account.";
+    console.error("[meta-callback]", message);
+    return settingsRedirect(req, { meta_error: message });
   }
 }

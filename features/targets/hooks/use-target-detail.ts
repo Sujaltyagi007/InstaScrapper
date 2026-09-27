@@ -1,8 +1,7 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
 import type { TargetDetail } from "@/types/domain";
+import { useCallback, useEffect, useState } from "react";
 
 export function useTargetDetail(targetId: string) {
   const [target, setTarget] = useState<TargetDetail | null>(null);

@@ -1,9 +1,7 @@
 "use client";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
-import { TargetLimitCard } from "@/features/account/components/target-limit-card";
-import { CheckScheduleCard } from "@/features/account/components/check-schedule-card";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -14,17 +12,25 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingState } from "@/components/common/loading-state";
 import { useSessions } from "@/features/sessions/hooks/use-sessions";
 import { useSettings, type UserSettings } from "@/hooks/use-settings";
+import { TargetLimitCard } from "@/features/account/components/target-limit-card";
 import { AddSessionDialog } from "@/features/sessions/components/add-session-dialog";
+import { CheckScheduleCard } from "@/features/account/components/check-schedule-card";
+import { InstagramPostingCard } from "@/features/account/components/instagram-posting-card";
+import { Loader2, Link2, CheckCircle2, AlertTriangle, Plus, Activity, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Loader2, Link2, CheckCircle2, AlertTriangle, Plus, Activity, Trash2 } from "lucide-react";
 
 interface MetaStatus {
   mock: boolean;
+  mode: "MOCK" | "GRAPH" | "STEALTH";
+  configured: boolean;
   connection: {
     id: string;
     status: string;
     accountType: string | null;
+    igUsername: string | null;
+    externalUserId: string;
+    expiresAt: string | null;
     lastVerifiedAt: string | null;
   } | null;
 }
@@ -44,30 +50,50 @@ export default function SettingsPage() {
   const [addSessionOpen, setAddSessionOpen] = useState(false);
   const [testingSessionId, setTestingSessionId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const refreshMetaStatus = useCallback(() => {
     apiFetch<MetaStatus>("/api/meta/status").then(setMetaStatus).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    refreshMetaStatus();
+  }, [refreshMetaStatus]);
+
+  // The OAuth callback redirects back here with the outcome in the query string,
+  // then we strip it so a refresh doesn't replay the same toast.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("meta_connected");
+    const error = params.get("meta_error");
+    if (!connected && !error) return;
+    if (connected) toast.success(connected === "1" ? "Instagram account connected." : `Connected @${connected}.`);
+    if (error) toast.error(error);
+    window.history.replaceState({}, "", window.location.pathname);
+    refreshMetaStatus();
+  }, [refreshMetaStatus]);
+
+  async function disconnectMeta(id: string) {
+    try {
+      await apiFetch(`/api/meta/connections?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      toast.success("Instagram account disconnected.");
+      refreshMetaStatus();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to disconnect.");
+    }
+  }
 
   async function handleTestSession(id: string) {
     setTestingSessionId(id);
     try {
       const res = await apiFetch<{ ok: boolean; status: string; message?: string; flagged?: boolean }>(
-        "/api/sessions/test",
-        { method: "POST", body: JSON.stringify({ id }) }
+        "/api/sessions/test", { method: "POST", body: JSON.stringify({ id }) }
       );
-      if (res.ok) {
-        toast.success("Session is healthy and authenticated.");
-      } else if (res.flagged) {
-        toast.error("Account or IP has been flagged by Instagram checkpoint challenge.");
-      } else {
-        toast.error(res.message || "Session test failed.");
-      }
+      if (res.ok) { toast.success("Session is healthy and authenticated."); }
+      else if (res.flagged) { toast.error("Account or IP has been flagged by Instagram checkpoint challenge."); }
+      else { toast.error(res.message || "Session test failed."); }
       refreshSessions();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to test session.");
-    } finally {
-      setTestingSessionId(null);
-    }
+    } finally { setTestingSessionId(null); }
   }
 
   async function handleDeleteSession(id: string) {
@@ -213,34 +239,70 @@ export default function SettingsPage() {
         onCreated={refreshSessions}
       />
 
+      <InstagramPostingCard />
+
       <Card>
         <CardHeader>
-          <CardTitle>Meta Graph API (Optional)</CardTitle>
-          <CardDescription>Official Facebook Graph API integration for verified Business Discovery.</CardDescription>
+          <CardTitle>Instagram account (official API)</CardTitle>
+          <CardDescription>
+            Connect your own Instagram Business/Creator account. This is what reads the accounts you
+            monitor (Business Discovery) and what posts on your behalf — no proxy, no burner, and no
+            ban risk from the mechanism itself.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          {metaStatus?.mock && (
+          {metaStatus && !metaStatus.configured && (
             <Alert>
               <AlertTriangle />
               <AlertDescription>
-                Running in mock mode (<code>MOCK_META_API=true</code>). For unmonitored live scraping, use the Stealth Engine above.
+                The server has no Meta app configured. Set <code>META_APP_ID</code> and{" "}
+                <code>META_APP_SECRET</code> before connecting.
+              </AlertDescription>
+            </Alert>
+          )}
+          {metaStatus?.mode === "STEALTH" && (
+            <Alert>
+              <AlertTriangle />
+              <AlertDescription>
+                Still running the legacy scraper (<code>INSTAGRAM_PROVIDER_MODE=STEALTH</code>). Remove
+                that override to use the official API.
               </AlertDescription>
             </Alert>
           )}
           {metaStatus?.connection ? (
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="size-4 text-success" />
-                Connected {metaStatus.connection.accountType ? `(${metaStatus.connection.accountType})` : ""}
-                <Badge variant="outline">{metaStatus.connection.status}</Badge>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+              <div className="flex flex-col gap-1 text-sm">
+                <span className="flex items-center gap-2">
+                  {metaStatus.connection.status === "ACTIVE" ? (
+                    <CheckCircle2 className="size-4 text-success" />
+                  ) : (
+                    <AlertTriangle className="size-4 text-destructive" />
+                  )}
+                  {metaStatus.connection.igUsername
+                    ? `@${metaStatus.connection.igUsername}`
+                    : metaStatus.connection.externalUserId}
+                  <Badge variant="outline">{metaStatus.connection.status}</Badge>
+                </span>
+                {metaStatus.connection.expiresAt && (
+                  <span className="text-xs text-muted-foreground">
+                    Token renews automatically · expires{" "}
+                    {formatDistanceToNow(new Date(metaStatus.connection.expiresAt), { addSuffix: true })}
+                  </span>
+                )}
               </div>
+              <Button variant="ghost" size="sm" onClick={() => disconnectMeta(metaStatus.connection!.id)}>
+                <Trash2 /> Disconnect
+              </Button>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No Meta Graph connection.</p>
+            <p className="text-sm text-muted-foreground">
+              No account connected yet. Your Instagram account must be Business or Creator and linked
+              to a Facebook Page you manage.
+            </p>
           )}
-          <Button asChild variant="outline" className="w-fit">
+          <Button asChild variant="outline" className="w-fit" disabled={!metaStatus?.configured}>
             <a href="/api/meta/connect">
-              <Link2 /> {metaStatus?.connection ? "Reconnect" : "Connect Meta account"}
+              <Link2 /> {metaStatus?.connection ? "Reconnect" : "Connect Instagram account"}
             </a>
           </Button>
         </CardContent>
@@ -265,14 +327,11 @@ export default function SettingsPage() {
             <LoadingState />
           </CardContent>
         ) : (
-          // Keyed by user id so this subtree mounts fresh (with settings
-          // already known) rather than syncing local form state from props
-          // via an effect after the fact.
           <AccountForm key={settings.id} settings={settings} onSaved={refresh} />
         )}
       </Card>
 
-      <Card>
+      <Card className="mb-6!">
         <CardHeader>
           <CardTitle>System health</CardTitle>
           <CardDescription>Recent background job runs (target checks, notifications, cleanup).</CardDescription>
@@ -312,12 +371,12 @@ export default function SettingsPage() {
               </Table>
             </div>
           )}
-          <div className="p-6 pt-0">
-            <Button variant="outline" size="sm" onClick={refreshJobs}>
-              Refresh
-            </Button>
-          </div>
         </CardContent>
+        <CardFooter>
+          <Button variant="outline" size="sm" onClick={refreshJobs}>
+            Refresh
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );

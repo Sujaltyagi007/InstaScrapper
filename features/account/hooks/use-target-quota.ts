@@ -1,9 +1,7 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
+import { useCallback, useEffect, useState } from "react";
 
-/** Mirrors lib/services/quota.service.ts `TargetQuota` (server-only module). */
 export interface TargetQuota {
   used: number;
   limit: number;
@@ -23,13 +21,8 @@ export function useTargetQuota() {
     try {
       const data = await apiFetch<{ quota: TargetQuota }>("/api/account/quota");
       setQuota(data.quota);
-    } catch {
-      // Non-critical: the server still enforces the limit, so a failed read
-      // just means no banner rather than a broken page.
-      setQuota(null);
-    } finally {
-      setLoading(false);
-    }
+    } catch { setQuota(null); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -44,6 +37,5 @@ export function useTargetQuota() {
     setQuota(data.quota);
     return data.quota;
   }, []);
-
   return { quota, loading, refresh, updateLimit };
 }

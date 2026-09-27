@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { deleteTargetFiles, syncStoredFiles } from "@/lib/services/storage-manager.service";
+import { signToken, verifyToken } from "@/lib/security/signed-token";
 import { reserveTargetSlot } from "@/lib/services/quota.service";
 import { NotFoundError } from "@/lib/errors";
-import { getMetaProvider } from "@/lib/meta/provider-factory";
+import { ApiError } from "@/lib/api-helpers";
+import { getMetaProvider, getProviderMode } from "@/lib/meta/provider-factory";
+import { getActiveGraphAccount } from "@/lib/services/meta-connection.service";
 import { toPrismaAccountType, toPrismaEligibility, isMonitorable } from "@/lib/meta/capability.service";
 import type { TargetResolution } from "@/lib/meta/types";
 
@@ -20,8 +24,19 @@ export function validateUsernameFormat(username: string): { valid: boolean; reas
   return { valid: true };
 }
 
-/** Phase: "Backend resolves and validates the target" (plan section 1, step 4). */
-export async function resolveTargetUsername(username: string, session?: import("@/lib/meta/types").StealthSessionConfig | null): Promise<TargetResolution> {
+/**
+ * Phase: "Backend resolves and validates the target" (plan section 1, step 4).
+ *
+ * `userId` is needed in GRAPH mode: Business Discovery is performed *as* the
+ * user's own connected Instagram account, so the resolve can't happen without
+ * it. Omitting it in GRAPH mode surfaces "connect your account" rather than a
+ * confusing lookup failure.
+ */
+export async function resolveTargetUsername(
+  username: string,
+  session?: import("@/lib/meta/types").StealthSessionConfig | null,
+  userId?: string,
+): Promise<TargetResolution> {
   const format = validateUsernameFormat(username);
   if (!format.valid) {
     return {
@@ -36,7 +51,27 @@ export async function resolveTargetUsername(username: string, session?: import("
   }
 
   const provider = getMetaProvider();
-  return provider.resolveTarget(normalizeUsername(username), session);
+  const graphAccount =
+    getProviderMode() === "GRAPH" && userId ? await getActiveGraphAccount(userId) : null;
+  return provider.resolveTarget(normalizeUsername(username), session, graphAccount);
+}
+
+/** How long a preview's lookup can be reused by the save step. */
+const RESOLUTION_TOKEN_TTL_MS = 10 * 60_000;
+
+/**
+ * Signs a resolution for the browser to hand back on save, so adding a target
+ * costs one Instagram lookup instead of two. Bound to the user and username;
+ * any edit breaks the signature.
+ */
+export function signResolution(userId: string, resolution: TargetResolution): string | null {
+  return signToken({ userId, username: resolution.username, resolution }, RESOLUTION_TOKEN_TTL_MS);
+}
+
+export function verifiedResolution(userId: string, username: string, token: string | null | undefined): TargetResolution | null {
+  const payload = verifyToken<{ userId: string; username: string; resolution: TargetResolution }>(token);
+  if (!payload || payload.userId !== userId) return null;
+  return normalizeUsername(payload.username) === normalizeUsername(username) ? payload.resolution : null;
 }
 
 async function assertOwnsInstagramSession(userId: string, instagramSessionId: string | null | undefined) {
@@ -77,6 +112,8 @@ export async function createTarget(params: {
   restrictedHoursEnd?: number;
   instagramSessionId?: string | null;
   engineType?: string;
+  triggerMode?: string;
+  purpose?: "MONITOR" | "TREND";
   followerThreshold?: number;
   intervalSeconds: number;
   notificationChannelIds: string[];
@@ -111,6 +148,8 @@ export async function createTarget(params: {
         create: {
           userId: params.userId,
           engineType: params.engineType ?? "STEALTH_SCRAPER",
+          triggerMode: params.triggerMode ?? "NEW_POSTS_ONLY",
+          purpose: params.purpose ?? "MONITOR",
           watchNewMedia: params.watchNewMedia,
           watchProfile: params.watchProfile,
           watchFollowerCount: params.watchFollowerCount,
@@ -180,6 +219,7 @@ export async function updateTargetMonitor(
     restrictedHoursEnd: number;
     instagramSessionId: string | null;
     engineType: string;
+    triggerMode: string;
     followerThreshold: number | null;
     intervalSeconds: number;
     active: boolean;
@@ -218,9 +258,24 @@ export async function updateTargetMonitor(
   return monitor;
 }
 
-export async function deleteTarget(userId: string, targetId: string) {
+/**
+ * Deletes a target. With `deleteFiles`, its stored media, thumbnails, stories
+ * and profile pictures are deleted too (the target stays if any file can't be
+ * deleted, so nothing is left untracked). Without it the files stay in storage
+ * and remain listed on the Storage page under the account's name.
+ */
+export async function deleteTarget(userId: string, targetId: string, opts: { deleteFiles?: boolean } = {}) {
   const target = await prisma.target.findFirst({ where: { id: targetId, userId } });
   if (!target) throw new NotFoundError("Target not found.");
+  // Register every file first: files the register doesn't know about would be
+  // impossible to find once the target's rows are gone.
+  await syncStoredFiles(userId);
+  if (opts.deleteFiles) {
+    const { failed } = await deleteTargetFiles(userId, targetId);
+    if (failed > 0) {
+      throw new ApiError(502, `${failed} file(s) couldn't be deleted from storage, so the account was kept. Try again.`);
+    }
+  }
   await prisma.target.delete({ where: { id: targetId } });
 }
 
@@ -231,7 +286,15 @@ export async function bulkSetTargetsActive(userId: string, targetIds: string[], 
   return { count: results.filter((r) => r.status === "fulfilled").length, total: targetIds.length };
 }
 
-export async function bulkDeleteTargets(userId: string, targetIds: string[]) {
-  const result = await prisma.target.deleteMany({ where: { id: { in: targetIds }, userId } });
-  return { count: result.count, total: targetIds.length };
+export async function bulkDeleteTargets(userId: string, targetIds: string[], opts: { deleteFiles?: boolean } = {}) {
+  let count = 0;
+  for (const id of targetIds) {
+    try {
+      await deleteTarget(userId, id, opts);
+      count += 1;
+    } catch (err) {
+      console.warn(`[targets] bulk delete skipped ${id}:`, err instanceof Error ? err.message : err);
+    }
+  }
+  return { count, total: targetIds.length };
 }

@@ -24,6 +24,7 @@ import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { MediaGallery } from "@/features/targets/components/media-gallery";
+import { DeleteTargetDialog } from "@/features/targets/components/delete-target-dialog";
 import { Download, HardDrive, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -48,15 +49,10 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
     }
   }
 
-  async function remove() {
-    if (!confirm("Delete this target and all its history? This cannot be undone.")) return;
-    try {
-      await apiFetch(`/api/targets/${id}`, { method: "DELETE" });
-      toast.success("Target deleted.");
-      router.push("/targets");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete target.");
-    }
+  // The dialog asks whether the stored files go too, then does the delete.
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  function remove() {
+    setDeleteOpen(true);
   }
 
   if (loading) return <LoadingState />;
@@ -74,6 +70,7 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
   }
 
   const snapshot = target.snapshots[0];
+  const newPostsOnly = (target.monitor?.triggerMode ?? "NEW_POSTS_ONLY") !== "FULL";
   const downloadedMediaCount = target.media?.length ?? 0;
 
   return (
@@ -96,6 +93,12 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
             <Button variant="outline" size="sm" onClick={remove} className="self-start sm:self-auto text-destructive hover:bg-destructive/10">
               <Trash2 className="size-4 mr-1.5" /> Delete target
             </Button>
+            <DeleteTargetDialog
+              open={deleteOpen}
+              onOpenChange={setDeleteOpen}
+              targets={[{ id: target.id, username: target.username }]}
+              onDeleted={() => router.push("/targets")}
+            />
           </div>
 
           {/* Monitor Settings */}
@@ -111,6 +114,15 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
                 disabled={saving}
                 onCheckedChange={(v) => updateMonitor({ active: v })}
               />
+              <ToggleRow
+                label="Only act on new posts & reels"
+                checked={newPostsOnly}
+                disabled={saving}
+                onCheckedChange={(v) => updateMonitor({ triggerMode: v ? "NEW_POSTS_ONLY" : "FULL" })}
+              />
+              <p className="-mt-2 text-xs text-muted-foreground">
+                Ignores follower counts, stories, and profile edits. Turn off for full monitoring.
+              </p>
               <Separator />
 
               <div className="flex flex-col gap-1.5">
@@ -160,15 +172,21 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
               />
               <ToggleRow
                 label="Profile changes"
-                checked={Boolean(target.monitor?.watchProfile)}
-                disabled={saving}
+                checked={newPostsOnly ? false : Boolean(target.monitor?.watchProfile)}
+                disabled={saving || newPostsOnly}
                 onCheckedChange={(v) => updateMonitor({ watchProfile: v })}
               />
               <ToggleRow
                 label="Follower count"
-                checked={Boolean(target.monitor?.watchFollowerCount)}
-                disabled={saving}
+                checked={newPostsOnly ? false : Boolean(target.monitor?.watchFollowerCount)}
+                disabled={saving || newPostsOnly}
                 onCheckedChange={(v) => updateMonitor({ watchFollowerCount: v })}
+              />
+              <ToggleRow
+                label="Auto-repost new posts to my Instagram"
+                checked={Boolean(target.monitor?.autoRepost)}
+                disabled={saving}
+                onCheckedChange={(v) => updateMonitor({ autoRepost: v })}
               />
               <ToggleRow
                 label="Anti-bot jitter"
@@ -180,24 +198,29 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mt-2">
                 Advanced (requires an Instagram session)
               </p>
+              {newPostsOnly && (
+                <p className="-mt-2 text-xs text-muted-foreground">
+                  Disabled while &quot;only act on new posts&quot; is on.
+                </p>
+              )}
               <ToggleRow
                 label="Stories"
                 checked={Boolean(target.monitor?.watchStories)}
-                disabled={saving || !target.monitor?.instagramSessionId}
+                disabled={saving || newPostsOnly || !target.monitor?.instagramSessionId}
                 locked={!target.monitor?.instagramSessionId}
                 onCheckedChange={(v) => updateMonitor({ watchStories: v })}
               />
               <ToggleRow
                 label="Follower & following changes"
                 checked={Boolean(target.monitor?.watchFollowerChurn)}
-                disabled={saving || !target.monitor?.instagramSessionId}
+                disabled={saving || newPostsOnly || !target.monitor?.instagramSessionId}
                 locked={!target.monitor?.instagramSessionId}
                 onCheckedChange={(v) => updateMonitor({ watchFollowerChurn: v })}
               />
               <ToggleRow
                 label="Following count"
                 checked={Boolean(target.monitor?.watchFollowingCount)}
-                disabled={saving || !target.monitor?.instagramSessionId}
+                disabled={saving || newPostsOnly || !target.monitor?.instagramSessionId}
                 locked={!target.monitor?.instagramSessionId}
                 onCheckedChange={(v) => updateMonitor({ watchFollowingCount: v })}
               />

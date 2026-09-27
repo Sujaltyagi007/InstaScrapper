@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,16 +13,29 @@ import type { UserSettings } from "@/hooks/use-settings";
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 
 function formatHour(h: number): string {
-  return `${String(h).padStart(2, "0")}:00`;
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${hour12}:00 ${ampm}`;
 }
 
-/**
- * Human-like schedule settings: the user's timezone and a nightly "sleep"
- * window during which no scheduled checks run. Keyed by the parent on the
- * saved values, so it remounts with fresh state after each save.
- */
+const TIMEZONES = typeof Intl !== "undefined" && Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : [
+  "UTC",
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "Europe/London",
+  "Europe/Paris",
+  "Asia/Kolkata",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+];
+
+
 export function CheckScheduleCard({ settings, onSaved }: { settings: UserSettings; onSaved: () => void }) {
-  const [timezone, setTimezone] = useState(settings.timezone);
+  // Default to India (Asia/Kolkata) if it's still the system default UTC
+  const defaultTz = settings.timezone === "UTC" ? "Asia/Kolkata" : settings.timezone;
+  const [timezone, setTimezone] = useState(defaultTz);
   const [sleepEnabled, setSleepEnabled] = useState(settings.sleepEnabled);
   const [sleepStartHour, setSleepStartHour] = useState(settings.sleepStartHour);
   const [sleepEndHour, setSleepEndHour] = useState(settings.sleepEndHour);
@@ -64,13 +76,18 @@ export function CheckScheduleCard({ settings, onSaved }: { settings: UserSetting
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="timezone">Timezone</Label>
             <div className="flex flex-wrap gap-2">
-              <Input
+              <select
                 id="timezone"
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                placeholder="e.g. Asia/Kolkata"
-                className="max-w-64"
-              />
+                className="h-9 min-w-50 max-w-64 rounded-md border bg-background px-2 text-sm"
+              >
+                {TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
+                ))}
+              </select>
               {browserZone && browserZone !== timezone && (
                 <Button type="button" variant="outline" size="sm" onClick={() => setTimezone(browserZone)}>
                   Use my timezone ({browserZone})
@@ -93,10 +110,7 @@ export function CheckScheduleCard({ settings, onSaved }: { settings: UserSetting
               <HourSelect id="sleep-start" label="From" value={sleepStartHour} onChange={setSleepStartHour} />
               <HourSelect id="sleep-end" label="Until" value={sleepEndHour} onChange={setSleepEndHour} />
               <p className="w-full text-xs text-muted-foreground">
-                {emptyWindow
-                  ? "Start and end are the same, so there is no sleep window."
-                  : `No scheduled checks from ${formatHour(sleepStartHour)} to ${formatHour(sleepEndHour)}${sleepStartHour > sleepEndHour ? " (overnight)" : ""
-                  }.`}
+                {emptyWindow ? "Start and end are the same, so there is no sleep window." : `No scheduled checks from ${formatHour(sleepStartHour)} to ${formatHour(sleepEndHour)}${sleepStartHour > sleepEndHour ? " (overnight)" : ""}.`}
               </p>
             </div>
           )}
@@ -123,15 +137,12 @@ function HourSelect({
   value: number;
   onChange: (hour: number) => void;
 }) {
-  // Native select: 24 fixed options, and it behaves well on mobile.
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <select
-        id={id}
-        value={value}
+      <select id={id} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-9 rounded-md border bg-background px-2 text-sm"
+        className="h-9 min-w-27.5 rounded-md border bg-background py-1 pl-3 pr-8 text-sm"
       >
         {HOURS.map((h) => (
           <option key={h} value={h}>

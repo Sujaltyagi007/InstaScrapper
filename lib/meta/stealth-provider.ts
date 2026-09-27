@@ -1,14 +1,5 @@
-import type {
-  MetaProvider,
-  TargetResolution,
-  TargetFetchResult,
-  StealthSessionConfig,
-  StealthFetchOptions,
-} from "./types";
-import {
-  stealthResolveTarget,
-  stealthFetchTargetData,
-} from "./stealth-engine-bridge";
+import type { MetaProvider, TargetResolution, TargetFetchResult, StealthSessionConfig, StealthFetchOptions } from "./types";
+import { stealthResolveTarget, stealthFetchTargetData } from "./stealth-engine-bridge";
 
 export class StealthMetaProvider implements MetaProvider {
   async resolveTarget(username: string, session?: StealthSessionConfig | null): Promise<TargetResolution> {

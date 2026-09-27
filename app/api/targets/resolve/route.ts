@@ -4,8 +4,7 @@ import { decryptSecret } from "@/lib/crypto";
 import { requireUserId, jsonError } from "@/lib/api-helpers";
 import { resolveTargetSchema } from "@/lib/validation/target";
 import { eligibilityMessage } from "@/lib/meta/capability.service";
-import { resolveTargetUsername, normalizeUsername } from "@/lib/services/target.service";
-import { peekSession } from "@/lib/meta/session-pool";
+import { resolveTargetUsername, normalizeUsername, signResolution } from "@/lib/services/target.service";
 import { assertCanAddTarget } from "@/lib/services/quota.service";
 
 export async function POST(req: Request) {
@@ -34,18 +33,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const picked = await peekSession(userId, { pinnedSessionId: null });
-    let sessionConfig = picked?.config ?? null;
-    let sessionDiag: Record<string, unknown> = { sessionFound: !!picked };
-
-    if (picked) {
-      sessionDiag.sessionId = picked.id;
-      sessionDiag.sessionUsername = sessionConfig?.username;
-      sessionDiag.decryptionOk = true;
-    }
-
-    const resolution = await resolveTargetUsername(parsed.data.username, sessionConfig);
-    return NextResponse.json({ resolution, message: eligibilityMessage(resolution), _sessionDiag: sessionDiag });
+    // Always logged out: a public profile lookup needs no account, and keeping
+    // the burner out of it means adding targets never adds risk to it.
+    const resolution = await resolveTargetUsername(parsed.data.username, null, userId);
+    return NextResponse.json({
+      resolution,
+      message: eligibilityMessage(resolution),
+      resolutionToken: signResolution(userId, resolution),
+    });
   } catch (err) {
     return jsonError(err);
   }

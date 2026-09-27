@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { Media } from "@prisma/client";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
@@ -7,20 +7,18 @@ import { Button } from "@/components/ui/button";
 import { downloadMedia } from "../lib/download-media";
 import { Play, Image as ImageIcon, ExternalLink, Sparkles, Download, CloudOff, RefreshCw, Trash2, Loader2 } from "lucide-react";
 import { useMediaActions, displayThumbnail, displayFullAsset } from "../hooks/use-media-actions";
+import { RepostControl } from "./repost-control";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface MediaGalleryProps {
   media: Media[];
   username: string;
-  /** Refetches the target so the grid reflects re-downloads and deletions. */
   onMediaChanged?: () => void;
 }
 
 export function MediaGallery({ media, username, onMediaChanged }: MediaGalleryProps) {
   const [selectedItem, setSelectedItem] = useState<Media | null>(null);
   const { redownload, permanentDelete, busyId } = useMediaActions(onMediaChanged);
-
-  // Keep the open dialog in sync with the freshly re-downloaded row.
   const handleRedownload = async (item: Media) => {
     const updated = await redownload(item.id);
     if (updated) setSelectedItem(updated);
@@ -138,15 +136,8 @@ export function MediaGallery({ media, username, onMediaChanged }: MediaGalleryPr
                     </DialogTitle>
                     <div className="flex items-center gap-2">
                       {selectedItem.isExpired ? (
-                        /* Exactly two options for an expired item. */
-                        <>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-7 text-xs gap-1"
-                            disabled={busyId === selectedItem.id}
-                            onClick={() => handleRedownload(selectedItem)}
-                          >
+                        <Fragment>
+                          <Button variant="secondary" size="sm" className="h-7 text-xs gap-1" disabled={busyId === selectedItem.id} onClick={() => handleRedownload(selectedItem)}>
                             {busyId === selectedItem.id ? (
                               <Loader2 className="size-3 animate-spin" />
                             ) : (
@@ -154,30 +145,14 @@ export function MediaGallery({ media, username, onMediaChanged }: MediaGalleryPr
                             )}
                             <span>Re-download</span>
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 gap-1 text-xs text-destructive hover:bg-destructive/10"
-                            disabled={busyId === selectedItem.id}
-                            onClick={() => handleDelete(selectedItem)}
-                          >
+                          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs text-destructive hover:bg-destructive/10" disabled={busyId === selectedItem.id} onClick={() => handleDelete(selectedItem)}>
                             <Trash2 className="size-3" />
                             <span>Delete permanently</span>
                           </Button>
-                        </>
+                        </Fragment>
                       ) : (
                         displayFullAsset(selectedItem) && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-7 text-xs gap-1"
-                            onClick={() => downloadMedia(
-                              displayFullAsset(selectedItem) || "",
-                              selectedItem.mediaType,
-                              selectedItem.externalMediaId,
-                              username
-                            )}
-                          >
+                          <Button variant="secondary" size="sm" className="h-7 text-xs gap-1" onClick={() => downloadMedia(displayFullAsset(selectedItem) || "", selectedItem.mediaType, selectedItem.externalMediaId, username)}>
                             <Download className="size-3" />
                             <span>Download</span>
                           </Button>
@@ -203,6 +178,8 @@ export function MediaGallery({ media, username, onMediaChanged }: MediaGalleryPr
                 <div className="rounded-lg bg-muted/50 p-3 text-sm max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed">
                   {selectedItem.caption || <span className="text-muted-foreground italic">No caption was provided for this post.</span>}
                 </div>
+
+                {!selectedItem.isExpired && <RepostControl media={selectedItem} />}
               </div>
             </div>
           )}

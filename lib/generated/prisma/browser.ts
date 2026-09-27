@@ -28,6 +28,46 @@ export type User = Prisma.UserModel
  */
 export type MetaConnection = Prisma.MetaConnectionModel
 /**
+ * Model IgAccount
+ * 
+ */
+export type IgAccount = Prisma.IgAccountModel
+/**
+ * Model MediaMetricSnapshot
+ * 
+ */
+export type MediaMetricSnapshot = Prisma.MediaMetricSnapshotModel
+/**
+ * Model Niche
+ * 
+ */
+export type Niche = Prisma.NicheModel
+/**
+ * Model ReelIdea
+ * 
+ */
+export type ReelIdea = Prisma.ReelIdeaModel
+/**
+ * Model ReelProject
+ * 
+ */
+export type ReelProject = Prisma.ReelProjectModel
+/**
+ * Model StoredFile
+ * 
+ */
+export type StoredFile = Prisma.StoredFileModel
+/**
+ * Model SoundAsset
+ * 
+ */
+export type SoundAsset = Prisma.SoundAssetModel
+/**
+ * Model NicheAccount
+ * 
+ */
+export type NicheAccount = Prisma.NicheAccountModel
+/**
  * Model Target
  * 
  */
@@ -87,3 +127,8 @@ export type R2UsageCounter = Prisma.R2UsageCounterModel
  * 
  */
 export type ScrapeThrottle = Prisma.ScrapeThrottleModel
+/**
+ * Model Repost
+ * 
+ */
+export type Repost = Prisma.RepostModel

@@ -6,7 +6,7 @@ import sharp from "sharp";
  */
 
 /** Browser-ish headers; Instagram's CDN refuses plain server requests. */
-const CDN_FETCH_HEADERS = {
+export const CDN_FETCH_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
   Referer: "https://www.instagram.com/",
@@ -49,4 +49,46 @@ export async function generateThumbnailBuffer(
     console.warn("[storage] thumbnail render failed:", err instanceof Error ? err.message : err);
     return null;
   }
+}
+
+/**
+ * Perceptual "average hash" of an image: 16x16 grayscale, one bit per pixel
+ * (above/below the mean), as 64 hex chars. The same picture at a different
+ * size or compression lands within a few bits; a different picture doesn't.
+ * Null when the bytes aren't a decodable image.
+ */
+export async function visualHash(buffer: Buffer): Promise<string | null> {
+  try {
+    const px = await sharp(buffer)
+      .flatten({ background: "#ffffff" })
+      .grayscale()
+      .resize(16, 16, { fit: "fill" })
+      .raw()
+      .toBuffer();
+    if (px.length !== 256) return null;
+    const mean = px.reduce((sum, v) => sum + v, 0) / px.length;
+    let hex = "";
+    for (let i = 0; i < px.length; i += 4) {
+      let nibble = 0;
+      for (let j = 0; j < 4; j++) nibble = (nibble << 1) | (px[i + j] >= mean ? 1 : 0);
+      hex += nibble.toString(16);
+    }
+    return hex;
+  } catch {
+    return null;
+  }
+}
+
+/** Number of differing bits between two visualHash values (256 = nothing alike). */
+export function visualDistance(a: string, b: string): number {
+  if (a.length !== b.length) return 256;
+  let bits = 0;
+  for (let i = 0; i < a.length; i++) {
+    let x = parseInt(a[i], 16) ^ parseInt(b[i], 16);
+    while (x) {
+      bits += x & 1;
+      x >>= 1;
+    }
+  }
+  return bits;
 }

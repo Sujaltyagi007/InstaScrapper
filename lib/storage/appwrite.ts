@@ -1,4 +1,4 @@
-import { Client, ID, Permission, Role, Storage } from "node-appwrite";
+import { Client, ID, Permission, Query, Role, Storage } from "node-appwrite";
 import { InputFile } from "node-appwrite/file";
 
 /**
@@ -102,4 +102,52 @@ export async function deleteAppwriteFile(fileId: string): Promise<boolean> {
     console.error(`[appwrite] delete failed for ${fileId}:`, err instanceof Error ? err.message : err);
     return false;
   }
+}
+
+/**
+ * Reads a file's bytes with the API key. Unlike the public `/view` URL this
+ * works without Role "Any" read on the bucket, so server-side pipelines don't
+ * depend on that setting.
+ */
+export async function downloadAppwriteFile(fileId: string): Promise<Buffer | null> {
+  const ctx = getStorage();
+  if (!ctx) return null;
+
+  try {
+    const bytes = await ctx.storage.getFileDownload({ bucketId: ctx.cfg.bucketId, fileId });
+    return Buffer.from(bytes);
+  } catch (err) {
+    console.error(`[appwrite] download failed for ${fileId}:`, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/** Like appwriteFileUrl, but served as an attachment so phones save it instead of playing it. */
+export function appwriteDownloadUrl(fileId: string): string | null {
+  const cfg = config();
+  if (!cfg) return null;
+  return `${cfg.endpoint}/storage/buckets/${cfg.bucketId}/files/${encodeURIComponent(fileId)}/download?project=${cfg.projectId}`;
+}
+
+/**
+ * Sizes and names for existing files (up to 100 ids per request). Files that
+ * no longer exist are simply absent from the result.
+ */
+export async function appwriteFileInfo(
+  fileIds: string[],
+): Promise<Map<string, { sizeBytes: number; name: string; mimeType: string; createdAt: string }>> {
+  const info = new Map<string, { sizeBytes: number; name: string; mimeType: string; createdAt: string }>();
+  const ctx = getStorage();
+  if (!ctx || fileIds.length === 0) return info;
+  for (let i = 0; i < fileIds.length; i += 100) {
+    const batch = fileIds.slice(i, i + 100);
+    const list = await ctx.storage.listFiles({
+      bucketId: ctx.cfg.bucketId,
+      queries: [Query.equal("$id", batch), Query.limit(100)],
+    });
+    for (const f of list.files) {
+      info.set(f.$id, { sizeBytes: f.sizeOriginal, name: f.name, mimeType: f.mimeType, createdAt: f.$createdAt });
+    }
+  }
+  return info;
 }

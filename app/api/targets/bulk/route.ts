@@ -3,9 +3,14 @@ import { z } from "zod";
 import { requireUserId, jsonError, ApiError } from "@/lib/api-helpers";
 import { bulkSetTargetsActive, bulkDeleteTargets } from "@/lib/services/target.service";
 
+// Deleting accounts with their stored files can take a while.
+export const maxDuration = 300;
+
 const bulkActionSchema = z.object({
   ids: z.array(z.string().min(1)).min(1).max(200),
   action: z.enum(["pause", "resume", "delete"]),
+  /** With action "delete": also delete each account's stored media. */
+  deleteFiles: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -16,9 +21,9 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       throw new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input.");
     }
-    const { ids, action } = parsed.data;
+    const { ids, action, deleteFiles } = parsed.data;
 
-    const { count, total } = action === "delete" ? await bulkDeleteTargets(userId, ids) : await bulkSetTargetsActive(userId, ids, action === "resume");
+    const { count, total } = action === "delete" ? await bulkDeleteTargets(userId, ids, { deleteFiles }) : await bulkSetTargetsActive(userId, ids, action === "resume");
 
     if (count === 0) {
       throw new ApiError(404, "None of the selected targets could be updated.");

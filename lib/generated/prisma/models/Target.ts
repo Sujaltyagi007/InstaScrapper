@@ -318,6 +318,8 @@ export type TargetWhereInput = {
   media?: Prisma.MediaListRelationFilter
   events?: Prisma.EventListRelationFilter
   jobs?: Prisma.JobListRelationFilter
+  nicheAccounts?: Prisma.NicheAccountListRelationFilter
+  storedFiles?: Prisma.StoredFileListRelationFilter
 }
 
 export type TargetOrderByWithRelationInput = {
@@ -344,6 +346,8 @@ export type TargetOrderByWithRelationInput = {
   media?: Prisma.MediaOrderByRelationAggregateInput
   events?: Prisma.EventOrderByRelationAggregateInput
   jobs?: Prisma.JobOrderByRelationAggregateInput
+  nicheAccounts?: Prisma.NicheAccountOrderByRelationAggregateInput
+  storedFiles?: Prisma.StoredFileOrderByRelationAggregateInput
 }
 
 export type TargetWhereUniqueInput = Prisma.AtLeast<{
@@ -374,6 +378,8 @@ export type TargetWhereUniqueInput = Prisma.AtLeast<{
   media?: Prisma.MediaListRelationFilter
   events?: Prisma.EventListRelationFilter
   jobs?: Prisma.JobListRelationFilter
+  nicheAccounts?: Prisma.NicheAccountListRelationFilter
+  storedFiles?: Prisma.StoredFileListRelationFilter
 }, "id" | "userId_normalizedUsername">
 
 export type TargetOrderByWithAggregationInput = {
@@ -447,6 +453,8 @@ export type TargetCreateInput = {
   media?: Prisma.MediaCreateNestedManyWithoutTargetInput
   events?: Prisma.EventCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutTargetInput
 }
 
 export type TargetUncheckedCreateInput = {
@@ -472,6 +480,8 @@ export type TargetUncheckedCreateInput = {
   media?: Prisma.MediaUncheckedCreateNestedManyWithoutTargetInput
   events?: Prisma.EventUncheckedCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobUncheckedCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type TargetUpdateInput = {
@@ -497,6 +507,8 @@ export type TargetUpdateInput = {
   media?: Prisma.MediaUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetUncheckedUpdateInput = {
@@ -522,6 +534,8 @@ export type TargetUncheckedUpdateInput = {
   media?: Prisma.MediaUncheckedUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUncheckedUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUncheckedUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetCreateManyInput = {
@@ -591,6 +605,16 @@ export type TargetListRelationFilter = {
 
 export type TargetOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type TargetNullableScalarRelationFilter = {
+  is?: Prisma.TargetWhereInput | null
+  isNot?: Prisma.TargetWhereInput | null
+}
+
+export type TargetScalarRelationFilter = {
+  is?: Prisma.TargetWhereInput
+  isNot?: Prisma.TargetWhereInput
 }
 
 export type TargetUserIdNormalizedUsernameCompoundUniqueInput = {
@@ -666,16 +690,6 @@ export type TargetSumOrderByAggregateInput = {
   consecutiveFailures?: Prisma.SortOrder
 }
 
-export type TargetScalarRelationFilter = {
-  is?: Prisma.TargetWhereInput
-  isNot?: Prisma.TargetWhereInput
-}
-
-export type TargetNullableScalarRelationFilter = {
-  is?: Prisma.TargetWhereInput | null
-  isNot?: Prisma.TargetWhereInput | null
-}
-
 export type TargetCreateNestedManyWithoutUserInput = {
   create?: Prisma.XOR<Prisma.TargetCreateWithoutUserInput, Prisma.TargetUncheckedCreateWithoutUserInput> | Prisma.TargetCreateWithoutUserInput[] | Prisma.TargetUncheckedCreateWithoutUserInput[]
   connectOrCreate?: Prisma.TargetCreateOrConnectWithoutUserInput | Prisma.TargetCreateOrConnectWithoutUserInput[]
@@ -716,6 +730,36 @@ export type TargetUncheckedUpdateManyWithoutUserNestedInput = {
   update?: Prisma.TargetUpdateWithWhereUniqueWithoutUserInput | Prisma.TargetUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.TargetUpdateManyWithWhereWithoutUserInput | Prisma.TargetUpdateManyWithWhereWithoutUserInput[]
   deleteMany?: Prisma.TargetScalarWhereInput | Prisma.TargetScalarWhereInput[]
+}
+
+export type TargetCreateNestedOneWithoutStoredFilesInput = {
+  create?: Prisma.XOR<Prisma.TargetCreateWithoutStoredFilesInput, Prisma.TargetUncheckedCreateWithoutStoredFilesInput>
+  connectOrCreate?: Prisma.TargetCreateOrConnectWithoutStoredFilesInput
+  connect?: Prisma.TargetWhereUniqueInput
+}
+
+export type TargetUpdateOneWithoutStoredFilesNestedInput = {
+  create?: Prisma.XOR<Prisma.TargetCreateWithoutStoredFilesInput, Prisma.TargetUncheckedCreateWithoutStoredFilesInput>
+  connectOrCreate?: Prisma.TargetCreateOrConnectWithoutStoredFilesInput
+  upsert?: Prisma.TargetUpsertWithoutStoredFilesInput
+  disconnect?: Prisma.TargetWhereInput | boolean
+  delete?: Prisma.TargetWhereInput | boolean
+  connect?: Prisma.TargetWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TargetUpdateToOneWithWhereWithoutStoredFilesInput, Prisma.TargetUpdateWithoutStoredFilesInput>, Prisma.TargetUncheckedUpdateWithoutStoredFilesInput>
+}
+
+export type TargetCreateNestedOneWithoutNicheAccountsInput = {
+  create?: Prisma.XOR<Prisma.TargetCreateWithoutNicheAccountsInput, Prisma.TargetUncheckedCreateWithoutNicheAccountsInput>
+  connectOrCreate?: Prisma.TargetCreateOrConnectWithoutNicheAccountsInput
+  connect?: Prisma.TargetWhereUniqueInput
+}
+
+export type TargetUpdateOneRequiredWithoutNicheAccountsNestedInput = {
+  create?: Prisma.XOR<Prisma.TargetCreateWithoutNicheAccountsInput, Prisma.TargetUncheckedCreateWithoutNicheAccountsInput>
+  connectOrCreate?: Prisma.TargetCreateOrConnectWithoutNicheAccountsInput
+  upsert?: Prisma.TargetUpsertWithoutNicheAccountsInput
+  connect?: Prisma.TargetWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TargetUpdateToOneWithWhereWithoutNicheAccountsInput, Prisma.TargetUpdateWithoutNicheAccountsInput>, Prisma.TargetUncheckedUpdateWithoutNicheAccountsInput>
 }
 
 export type EnumTargetAccountTypeFieldUpdateOperationsInput = {
@@ -824,6 +868,8 @@ export type TargetCreateWithoutUserInput = {
   media?: Prisma.MediaCreateNestedManyWithoutTargetInput
   events?: Prisma.EventCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutTargetInput
 }
 
 export type TargetUncheckedCreateWithoutUserInput = {
@@ -848,6 +894,8 @@ export type TargetUncheckedCreateWithoutUserInput = {
   media?: Prisma.MediaUncheckedCreateNestedManyWithoutTargetInput
   events?: Prisma.EventUncheckedCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobUncheckedCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type TargetCreateOrConnectWithoutUserInput = {
@@ -899,6 +947,246 @@ export type TargetScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Target"> | Date | string
 }
 
+export type TargetCreateWithoutStoredFilesInput = {
+  id?: string
+  username: string
+  normalizedUsername: string
+  externalId?: string | null
+  accountType?: $Enums.TargetAccountType
+  eligibility?: $Enums.TargetEligibility
+  status?: $Enums.TargetStatus
+  errorCode?: string | null
+  errorMessage?: string | null
+  nextRunAt?: Date | string | null
+  lastCheckedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  consecutiveFailures?: number
+  lockedUntil?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTargetsInput
+  monitor?: Prisma.MonitorCreateNestedOneWithoutTargetInput
+  snapshots?: Prisma.TargetSnapshotCreateNestedManyWithoutTargetInput
+  media?: Prisma.MediaCreateNestedManyWithoutTargetInput
+  events?: Prisma.EventCreateNestedManyWithoutTargetInput
+  jobs?: Prisma.JobCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountCreateNestedManyWithoutTargetInput
+}
+
+export type TargetUncheckedCreateWithoutStoredFilesInput = {
+  id?: string
+  userId: string
+  username: string
+  normalizedUsername: string
+  externalId?: string | null
+  accountType?: $Enums.TargetAccountType
+  eligibility?: $Enums.TargetEligibility
+  status?: $Enums.TargetStatus
+  errorCode?: string | null
+  errorMessage?: string | null
+  nextRunAt?: Date | string | null
+  lastCheckedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  consecutiveFailures?: number
+  lockedUntil?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  monitor?: Prisma.MonitorUncheckedCreateNestedOneWithoutTargetInput
+  snapshots?: Prisma.TargetSnapshotUncheckedCreateNestedManyWithoutTargetInput
+  media?: Prisma.MediaUncheckedCreateNestedManyWithoutTargetInput
+  events?: Prisma.EventUncheckedCreateNestedManyWithoutTargetInput
+  jobs?: Prisma.JobUncheckedCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedCreateNestedManyWithoutTargetInput
+}
+
+export type TargetCreateOrConnectWithoutStoredFilesInput = {
+  where: Prisma.TargetWhereUniqueInput
+  create: Prisma.XOR<Prisma.TargetCreateWithoutStoredFilesInput, Prisma.TargetUncheckedCreateWithoutStoredFilesInput>
+}
+
+export type TargetUpsertWithoutStoredFilesInput = {
+  update: Prisma.XOR<Prisma.TargetUpdateWithoutStoredFilesInput, Prisma.TargetUncheckedUpdateWithoutStoredFilesInput>
+  create: Prisma.XOR<Prisma.TargetCreateWithoutStoredFilesInput, Prisma.TargetUncheckedCreateWithoutStoredFilesInput>
+  where?: Prisma.TargetWhereInput
+}
+
+export type TargetUpdateToOneWithWhereWithoutStoredFilesInput = {
+  where?: Prisma.TargetWhereInput
+  data: Prisma.XOR<Prisma.TargetUpdateWithoutStoredFilesInput, Prisma.TargetUncheckedUpdateWithoutStoredFilesInput>
+}
+
+export type TargetUpdateWithoutStoredFilesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  externalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accountType?: Prisma.EnumTargetAccountTypeFieldUpdateOperationsInput | $Enums.TargetAccountType
+  eligibility?: Prisma.EnumTargetEligibilityFieldUpdateOperationsInput | $Enums.TargetEligibility
+  status?: Prisma.EnumTargetStatusFieldUpdateOperationsInput | $Enums.TargetStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nextRunAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTargetsNestedInput
+  monitor?: Prisma.MonitorUpdateOneWithoutTargetNestedInput
+  snapshots?: Prisma.TargetSnapshotUpdateManyWithoutTargetNestedInput
+  media?: Prisma.MediaUpdateManyWithoutTargetNestedInput
+  events?: Prisma.EventUpdateManyWithoutTargetNestedInput
+  jobs?: Prisma.JobUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUpdateManyWithoutTargetNestedInput
+}
+
+export type TargetUncheckedUpdateWithoutStoredFilesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  externalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accountType?: Prisma.EnumTargetAccountTypeFieldUpdateOperationsInput | $Enums.TargetAccountType
+  eligibility?: Prisma.EnumTargetEligibilityFieldUpdateOperationsInput | $Enums.TargetEligibility
+  status?: Prisma.EnumTargetStatusFieldUpdateOperationsInput | $Enums.TargetStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nextRunAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  monitor?: Prisma.MonitorUncheckedUpdateOneWithoutTargetNestedInput
+  snapshots?: Prisma.TargetSnapshotUncheckedUpdateManyWithoutTargetNestedInput
+  media?: Prisma.MediaUncheckedUpdateManyWithoutTargetNestedInput
+  events?: Prisma.EventUncheckedUpdateManyWithoutTargetNestedInput
+  jobs?: Prisma.JobUncheckedUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedUpdateManyWithoutTargetNestedInput
+}
+
+export type TargetCreateWithoutNicheAccountsInput = {
+  id?: string
+  username: string
+  normalizedUsername: string
+  externalId?: string | null
+  accountType?: $Enums.TargetAccountType
+  eligibility?: $Enums.TargetEligibility
+  status?: $Enums.TargetStatus
+  errorCode?: string | null
+  errorMessage?: string | null
+  nextRunAt?: Date | string | null
+  lastCheckedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  consecutiveFailures?: number
+  lockedUntil?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTargetsInput
+  monitor?: Prisma.MonitorCreateNestedOneWithoutTargetInput
+  snapshots?: Prisma.TargetSnapshotCreateNestedManyWithoutTargetInput
+  media?: Prisma.MediaCreateNestedManyWithoutTargetInput
+  events?: Prisma.EventCreateNestedManyWithoutTargetInput
+  jobs?: Prisma.JobCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutTargetInput
+}
+
+export type TargetUncheckedCreateWithoutNicheAccountsInput = {
+  id?: string
+  userId: string
+  username: string
+  normalizedUsername: string
+  externalId?: string | null
+  accountType?: $Enums.TargetAccountType
+  eligibility?: $Enums.TargetEligibility
+  status?: $Enums.TargetStatus
+  errorCode?: string | null
+  errorMessage?: string | null
+  nextRunAt?: Date | string | null
+  lastCheckedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  consecutiveFailures?: number
+  lockedUntil?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  monitor?: Prisma.MonitorUncheckedCreateNestedOneWithoutTargetInput
+  snapshots?: Prisma.TargetSnapshotUncheckedCreateNestedManyWithoutTargetInput
+  media?: Prisma.MediaUncheckedCreateNestedManyWithoutTargetInput
+  events?: Prisma.EventUncheckedCreateNestedManyWithoutTargetInput
+  jobs?: Prisma.JobUncheckedCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutTargetInput
+}
+
+export type TargetCreateOrConnectWithoutNicheAccountsInput = {
+  where: Prisma.TargetWhereUniqueInput
+  create: Prisma.XOR<Prisma.TargetCreateWithoutNicheAccountsInput, Prisma.TargetUncheckedCreateWithoutNicheAccountsInput>
+}
+
+export type TargetUpsertWithoutNicheAccountsInput = {
+  update: Prisma.XOR<Prisma.TargetUpdateWithoutNicheAccountsInput, Prisma.TargetUncheckedUpdateWithoutNicheAccountsInput>
+  create: Prisma.XOR<Prisma.TargetCreateWithoutNicheAccountsInput, Prisma.TargetUncheckedCreateWithoutNicheAccountsInput>
+  where?: Prisma.TargetWhereInput
+}
+
+export type TargetUpdateToOneWithWhereWithoutNicheAccountsInput = {
+  where?: Prisma.TargetWhereInput
+  data: Prisma.XOR<Prisma.TargetUpdateWithoutNicheAccountsInput, Prisma.TargetUncheckedUpdateWithoutNicheAccountsInput>
+}
+
+export type TargetUpdateWithoutNicheAccountsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  externalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accountType?: Prisma.EnumTargetAccountTypeFieldUpdateOperationsInput | $Enums.TargetAccountType
+  eligibility?: Prisma.EnumTargetEligibilityFieldUpdateOperationsInput | $Enums.TargetEligibility
+  status?: Prisma.EnumTargetStatusFieldUpdateOperationsInput | $Enums.TargetStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nextRunAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTargetsNestedInput
+  monitor?: Prisma.MonitorUpdateOneWithoutTargetNestedInput
+  snapshots?: Prisma.TargetSnapshotUpdateManyWithoutTargetNestedInput
+  media?: Prisma.MediaUpdateManyWithoutTargetNestedInput
+  events?: Prisma.EventUpdateManyWithoutTargetNestedInput
+  jobs?: Prisma.JobUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutTargetNestedInput
+}
+
+export type TargetUncheckedUpdateWithoutNicheAccountsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  externalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  accountType?: Prisma.EnumTargetAccountTypeFieldUpdateOperationsInput | $Enums.TargetAccountType
+  eligibility?: Prisma.EnumTargetEligibilityFieldUpdateOperationsInput | $Enums.TargetEligibility
+  status?: Prisma.EnumTargetStatusFieldUpdateOperationsInput | $Enums.TargetStatus
+  errorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nextRunAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  consecutiveFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  monitor?: Prisma.MonitorUncheckedUpdateOneWithoutTargetNestedInput
+  snapshots?: Prisma.TargetSnapshotUncheckedUpdateManyWithoutTargetNestedInput
+  media?: Prisma.MediaUncheckedUpdateManyWithoutTargetNestedInput
+  events?: Prisma.EventUncheckedUpdateManyWithoutTargetNestedInput
+  jobs?: Prisma.JobUncheckedUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutTargetNestedInput
+}
+
 export type TargetCreateWithoutMonitorInput = {
   id?: string
   username: string
@@ -921,6 +1209,8 @@ export type TargetCreateWithoutMonitorInput = {
   media?: Prisma.MediaCreateNestedManyWithoutTargetInput
   events?: Prisma.EventCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutTargetInput
 }
 
 export type TargetUncheckedCreateWithoutMonitorInput = {
@@ -945,6 +1235,8 @@ export type TargetUncheckedCreateWithoutMonitorInput = {
   media?: Prisma.MediaUncheckedCreateNestedManyWithoutTargetInput
   events?: Prisma.EventUncheckedCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobUncheckedCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type TargetCreateOrConnectWithoutMonitorInput = {
@@ -985,6 +1277,8 @@ export type TargetUpdateWithoutMonitorInput = {
   media?: Prisma.MediaUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetUncheckedUpdateWithoutMonitorInput = {
@@ -1009,6 +1303,8 @@ export type TargetUncheckedUpdateWithoutMonitorInput = {
   media?: Prisma.MediaUncheckedUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUncheckedUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUncheckedUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetCreateWithoutSnapshotsInput = {
@@ -1033,6 +1329,8 @@ export type TargetCreateWithoutSnapshotsInput = {
   media?: Prisma.MediaCreateNestedManyWithoutTargetInput
   events?: Prisma.EventCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutTargetInput
 }
 
 export type TargetUncheckedCreateWithoutSnapshotsInput = {
@@ -1057,6 +1355,8 @@ export type TargetUncheckedCreateWithoutSnapshotsInput = {
   media?: Prisma.MediaUncheckedCreateNestedManyWithoutTargetInput
   events?: Prisma.EventUncheckedCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobUncheckedCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type TargetCreateOrConnectWithoutSnapshotsInput = {
@@ -1097,6 +1397,8 @@ export type TargetUpdateWithoutSnapshotsInput = {
   media?: Prisma.MediaUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetUncheckedUpdateWithoutSnapshotsInput = {
@@ -1121,6 +1423,8 @@ export type TargetUncheckedUpdateWithoutSnapshotsInput = {
   media?: Prisma.MediaUncheckedUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUncheckedUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUncheckedUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetCreateWithoutMediaInput = {
@@ -1145,6 +1449,8 @@ export type TargetCreateWithoutMediaInput = {
   snapshots?: Prisma.TargetSnapshotCreateNestedManyWithoutTargetInput
   events?: Prisma.EventCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutTargetInput
 }
 
 export type TargetUncheckedCreateWithoutMediaInput = {
@@ -1169,6 +1475,8 @@ export type TargetUncheckedCreateWithoutMediaInput = {
   snapshots?: Prisma.TargetSnapshotUncheckedCreateNestedManyWithoutTargetInput
   events?: Prisma.EventUncheckedCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobUncheckedCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type TargetCreateOrConnectWithoutMediaInput = {
@@ -1209,6 +1517,8 @@ export type TargetUpdateWithoutMediaInput = {
   snapshots?: Prisma.TargetSnapshotUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetUncheckedUpdateWithoutMediaInput = {
@@ -1233,6 +1543,8 @@ export type TargetUncheckedUpdateWithoutMediaInput = {
   snapshots?: Prisma.TargetSnapshotUncheckedUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUncheckedUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUncheckedUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetCreateWithoutEventsInput = {
@@ -1257,6 +1569,8 @@ export type TargetCreateWithoutEventsInput = {
   snapshots?: Prisma.TargetSnapshotCreateNestedManyWithoutTargetInput
   media?: Prisma.MediaCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutTargetInput
 }
 
 export type TargetUncheckedCreateWithoutEventsInput = {
@@ -1281,6 +1595,8 @@ export type TargetUncheckedCreateWithoutEventsInput = {
   snapshots?: Prisma.TargetSnapshotUncheckedCreateNestedManyWithoutTargetInput
   media?: Prisma.MediaUncheckedCreateNestedManyWithoutTargetInput
   jobs?: Prisma.JobUncheckedCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type TargetCreateOrConnectWithoutEventsInput = {
@@ -1321,6 +1637,8 @@ export type TargetUpdateWithoutEventsInput = {
   snapshots?: Prisma.TargetSnapshotUpdateManyWithoutTargetNestedInput
   media?: Prisma.MediaUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetUncheckedUpdateWithoutEventsInput = {
@@ -1345,6 +1663,8 @@ export type TargetUncheckedUpdateWithoutEventsInput = {
   snapshots?: Prisma.TargetSnapshotUncheckedUpdateManyWithoutTargetNestedInput
   media?: Prisma.MediaUncheckedUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUncheckedUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetCreateWithoutJobsInput = {
@@ -1369,6 +1689,8 @@ export type TargetCreateWithoutJobsInput = {
   snapshots?: Prisma.TargetSnapshotCreateNestedManyWithoutTargetInput
   media?: Prisma.MediaCreateNestedManyWithoutTargetInput
   events?: Prisma.EventCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutTargetInput
 }
 
 export type TargetUncheckedCreateWithoutJobsInput = {
@@ -1393,6 +1715,8 @@ export type TargetUncheckedCreateWithoutJobsInput = {
   snapshots?: Prisma.TargetSnapshotUncheckedCreateNestedManyWithoutTargetInput
   media?: Prisma.MediaUncheckedCreateNestedManyWithoutTargetInput
   events?: Prisma.EventUncheckedCreateNestedManyWithoutTargetInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedCreateNestedManyWithoutTargetInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutTargetInput
 }
 
 export type TargetCreateOrConnectWithoutJobsInput = {
@@ -1433,6 +1757,8 @@ export type TargetUpdateWithoutJobsInput = {
   snapshots?: Prisma.TargetSnapshotUpdateManyWithoutTargetNestedInput
   media?: Prisma.MediaUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetUncheckedUpdateWithoutJobsInput = {
@@ -1457,6 +1783,8 @@ export type TargetUncheckedUpdateWithoutJobsInput = {
   snapshots?: Prisma.TargetSnapshotUncheckedUpdateManyWithoutTargetNestedInput
   media?: Prisma.MediaUncheckedUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUncheckedUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetCreateManyUserInput = {
@@ -1500,6 +1828,8 @@ export type TargetUpdateWithoutUserInput = {
   media?: Prisma.MediaUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetUncheckedUpdateWithoutUserInput = {
@@ -1524,6 +1854,8 @@ export type TargetUncheckedUpdateWithoutUserInput = {
   media?: Prisma.MediaUncheckedUpdateManyWithoutTargetNestedInput
   events?: Prisma.EventUncheckedUpdateManyWithoutTargetNestedInput
   jobs?: Prisma.JobUncheckedUpdateManyWithoutTargetNestedInput
+  nicheAccounts?: Prisma.NicheAccountUncheckedUpdateManyWithoutTargetNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutTargetNestedInput
 }
 
 export type TargetUncheckedUpdateManyWithoutUserInput = {
@@ -1555,6 +1887,8 @@ export type TargetCountOutputType = {
   media: number
   events: number
   jobs: number
+  nicheAccounts: number
+  storedFiles: number
 }
 
 export type TargetCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1562,6 +1896,8 @@ export type TargetCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions
   media?: boolean | TargetCountOutputTypeCountMediaArgs
   events?: boolean | TargetCountOutputTypeCountEventsArgs
   jobs?: boolean | TargetCountOutputTypeCountJobsArgs
+  nicheAccounts?: boolean | TargetCountOutputTypeCountNicheAccountsArgs
+  storedFiles?: boolean | TargetCountOutputTypeCountStoredFilesArgs
 }
 
 /**
@@ -1602,6 +1938,20 @@ export type TargetCountOutputTypeCountJobsArgs<ExtArgs extends runtime.Types.Ext
   where?: Prisma.JobWhereInput
 }
 
+/**
+ * TargetCountOutputType without action
+ */
+export type TargetCountOutputTypeCountNicheAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NicheAccountWhereInput
+}
+
+/**
+ * TargetCountOutputType without action
+ */
+export type TargetCountOutputTypeCountStoredFilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StoredFileWhereInput
+}
+
 
 export type TargetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1627,6 +1977,8 @@ export type TargetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   media?: boolean | Prisma.Target$mediaArgs<ExtArgs>
   events?: boolean | Prisma.Target$eventsArgs<ExtArgs>
   jobs?: boolean | Prisma.Target$jobsArgs<ExtArgs>
+  nicheAccounts?: boolean | Prisma.Target$nicheAccountsArgs<ExtArgs>
+  storedFiles?: boolean | Prisma.Target$storedFilesArgs<ExtArgs>
   _count?: boolean | Prisma.TargetCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["target"]>
 
@@ -1700,6 +2052,8 @@ export type TargetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   media?: boolean | Prisma.Target$mediaArgs<ExtArgs>
   events?: boolean | Prisma.Target$eventsArgs<ExtArgs>
   jobs?: boolean | Prisma.Target$jobsArgs<ExtArgs>
+  nicheAccounts?: boolean | Prisma.Target$nicheAccountsArgs<ExtArgs>
+  storedFiles?: boolean | Prisma.Target$storedFilesArgs<ExtArgs>
   _count?: boolean | Prisma.TargetCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TargetIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1718,6 +2072,8 @@ export type $TargetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     media: Prisma.$MediaPayload<ExtArgs>[]
     events: Prisma.$EventPayload<ExtArgs>[]
     jobs: Prisma.$JobPayload<ExtArgs>[]
+    nicheAccounts: Prisma.$NicheAccountPayload<ExtArgs>[]
+    storedFiles: Prisma.$StoredFilePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2137,6 +2493,8 @@ export interface Prisma__TargetClient<T, Null = never, ExtArgs extends runtime.T
   media<T extends Prisma.Target$mediaArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Target$mediaArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   events<T extends Prisma.Target$eventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Target$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   jobs<T extends Prisma.Target$jobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Target$jobsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$JobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  nicheAccounts<T extends Prisma.Target$nicheAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Target$nicheAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NicheAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  storedFiles<T extends Prisma.Target$storedFilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Target$storedFilesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoredFilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2696,6 +3054,54 @@ export type Target$jobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   distinct?: Prisma.JobScalarFieldEnum | Prisma.JobScalarFieldEnum[]
+}
+
+/**
+ * Target.nicheAccounts
+ */
+export type Target$nicheAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NicheAccount
+   */
+  select?: Prisma.NicheAccountSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NicheAccount
+   */
+  omit?: Prisma.NicheAccountOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NicheAccountInclude<ExtArgs> | null
+  where?: Prisma.NicheAccountWhereInput
+  orderBy?: Prisma.NicheAccountOrderByWithRelationInput | Prisma.NicheAccountOrderByWithRelationInput[]
+  cursor?: Prisma.NicheAccountWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NicheAccountScalarFieldEnum | Prisma.NicheAccountScalarFieldEnum[]
+}
+
+/**
+ * Target.storedFiles
+ */
+export type Target$storedFilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoredFile
+   */
+  select?: Prisma.StoredFileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StoredFile
+   */
+  omit?: Prisma.StoredFileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoredFileInclude<ExtArgs> | null
+  where?: Prisma.StoredFileWhereInput
+  orderBy?: Prisma.StoredFileOrderByWithRelationInput | Prisma.StoredFileOrderByWithRelationInput[]
+  cursor?: Prisma.StoredFileWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StoredFileScalarFieldEnum | Prisma.StoredFileScalarFieldEnum[]
 }
 
 /**

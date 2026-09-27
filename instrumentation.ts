@@ -30,4 +30,22 @@ export async function register() {
   }, POLL_INTERVAL_MS);
 
   console.log(`[dev-monitor-poller] human-paced polling every ${POLL_INTERVAL_MS / 1000}s (dev only)`);
+
+  // Same idea for reel projects, which production advances via /api/cron/reels.
+  const { advanceReelProjects } = await import("@/lib/services/reel-pipeline.service");
+  const { sendDueReels } = await import("@/lib/services/reel-delivery.service");
+  let reelsRunning = false;
+  setInterval(() => {
+    if (reelsRunning) return;
+    reelsRunning = true;
+    sendDueReels()
+      .then(() => advanceReelProjects())
+      .then((r) => {
+        if (r.runs.length > 0) console.log(`[dev-reels-poller] ${r.runs.map((x) => `${x.stage}:${x.outcome}`).join(" ")}`);
+      })
+      .catch((err) => console.error("[dev-reels-poller] failed:", err))
+      .finally(() => {
+        reelsRunning = false;
+      });
+  }, POLL_INTERVAL_MS);
 }

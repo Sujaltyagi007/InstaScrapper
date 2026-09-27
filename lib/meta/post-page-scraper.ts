@@ -1,26 +1,6 @@
-/**
- * Re-resolves a single post's media URLs from its permalink.
- *
- * WHY THIS EXISTS
- * Instagram CDN URLs carry an `oe=` expiry parameter and go stale within days,
- * so the `sourceMediaUrl` we stored at ingestion cannot be trusted for an
- * on-demand re-download later. The permalink (`/p/<shortcode>/`) never
- * expires, and its page still renders `og:image` / `og:video` for logged-out
- * visitors — so re-scraping it yields a *fresh* CDN link.
- *
- * Measured: the post page returned `og:image` on the first attempt, i.e. it is
- * markedly more reliable than the profile page (which loses a ~15% roll to the
- * login shell). The retry loop is kept anyway since the same soft block
- * applies in principle.
- *
- * Pure parsing with an injected fetcher, mirroring html-profile-scraper.ts, so
- * this module has no dependency on the bridge and can be deleted on its own.
- */
 
 export interface PostMediaSource {
-  /** Fresh full-resolution image (or video poster) URL. */
   imageUrl: string | null;
-  /** Fresh MP4 URL when the post is a video/reel and Instagram exposes it. */
   videoUrl: string | null;
 }
 

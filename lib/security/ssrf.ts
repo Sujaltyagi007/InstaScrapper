@@ -3,7 +3,7 @@ import net from "net";
 
 const BLOCKED_HOSTNAMES = new Set(["localhost", "metadata.google.internal"]);
 
-export class UnsafeUrlError extends Error {}
+export class UnsafeUrlError extends Error { }
 
 function ipv4ToInt(ip: string): number {
   return ip.split(".").reduce((acc, octet) => (acc << 8) + Number(octet), 0) >>> 0;
@@ -11,7 +11,6 @@ function ipv4ToInt(ip: string): number {
 
 function isPrivateIPv4(ip: string): boolean {
   const int = ipv4ToInt(ip);
-  // Loopback, RFC1918, link-local/cloud-metadata, CGNAT, multicast/reserved, etc.
   const ranges: [string, number][] = [
     ["0.0.0.0", 8],
     ["10.0.0.0", 8],
@@ -39,13 +38,6 @@ function isPrivateIPv6(ip: string): boolean {
   if (mapped) return isPrivateIPv4(mapped[1]);
   return false;
 }
-
-/**
- * Blocks outbound requests to loopback/private/link-local/metadata addresses
- * before this server fetches a user-supplied URL (notification webhooks).
- * Resolves DNS once up front; doesn't pin the connection to the resolved IP,
- * so a slow DNS-rebind between this check and the fetch is a residual risk.
- */
 export async function assertPublicHttpUrl(rawUrl: string): Promise<void> {
   let url: URL;
   try {

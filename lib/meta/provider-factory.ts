@@ -11,6 +11,11 @@ export function getProviderMode(): ProviderMode {
   const mode = process.env.INSTAGRAM_PROVIDER_MODE?.toUpperCase();
   if (mode === "STEALTH") return "STEALTH";
   if (mode === "GRAPH") return "GRAPH";
+  if (mode === "MOCK") return "MOCK";
+  // No explicit mode: prefer the official Graph API whenever a Meta app is
+  // configured. That makes the sanctioned path the default rather than
+  // something you have to opt into, and leaves STEALTH as an explicit choice.
+  if (process.env.META_APP_ID && process.env.META_APP_SECRET) return "GRAPH";
   if (process.env.MOCK_META_API === "false") return "STEALTH";
   return "MOCK";
 }

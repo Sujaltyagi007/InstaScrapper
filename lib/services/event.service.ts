@@ -3,12 +3,6 @@ import { prisma } from "@/lib/prisma";
 import type { DetectedChange } from "./diff.service";
 import { enqueueNotificationsForEvent } from "./notification.service";
 
-/**
- * Persists a detected change as an Event, using the unique (targetId,
- * fingerprint) constraint as the idempotency key so a duplicate detection
- * (e.g. a re-run job after a crash) never creates a second event or a
- * duplicate notification (plan section 17 - "Duplicate webhook/job").
- */
 export async function recordEvent(params: { targetId: string; userId: string; change: DetectedChange }) {
   const { targetId, userId, change } = params;
 

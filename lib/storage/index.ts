@@ -4,12 +4,25 @@
  * Picks a provider from STORAGE_PROVIDER ("appwrite" | "r2"). When unset it
  * uses whichever provider is actually configured, preferring Appwrite. To
  * switch clouds, change the env var; no caller changes.
+ *
+ * Uploads that pass an `owner` are recorded in the file register
+ * (lib/storage/ledger.ts), and every successful delete removes its row.
  */
-import { appwriteFileUrl, deleteAppwriteFile, isAppwriteEnabled, uploadBufferToAppwrite } from "./appwrite";
-import { deleteR2Object, isR2Enabled, uploadBufferToR2 } from "./r2";
-import { fetchToBuffer, generateThumbnailBuffer } from "./common";
+import {
+  appwriteDownloadUrl,
+  appwriteFileInfo,
+  appwriteFileUrl,
+  deleteAppwriteFile,
+  downloadAppwriteFile,
+  isAppwriteEnabled,
+  uploadBufferToAppwrite,
+} from "./appwrite";
+import { deleteR2Object, getPresignedDownloadUrl, isR2Enabled, uploadBufferToR2 } from "./r2";
+import { CDN_FETCH_HEADERS, fetchToBuffer, generateThumbnailBuffer, visualDistance, visualHash } from "./common";
+import { contentHash, forgetStoredFile, recordStoredFile, type FileOwner } from "./ledger";
 
-export { fetchToBuffer };
+export { CDN_FETCH_HEADERS, fetchToBuffer, visualDistance, visualHash };
+export type { FileOwner, StoredFileKind } from "./ledger";
 
 export type StorageProvider = "appwrite" | "r2" | "none";
 
@@ -43,13 +56,17 @@ export async function uploadBuffer(params: {
   fileName: string;
   folder: string;
   contentType: string;
+  /** Who the file belongs to, for the file register (Storage page). */
+  owner?: FileOwner;
 }): Promise<StoredObject | null> {
   const folder = params.folder.replace(/^\/+|\/+$/g, "");
   const path = folder ? `${folder}/${params.fileName}` : params.fileName;
 
+  let stored: StoredObject | null;
   switch (getStorageProvider()) {
     case "appwrite":
-      return uploadBufferToAppwrite({ buffer: params.buffer, fileName: path });
+      stored = await uploadBufferToAppwrite({ buffer: params.buffer, fileName: path });
+      break;
     case "r2": {
       const res = await uploadBufferToR2({
         buffer: params.buffer,
@@ -57,11 +74,23 @@ export async function uploadBuffer(params: {
         folder,
         contentType: params.contentType,
       });
-      return res && res.url ? { url: res.url, fileId: res.fileId } : null;
+      stored = res && res.url ? { url: res.url, fileId: res.fileId } : null;
+      break;
     }
     default:
-      return null;
+      stored = null;
   }
+  if (stored && params.owner) {
+    await recordStoredFile({
+      owner: params.owner,
+      fileId: stored.fileId,
+      url: stored.url,
+      sizeBytes: params.buffer.length,
+      contentType: params.contentType,
+      hash: contentHash(params.buffer),
+    });
+  }
+  return stored;
 }
 
 /**
@@ -70,14 +99,45 @@ export async function uploadBuffer(params: {
  * switching providers with media already stored.
  */
 export async function deleteStoredObject(fileId: string): Promise<boolean> {
+  let deleted: boolean;
   switch (getStorageProvider()) {
     case "appwrite":
-      return deleteAppwriteFile(fileId);
+      deleted = await deleteAppwriteFile(fileId);
+      break;
     case "r2":
-      return deleteR2Object(fileId);
+      deleted = await deleteR2Object(fileId);
+      break;
     default:
-      return false;
+      deleted = false;
   }
+  if (deleted) await forgetStoredFile(fileId);
+  return deleted;
+}
+
+/** Size, name and type of existing files; missing files are left out (Appwrite only, empty otherwise). */
+export async function getStoredObjectInfo(fileIds: string[]) {
+  return getStorageProvider() === "appwrite"
+    ? appwriteFileInfo(fileIds)
+    : new Map<string, { sizeBytes: number; name: string; mimeType: string; createdAt: string }>();
+}
+
+/** Reads a stored object's bytes with the provider's credentials (no public URL needed). */
+export async function downloadStoredObject(fileId: string): Promise<Buffer | null> {
+  switch (getStorageProvider()) {
+    case "appwrite":
+      return downloadAppwriteFile(fileId);
+    case "r2": {
+      const url = await getPresignedDownloadUrl(fileId, 300);
+      return url ? fetchToBuffer(url) : null;
+    }
+    default:
+      return null;
+  }
+}
+
+/** Public link that downloads the file (null when the provider has no such link). */
+export function publicDownloadUrl(fileId: string): string | null {
+  return getStorageProvider() === "appwrite" ? appwriteDownloadUrl(fileId) : null;
 }
 
 /** Renders a compressed thumbnail locally (sharp) and stores it as its own file. */
@@ -86,11 +146,18 @@ export async function createCompressedThumbnail(params: {
   fileName: string;
   folder: string;
   isVideo?: boolean;
+  owner?: FileOwner;
 }): Promise<StoredObject | null> {
   if (!isStorageEnabled()) return null;
   const thumb = await generateThumbnailBuffer(params.sourceBuffer, params.isVideo ?? false);
   if (!thumb) return null;
-  return uploadBuffer({ buffer: thumb, fileName: params.fileName, folder: params.folder, contentType: "image/jpeg" });
+  return uploadBuffer({
+    buffer: thumb,
+    fileName: params.fileName,
+    folder: params.folder,
+    contentType: "image/jpeg",
+    owner: params.owner ? { ...params.owner, kind: "THUMBNAIL" } : undefined,
+  });
 }
 
 export { appwriteFileUrl };

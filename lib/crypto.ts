@@ -24,10 +24,7 @@ export interface EncryptedPayload {
   iv: string; // base64
 }
 
-/**
- * Encrypts a plaintext string (access tokens, webhook secrets, etc.) for
- * storage at rest. Never log the plaintext or the returned ciphertext.
- */
+
 export function encryptSecret(plaintext: string): EncryptedPayload {
   const key = getKey();
   const iv = crypto.randomBytes(IV_LENGTH);

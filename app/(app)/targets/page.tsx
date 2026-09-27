@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/common/empty-state";
 import { LoadingState } from "@/components/common/loading-state";
 import { TargetStatusBadge } from "@/features/targets/components/target-status-badge";
+import { DeleteTargetDialog } from "@/features/targets/components/delete-target-dialog";
 import { Plus, Radar, MoreVertical, Pause, Play, Trash2, Search, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -49,6 +50,8 @@ export default function TargetsPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Targets waiting for the delete dialog (it asks what to do with their stored files).
+  const [deleting, setDeleting] = useState<{ id: string; username: string }[] | null>(null);
 
   const filteredTargets = useMemo(() => {
     if (!targets) return [];
@@ -103,25 +106,16 @@ export default function TargetsPage() {
     }
   }
 
-  async function remove(targetId: string) {
-    if (!confirm("Delete this target and all its history? This cannot be undone.")) return;
-    setBusyId(targetId);
-    try {
-      await apiFetch(`/api/targets/${targetId}`, { method: "DELETE" });
-      toast.success("Target deleted.");
-      refresh();
-      refreshQuota();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setBusyId(null);
-    }
+  function remove(targetId: string) {
+    const target = targets?.find((t) => t.id === targetId);
+    if (target) setDeleting([{ id: target.id, username: target.username }]);
   }
 
   async function bulkAction(action: "pause" | "resume" | "delete") {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
-    if (action === "delete" && !confirm(`Delete ${ids.length} target${ids.length > 1 ? "s" : ""} and all their history? This cannot be undone.`)) {
+    if (action === "delete") {
+      setDeleting((targets ?? []).filter((t) => selected.has(t.id)).map((t) => ({ id: t.id, username: t.username })));
       return;
     }
     setBulkBusy(true);
@@ -130,7 +124,7 @@ export default function TargetsPage() {
         method: "POST",
         body: JSON.stringify({ ids, action }),
       });
-      const verb = action === "delete" ? "deleted" : action === "pause" ? "paused" : "resumed";
+      const verb = action === "pause" ? "paused" : "resumed";
       if (data.count < data.total) {
         toast.warning(`${data.count} of ${data.total} target${data.total === 1 ? "" : "s"} ${verb}; the rest failed.`);
       } else {
@@ -172,7 +166,7 @@ export default function TargetsPage() {
       <TargetQuotaBanner quota={quota} />
 
       {targets && targets.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 ">
           <div className="relative flex-1 min-w-50">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -217,7 +211,7 @@ export default function TargetsPage() {
         </div>
       )}
 
-      <Card>
+      <Card className="" >
         <CardContent className="px-0 sm:px-6">
           {loading ? (
             <LoadingState />
@@ -370,6 +364,16 @@ export default function TargetsPage() {
           )}
         </CardContent>
       </Card>
+      <DeleteTargetDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        targets={deleting ?? []}
+        onDeleted={() => {
+          setSelected(new Set());
+          refresh();
+          refreshQuota();
+        }}
+      />
     </div>
   );
 }

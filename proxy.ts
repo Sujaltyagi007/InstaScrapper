@@ -14,6 +14,7 @@ export default withAuth(
         PUBLIC_PATHS.includes(pathname) ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/cron") ||
+        pathname.startsWith("/api/dev") ||
         pathname.startsWith("/api/health") ||
         pathname.startsWith("/api/ready");
 

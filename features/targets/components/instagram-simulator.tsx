@@ -1,31 +1,11 @@
 "use client";
-
-import { Fragment, useEffect, useRef, useState } from "react";
+import { apiFetch } from "@/lib/fetcher";
 import { format, formatDistanceToNow } from "date-fns";
-import {
-  ChevronLeft,
-  MoreHorizontal,
-  Grid3X3,
-  PlaySquare,
-  Bookmark,
-  UserSquare,
-  Download,
-  Play,
-  Image as ImageIcon,
-  Heart,
-  MessageCircle,
-  Send,
-  Layers,
-  RefreshCw,
-  Loader2,
-  Info,
-  CloudOff,
-  Trash2,
-} from "lucide-react";
 import type { Media, TargetSnapshot } from "@prisma/client";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { downloadMedia, isThumbnailOnlyVideo } from "../lib/download-media";
 import { useMediaActions, displayThumbnail, displayFullAsset } from "../hooks/use-media-actions";
-import { apiFetch } from "@/lib/fetcher";
+import { ChevronLeft, MoreHorizontal, Grid3X3, PlaySquare, Bookmark, UserSquare, Download, Play, Image as ImageIcon, Heart, MessageCircle, Send, Layers, RefreshCw, Loader2, Info, CloudOff, Trash2,} from "lucide-react";
 
 interface InstagramSimulatorProps {
   snapshot?: TargetSnapshot | null;
@@ -37,13 +17,7 @@ interface InstagramSimulatorProps {
 
 const SCROLL_AREA = "flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
 
-export function InstagramSimulator({
-  snapshot,
-  media,
-  username,
-  targetId,
-  onDataChanged,
-}: InstagramSimulatorProps) {
+export function InstagramSimulator({ snapshot, media, username, targetId, onDataChanged, }: InstagramSimulatorProps) {
   const [view, setView] = useState<"profile" | "post">("profile");
   const [selectedPost, setSelectedPost] = useState<Media | null>(null);
   const [checking, setChecking] = useState(false);
@@ -81,7 +55,7 @@ export function InstagramSimulator({
 
   return (
     <div className="flex flex-col items-center sm:gap-3">
-      <div className="w-full sm:max-w-sm bg-background sm:border sm:rounded-2xl overflow-hidden relative sm:shadow-xl flex flex-col text-foreground h-[100dvh] sm:h-162.5 sm:max-h-[calc(100vh-5rem)]">
+      <div className="w-full sm:max-w-sm bg-background sm:border sm:rounded-2xl overflow-hidden relative sm:shadow-xl flex flex-col text-foreground h-dvh sm:h-162.5 sm:max-h-[calc(100vh-5rem)]">
         <div ref={scrollRef} className={SCROLL_AREA}>
           {!hasData && (
             <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
@@ -349,7 +323,7 @@ function PostView({
               <CloudOff className="size-6 text-white/80" />
               <p className="text-xs font-semibold text-white">Full file expired</p>
               <p className="text-[10px] leading-relaxed text-white/70">
-                Removed after 48h to save storage. Re-download or delete below.
+                The full-size file was removed to save storage (Storage settings). Re-download or delete below.
               </p>
             </div>
           </div>

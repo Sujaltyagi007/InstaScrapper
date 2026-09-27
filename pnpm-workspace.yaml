@@ -1,6 +1,7 @@
 allowBuilds:
   '@dryft/tlsclient': false
   '@prisma/engines': false
+  ffmpeg-static: true
   prisma: false
   sharp: false
   unrs-resolver: false

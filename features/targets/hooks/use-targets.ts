@@ -1,8 +1,7 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
-import type { TargetWithMonitor } from "@/types/domain";
 import { getTargets } from "../api/target.api";
+import type { TargetWithMonitor } from "@/types/domain";
+import { useCallback, useEffect, useState } from "react";
 
 export function useTargets() {
   const [targets, setTargets] = useState<TargetWithMonitor[] | null>(null);
