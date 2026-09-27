@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -85,7 +86,7 @@ export default function NewTargetPage() {
         setResolveError(err.message);
         refreshQuota();
       } else {
-        setResolveError(err instanceof Error ? err.message : "Failed to resolve this account.");
+        setResolveError(friendlyError(err, "Failed to resolve this account."));
       }
     } finally {
       setResolving(false);
@@ -138,7 +139,7 @@ export default function NewTargetPage() {
         });
         return;
       }
-      toast.error(err instanceof Error ? err.message : "Failed to create target.");
+      toast.error(friendlyError(err, "Failed to create target."));
     } finally {
       setCreating(false);
     }

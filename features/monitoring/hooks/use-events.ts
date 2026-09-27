@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
 import type { EventWithTarget } from "@/types/domain";
 import { EVENTS_KEY } from "@/lib/swr-keys";
+import { friendlyError } from "@/lib/friendly-error";
 
 export { EVENTS_KEY };
 
@@ -47,7 +48,7 @@ export function useEvents() {
     events: data ? [...data.events, ...extra] : null,
     loading: isLoading,
     loadingMore,
-    error: error instanceof Error ? error.message : error ? "Failed to load events." : null,
+    error: error ? friendlyError(error) : null,
     refresh,
     loadMore,
     hasMore: Boolean(nextCursor),

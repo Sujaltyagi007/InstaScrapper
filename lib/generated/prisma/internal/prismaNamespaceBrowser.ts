@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  PushSubscription: 'PushSubscription',
   MetaConnection: 'MetaConnection',
   IgAccount: 'IgAccount',
   MediaMetricSnapshot: 'MediaMetricSnapshot',
@@ -112,6 +113,22 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  label: 'label',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt',
+  lastSuccessAt: 'lastSuccessAt',
+  failureCount: 'failureCount'
+} as const
+
+export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
 
 
 export const MetaConnectionScalarFieldEnum = {

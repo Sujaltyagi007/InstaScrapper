@@ -107,7 +107,8 @@ export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus]
 export const NotificationProvider = {
   DISCORD: 'DISCORD',
   NTFY: 'NTFY',
-  WEBHOOK: 'WEBHOOK'
+  WEBHOOK: 'WEBHOOK',
+  WEBPUSH: 'WEBPUSH'
 } as const
 
 export type NotificationProvider = (typeof NotificationProvider)[keyof typeof NotificationProvider]

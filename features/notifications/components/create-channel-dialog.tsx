@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
 import { Fragment, useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -50,7 +51,7 @@ export function CreateChannelDialog({ open, onOpenChange, onCreated }: CreateCha
       onOpenChange(false);
       onCreated();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create channel.");
+      toast.error(friendlyError(err, "Failed to create channel."));
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -20,10 +21,10 @@ export function TargetLimitCard() {
   const { quota, loading, updateLimit } = useTargetQuota();
 
   return (
-    <Card id="account-limit" className="scroll-mt-20">
+    <Card id="account-limit" size="sm" className="scroll-mt-20">
       <CardHeader>
         <CardTitle>Monitored account limit</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           How many Instagram accounts you can monitor. Every account counts, including paused and
           unsupported ones.
         </CardDescription>
@@ -64,7 +65,7 @@ function LimitForm({
       const next = await onSave(parsed);
       toast.success(`Account limit set to ${next.limit}.`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update limit.");
+      toast.error(friendlyError(err, "Failed to update limit."));
     } finally {
       setSaving(false);
     }
@@ -72,11 +73,11 @@ function LimitForm({
 
   return (
     <form onSubmit={save}>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-3">
         <TargetQuotaBanner quota={quota} />
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="max-targets">Maximum accounts</Label>
+          <Label htmlFor="max-targets" className="text-xs">Maximum accounts</Label>
           <Input
             id="max-targets"
             type="number"
@@ -86,7 +87,7 @@ function LimitForm({
             step={1}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="max-w-32"
+            className="h-9 max-w-32"
           />
           <p className="text-xs text-muted-foreground">
             Using {quota.used} of {quota.limit}. You can set between {lowest} and {quota.maxLimit}
@@ -103,7 +104,7 @@ function LimitForm({
         </div>
       </CardContent>
       <CardFooter>
-        <Button type="submit" disabled={saving || !valid || unchanged}>
+        <Button type="submit" size="sm" disabled={saving || !valid || unchanged}>
           {saving && <Loader2 className="animate-spin" />}
           Save limit
         </Button>

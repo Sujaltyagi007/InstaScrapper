@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
 import { useState } from "react";
 import { toast } from "sonner";
@@ -26,7 +27,7 @@ export function NicheSetupCard({ niche, onSaved }: { niche: NicheData["niche"]; 
       toast.success("Niche saved.");
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save niche.");
+      toast.error(friendlyError(err, "Failed to save niche."));
     } finally {
       setSaving(false);
     }

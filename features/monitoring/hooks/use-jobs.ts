@@ -1,25 +1,12 @@
 "use client";
-import { apiFetch } from "@/lib/fetcher";
+import useSWR from "swr";
+import { useCallback } from "react";
 import type { JobWithTarget } from "@/types/domain";
-import { useCallback, useEffect, useState } from "react";
+import { JOBS_KEY } from "@/lib/swr-keys";
+import { friendlyError } from "@/lib/friendly-error";
 
 export function useJobs() {
-  const [jobs, setJobs] = useState<JobWithTarget[] | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await apiFetch<{ jobs: JobWithTarget[] }>("/api/jobs");
-      setJobs(data.jobs);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { jobs, loading, refresh };
+  const { data, error, isLoading, mutate } = useSWR<{ jobs: JobWithTarget[] }>(JOBS_KEY);
+  const refresh = useCallback(() => mutate(), [mutate]);
+  return { jobs: data?.jobs ?? null, loading: isLoading, error: error ? friendlyError(error) : null, refresh };
 }

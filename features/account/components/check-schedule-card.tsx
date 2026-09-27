@@ -1,11 +1,11 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { UserSettings } from "@/hooks/use-settings";
@@ -56,25 +56,25 @@ export function CheckScheduleCard({ settings, onSaved }: { settings: UserSetting
       toast.success("Schedule saved.");
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save schedule.");
+      toast.error(friendlyError(err, "Failed to save schedule."));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader>
         <CardTitle>Human-like check schedule</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           Checks run one at a time with random gaps, like a person browsing. During sleep hours no
-          scheduled checks run; they resume gradually afterwards. &quot;Run check now&quot; always works.
+          scheduled checks run. &quot;Run check now&quot; always works.
         </CardDescription>
       </CardHeader>
       <form onSubmit={save}>
-        <CardContent className="flex flex-col gap-5">
+        <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="timezone">Timezone</Label>
+            <Label htmlFor="timezone" className="text-xs">Timezone</Label>
             <div className="flex flex-wrap gap-2">
               <select
                 id="timezone"
@@ -99,7 +99,7 @@ export function CheckScheduleCard({ settings, onSaved }: { settings: UserSetting
 
           <div className="flex items-center justify-between gap-4">
             <div>
-              <Label htmlFor="sleep-enabled">Sleep hours</Label>
+              <Label htmlFor="sleep-enabled" className="text-xs">Sleep hours</Label>
               <p className="text-xs text-muted-foreground">Pause scheduled checks overnight.</p>
             </div>
             <Switch id="sleep-enabled" checked={sleepEnabled} onCheckedChange={setSleepEnabled} />
@@ -116,7 +116,7 @@ export function CheckScheduleCard({ settings, onSaved }: { settings: UserSetting
           )}
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={saving || !timezone.trim()}>
+          <Button type="submit" size="sm" disabled={saving || !timezone.trim()}>
             {saving && <Loader2 className="animate-spin" />}
             Save schedule
           </Button>
@@ -139,7 +139,7 @@ function HourSelect({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-xs">{label}</Label>
       <select id={id} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="h-9 min-w-27.5 rounded-md border bg-background py-1 pl-3 pr-8 text-sm"

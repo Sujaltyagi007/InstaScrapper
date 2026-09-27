@@ -1,7 +1,11 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
-import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/common/error-state";
 import { format } from "date-fns";
 import { ExternalLink, FileAudio, FileVideo, File as FileIcon, Loader2, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/fetcher";
@@ -51,20 +55,13 @@ function Preview({ file }: { file: StoredFileRow }) {
 /** One group's files: previews, multi-select, delete. */
 export function StorageGroupFiles({ group, onChanged }: { group: string; onChanged: () => void }) {
   const [page, setPage] = useState(0);
-  const [data, setData] = useState<{ files: StoredFileRow[]; total: number; pageSize: number } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
-
-  const load = useCallback(async () => {
-    const res = await apiFetch<{ files: StoredFileRow[]; total: number; pageSize: number }>(
-      `/api/storage/files?group=${encodeURIComponent(group)}&page=${page}`,
-    );
-    setData(res);
-  }, [group, page]);
-
-  useEffect(() => {
-    load().catch((err) => toast.error(err instanceof Error ? err.message : "Couldn't load files."));
-  }, [load]);
+  const { data, error, mutate } = useSWR<{ files: StoredFileRow[]; total: number; pageSize: number }>(
+    `/api/storage/files?group=${encodeURIComponent(group)}&page=${page}`,
+    { revalidateOnFocus: false },
+  );
+  const load = useCallback(() => mutate(), [mutate]);
 
   function toggle(fileId: string) {
     setSelected((prev) => {
@@ -79,27 +76,37 @@ export function StorageGroupFiles({ group, onChanged }: { group: string; onChang
     if (selected.size === 0) return;
     if (!confirm(`Delete ${selected.size} file${selected.size === 1 ? "" : "s"}? This can't be undone.`)) return;
     setBusy(true);
+    const ids = new Set(selected);
+    // Optimistic: the tiles disappear at once; the re-fetch after brings back any that failed.
+    mutate((cur) => cur && { ...cur, files: cur.files.filter((f) => !ids.has(f.fileId)) }, { revalidate: false });
+    setSelected(new Set());
     try {
       const res = await apiFetch<{ deleted: number; failed: number }>("/api/storage/files", {
         method: "DELETE",
-        body: JSON.stringify({ fileIds: [...selected] }),
+        body: JSON.stringify({ fileIds: [...ids] }),
       });
       if (res.failed) toast.warning(`${res.deleted} deleted, ${res.failed} couldn't be deleted. Try again.`);
       else toast.success(`${res.deleted} file${res.deleted === 1 ? "" : "s"} deleted.`);
-      setSelected(new Set());
-      await load();
       onChanged();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't delete.");
+      toast.error(friendlyError(err, "Couldn't delete those files."));
     } finally {
+      await load();
       setBusy(false);
     }
   }
 
   if (!data) {
+    if (error) {
+      return (
+        <ErrorState title="Couldn't load these files" message={friendlyError(error)} onRetry={load} className="m-3" />
+      );
+    }
     return (
-      <div className="flex justify-center p-6">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      <div className="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 lg:grid-cols-6" aria-busy="true">
+        {Array.from({ length: 12 }, (_, i) => (
+          <Skeleton key={i} className="aspect-square w-full rounded-lg" />
+        ))}
       </div>
     );
   }

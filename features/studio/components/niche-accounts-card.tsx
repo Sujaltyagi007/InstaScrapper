@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -34,7 +35,7 @@ export function NicheAccountsCard({ data, onChanged }: { data: NicheData; onChan
       if (source === "USER") setUsername("");
       onChanged();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add account.");
+      toast.error(friendlyError(err, "Failed to add account."));
     } finally {
       setAdding(null);
     }
@@ -46,7 +47,7 @@ export function NicheAccountsCard({ data, onChanged }: { data: NicheData; onChan
       toast.success(`@${handle} removed.`);
       onChanged();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to remove account.");
+      toast.error(friendlyError(err, "Failed to remove account."));
     }
   }
 
@@ -57,7 +58,7 @@ export function NicheAccountsCard({ data, onChanged }: { data: NicheData; onChan
       setSuggestions(res.suggestions);
       if (res.suggestions.length === 0) toast.info("No new suggestions. Try adding more detail to your niche.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to get suggestions.");
+      toast.error(friendlyError(err, "Failed to get suggestions."));
     } finally {
       setSuggesting(false);
     }

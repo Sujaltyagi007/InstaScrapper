@@ -26,6 +26,13 @@ No Meta app needed. You'll get a push notification with the video + caption and 
 - [ ] `GEMINI_API_KEY`
 - [ ] `PEXELS_API_KEY`
 - [ ] `APP_URL` = your Vercel address, e.g. `https://your-app.vercel.app` (the phone notification links to it)
+- [ ] Push notifications: copy **`NEXT_PUBLIC_VAPID_PUBLIC_KEY`** and **`VAPID_PRIVATE_KEY`** from your local `.env` (already generated) into Vercel, and add **`VAPID_SUBJECT`** = your Vercel address (e.g. `https://your-app.vercel.app`). Use the **same** key pair everywhere: changing it later invalidates every device's subscription. Keep the private key secret.
+
+## 3b. Install the app and turn on push (after deploying)
+- [ ] Phone (Android/Chrome) or computer: open your Vercel address → sidebar **Install app**.
+- [ ] iPhone/iPad: open it in Safari → **Share → Add to Home Screen**, then open the app from the Home Screen (iOS only allows push for installed apps).
+- [ ] In the app: **Notifications → Push notifications → Turn on**, allow when asked, then **Test**.
+- [ ] Pick what you want pushed with the chips under "Notify me about". Discord/ntfy channels keep working as before.
 
 ## 4. Deploy
 - [ ] Commit (commit `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml` together) → push

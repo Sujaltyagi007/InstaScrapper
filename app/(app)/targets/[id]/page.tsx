@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
 import { use, useState } from "react";
 import Link from "next/link";
@@ -12,39 +13,56 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTargetDetail } from "@/features/targets/hooks/use-target-detail";
 import { useSessions } from "@/features/sessions/hooks/use-sessions";
-import { LoadingState } from "@/components/common/loading-state";
+import { mutate as globalMutate } from "swr";
+import { TARGETS_KEY } from "@/lib/swr-keys";
+import { ErrorState } from "@/components/common/error-state";
 import { EmptyState } from "@/components/common/empty-state";
+import { TargetDetailSkeleton } from "@/features/targets/components/target-detail-skeleton";
 import { TargetStatusBadge } from "@/features/targets/components/target-status-badge";
 import { EventTypeBadge } from "@/features/monitoring/components/event-type-badge";
 import { InstagramSimulator } from "@/features/targets/components/instagram-simulator";
+import { SimulatorSheet } from "@/features/targets/components/simulator-sheet";
 import { apiFetch } from "@/lib/fetcher";
 import { toast } from "sonner";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { MediaGallery } from "@/features/targets/components/media-gallery";
 import { DeleteTargetDialog } from "@/features/targets/components/delete-target-dialog";
-import { Download, HardDrive, Sparkles } from "lucide-react";
+import { HardDrive } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function TargetDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { target, loading, error, refresh } = useTargetDetail(id);
+  const { target, loading, error, notFound, refresh, mutate } = useTargetDetail(id);
   const { sessions } = useSessions();
   const [saving, setSaving] = useState(false);
   const activeSessions = (sessions ?? []).filter((s) => s.status === "ACTIVE");
 
   async function updateMonitor(updates: Record<string, unknown>) {
     setSaving(true);
+    // Optimistic: the toggle moves at once. Pausing/resuming also flips the status
+    // badge the same way the server does (see updateTargetMonitor).
+    mutate(
+      (cur) => {
+        if (!cur?.target.monitor) return cur;
+        const t = cur.target;
+        const status =
+          updates.active === false ? "PAUSED" : updates.active === true && t.status === "PAUSED" ? "ACTIVE" : t.status;
+        return { target: { ...t, status, monitor: { ...t.monitor!, ...updates } } };
+      },
+      { revalidate: false },
+    );
     try {
       await apiFetch(`/api/targets/${id}`, { method: "PATCH", body: JSON.stringify(updates) });
       toast.success("Settings updated.");
-      refresh();
+      globalMutate(TARGETS_KEY); // the list page shows the same status
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update.");
+      toast.error(friendlyError(err, "Couldn't save that change."));
     } finally {
+      refresh();
       setSaving(false);
     }
   }
@@ -55,8 +73,8 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
     setDeleteOpen(true);
   }
 
-  if (loading) return <LoadingState />;
-  if (error || !target) {
+  if (loading && !target) return <TargetDetailSkeleton />;
+  if (!target) {
     return (
       <div className="flex flex-col gap-4">
         <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
@@ -64,7 +82,14 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
             <ArrowLeft /> Back to targets
           </Link>
         </Button>
-        <p className="text-sm text-destructive">{error ?? "Target not found."}</p>
+        {notFound ? (
+          <ErrorState
+            title="This account isn't here anymore"
+            message="It may have been deleted. Go back to your targets to see the current list."
+          />
+        ) : (
+          <ErrorState title="Couldn't load this account" message={error} onRetry={refresh} />
+        )}
       </div>
     );
   }
@@ -98,6 +123,17 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
               onOpenChange={setDeleteOpen}
               targets={[{ id: target.id, username: target.username }]}
               onDeleted={() => router.push("/targets")}
+            />
+          </div>
+
+          {/* Phones/tablets: the simulator opens full-screen from here; laptops show it framed on the right. */}
+          <div className="shrink-0 lg:hidden">
+            <SimulatorSheet
+              snapshot={snapshot}
+              media={target.media || []}
+              username={target.username}
+              targetId={id}
+              onDataChanged={refresh}
             />
           </div>
 
@@ -296,7 +332,7 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
             </CardContent>
           </Card>
         </div>
-        <div className="lg:col-span-8 w-full flex flex-col items-center justify-start h-full min-h-0 overflow-hidden shrink-0 z-10">
+        <div className="hidden lg:flex lg:col-span-8 w-full flex-col items-center justify-start h-full min-h-0 overflow-hidden shrink-0 z-10">
           <div className="w-full max-w-sm mb-2 flex items-center justify-between px-1 text-xs text-muted-foreground shrink-0">
             <span className="flex items-center gap-1.5 font-medium text-foreground">
               <span className="relative flex size-2">

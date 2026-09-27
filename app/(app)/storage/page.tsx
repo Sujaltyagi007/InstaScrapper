@@ -1,11 +1,16 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
-import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, ChevronRight, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/fetcher";
 import { formatBytes } from "@/lib/format-bytes";
 import { cn } from "@/lib/utils";
+import { STORAGE_KEY } from "@/lib/swr-keys";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/common/error-state";
 import { LoadingState } from "@/components/common/loading-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,22 +54,12 @@ const KEEP_OPTIONS = [
 ];
 
 export default function StoragePage() {
-  const [overview, setOverview] = useState<Overview | null>(null);
+  // No refetch on tab focus: this call also reconciles the file register with the bucket.
+  const { data: overview, error, mutate } = useSWR<Overview>(STORAGE_KEY, { revalidateOnFocus: false });
   const [open, setOpen] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-
-  const refresh = useCallback(async () => {
-    try {
-      setOverview(await apiFetch<Overview>("/api/storage"));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't load storage.");
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  const refresh = useCallback(() => mutate(), [mutate]);
 
   async function run(label: string, action: () => Promise<string>) {
     setBusy(label);
@@ -73,7 +68,7 @@ export default function StoragePage() {
       await refresh();
       setReloadKey((k) => k + 1);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(friendlyError(err, "Something went wrong."));
     } finally {
       setBusy(null);
     }
@@ -91,7 +86,23 @@ export default function StoragePage() {
     });
   }
 
-  if (!overview) return <LoadingState message="Checking your storage…" />;
+  if (!overview) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Storage</h1>
+          <p className="text-sm text-muted-foreground">
+            Every file this app keeps for you: scraped photos and videos, profile pictures, reels and sounds.
+          </p>
+        </div>
+        {error ? (
+          <ErrorState title="Couldn't load your storage" message={friendlyError(error)} onRetry={refresh} />
+        ) : (
+          <StorageSkeleton />
+        )}
+      </div>
+    );
+  }
 
   const percent = Math.min(100, (overview.totalBytes / overview.quotaBytes) * 100);
   const profilePics = overview.groups.reduce((n, g) => n + (g.byKind.PROFILE_PIC?.files ?? 0), 0);
@@ -233,6 +244,27 @@ export default function StoragePage() {
           })}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+/** Usage card (bar + keep-for setting) and the per-account groups, while the overview loads. */
+function StorageSkeleton() {
+  return (
+    <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading storage">
+      <div className="rounded-xl border bg-card p-4">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="mt-2 h-3 w-52" />
+        <Skeleton className="mt-4 h-2 w-full rounded-full" />
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <Skeleton className="h-3.5 w-56 max-w-full" />
+          <Skeleton className="h-8 w-36 rounded-md" />
+        </div>
+      </div>
+      <div className="rounded-xl border bg-card p-4">
+        <Skeleton className="h-4 w-28" />
+        <LoadingState rows={4} className="mt-2" />
+      </div>
     </div>
   );
 }

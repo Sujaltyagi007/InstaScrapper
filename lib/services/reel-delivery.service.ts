@@ -72,13 +72,21 @@ async function deliver(projectId: string): Promise<void> {
       if (channel.provider === "NTFY") {
         await sendNtfyReel(config as NtfyConfig, { title, message: caption, click, attach });
       } else {
-        await dispatchToProvider(channel.provider, config, {
-          title,
-          body: `${caption}\n\nVideo and caption: ${click}`,
-          url: click,
-          eventType: "REEL_READY",
-          targetUsername: "studio",
-        });
+        await dispatchToProvider(
+          channel.provider,
+          config,
+          {
+            title,
+            // A push is a short preview; the full caption is one tap away on the review page.
+            body: channel.provider === "WEBPUSH" ? "Your reel is ready. Tap to review and post it." : `${caption}\n\nVideo and caption: ${click}`,
+            url: click,
+            eventType: "REEL_READY",
+            targetUsername: "studio",
+            appPath: `/studio/reels/${project.id}`,
+            tag: `reel:${project.id}`,
+          },
+          { userId: project.userId },
+        );
       }
       sent += 1;
     } catch (err) {

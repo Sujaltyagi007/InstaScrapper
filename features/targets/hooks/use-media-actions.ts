@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
 import { useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
@@ -18,7 +19,7 @@ export function useMediaActions(onChanged?: () => void) {
       onChanged?.();
       return data.media;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Re-download failed.");
+      toast.error(friendlyError(err, "Re-download failed."));
       return null;
     } finally {
       setBusyId(null);
@@ -47,7 +48,7 @@ export function useMediaActions(onChanged?: () => void) {
       onChanged?.();
       return true;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Delete failed.");
+      toast.error(friendlyError(err, "Delete failed."));
       return false;
     } finally {
       setBusyId(null);

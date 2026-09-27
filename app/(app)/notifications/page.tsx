@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import { useState } from "react";
 import { Plus, Bell, MoreVertical, Trash2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,45 +9,52 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNotificationChannels } from "@/features/notifications/hooks/use-notification-channels";
 import { LoadingState } from "@/components/common/loading-state";
+import { ErrorState } from "@/components/common/error-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { CreateChannelDialog } from "@/features/notifications/components/create-channel-dialog";
 import { apiFetch } from "@/lib/fetcher";
+import { mutate as globalMutate } from "swr";
+import { PUSH_KEY } from "@/lib/swr-keys";
+import { PushNotificationsCard } from "@/features/notifications/components/push-notifications-card";
 import { toast } from "sonner";
 
 const PROVIDER_LABELS: Record<string, string> = {
   DISCORD: "Discord",
   NTFY: "ntfy",
   WEBHOOK: "Generic webhook",
+  WEBPUSH: "Browser push",
 };
 
 export default function NotificationsPage() {
-  const { channels, loading, error, refresh } = useNotificationChannels();
+  const { channels, loading, error, refresh, mutate } = useNotificationChannels();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Optimistic: the switch flips / the row disappears at once; a failure re-fetches the real list.
   async function toggleEnabled(id: string, enabled: boolean) {
-    setBusyId(id);
+    mutate(
+      (cur) => cur && { channels: cur.channels.map((c) => (c.id === id ? { ...c, enabled } : c)) },
+      { revalidate: false },
+    );
     try {
       await apiFetch(`/api/notification-channels/${id}`, { method: "PATCH", body: JSON.stringify({ enabled }) });
-      refresh();
+      globalMutate(PUSH_KEY);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update channel.");
-    } finally {
-      setBusyId(null);
+      toast.error(friendlyError(err, "Couldn't update that channel."));
+      refresh();
     }
   }
 
   async function remove(id: string) {
     if (!confirm("Delete this notification channel?")) return;
-    setBusyId(id);
+    mutate((cur) => cur && { channels: cur.channels.filter((c) => c.id !== id) }, { revalidate: false });
     try {
       await apiFetch(`/api/notification-channels/${id}`, { method: "DELETE" });
+      globalMutate(PUSH_KEY);
       toast.success("Channel deleted.");
-      refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete channel.");
-    } finally {
-      setBusyId(null);
+      toast.error(friendlyError(err, "Couldn't delete that channel."));
+      refresh();
     }
   }
 
@@ -56,7 +64,7 @@ export default function NotificationsPage() {
       await apiFetch(`/api/notification-channels/${id}/test`, { method: "POST" });
       toast.success("Test notification sent.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send test notification.");
+      toast.error(friendlyError(err, "Failed to send test notification."));
     } finally {
       setBusyId(null);
     }
@@ -74,12 +82,14 @@ export default function NotificationsPage() {
         </Button>
       </div>
 
+      <PushNotificationsCard />
+
       <Card>
         <CardContent className="px-0 sm:px-6">
-          {loading ? (
-            <LoadingState />
-          ) : error ? (
-            <p className="p-6 text-sm text-destructive">{error}</p>
+          {loading && !channels ? (
+            <LoadingState rows={3} className="px-4 sm:px-0" />
+          ) : error && !channels ? (
+            <ErrorState title="Couldn't load your channels" message={error} onRetry={refresh} className="m-4 sm:m-0" />
           ) : !channels || channels.length === 0 ? (
             <EmptyState
               icon={Bell}

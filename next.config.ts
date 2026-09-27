@@ -37,8 +37,34 @@ const renderRoutes = [
   "/api/sounds",
 ];
 
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Browsers only honour HSTS over HTTPS (Vercel), so plain-http local runs aren't affected.
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]
+    : []),
+];
+
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["got-scraping", "header-generator", "@dryft/tlsclient", "ffi-rs", "workerpool", "ffmpeg-static"],
+  async headers() {
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      {
+        // The service worker must never be cached, or users keep an old one after a deploy.
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ];
+  },
+  serverExternalPackages:["got-scraping", "header-generator", "@dryft/tlsclient", "ffi-rs", "workerpool", "ffmpeg-static"],
   outputFileTracingIncludes: {
     ...Object.fromEntries(stealthRoutes.map((route) => [route, ["lib/native/**/*"]])),
     ...Object.fromEntries(

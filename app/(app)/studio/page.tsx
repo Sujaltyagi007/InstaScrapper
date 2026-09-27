@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { LoadingState } from "@/components/common/loading-state";
+import { ErrorState } from "@/components/common/error-state";
+import { CardSkeleton } from "@/components/common/page-skeleton";
 import { useTargetQuota } from "@/features/account/hooks/use-target-quota";
 import { TargetQuotaBanner } from "@/features/account/components/target-quota-banner";
 import { useNiche } from "@/features/studio/hooks/use-niche";
@@ -12,7 +13,7 @@ import { ReelsCard } from "@/features/studio/components/reels-card";
 import { SoundBankCard } from "@/features/studio/components/sound-bank-card";
 
 export default function StudioPage() {
-  const { data, loading, refresh } = useNiche();
+  const { data, loading, error, refresh } = useNiche();
   const { quota, refresh: refreshQuota } = useTargetQuota();
   const [reelsKey, setReelsKey] = useState(0);
 
@@ -30,8 +31,14 @@ export default function StudioPage() {
         </p>
       </div>
 
-      {loading || !data ? (
-        <LoadingState />
+      {loading && !data ? (
+        <div className="flex flex-col gap-4" aria-busy="true">
+          <CardSkeleton rows={2} />
+          <CardSkeleton rows={3} avatar />
+          <CardSkeleton rows={3} />
+        </div>
+      ) : !data ? (
+        <ErrorState title="Couldn't load your studio" message={error} onRetry={refresh} />
       ) : (
         <>
           <NicheSetupCard key={data.niche?.id ?? "new"} niche={data.niche} onSaved={changed} />

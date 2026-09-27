@@ -1,10 +1,13 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import { apiFetch } from "@/lib/fetcher";
 import { format, formatDistanceToNow } from "date-fns";
 import type { Media, TargetSnapshot } from "@prisma/client";
 import { Fragment, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { downloadMedia, isThumbnailOnlyVideo } from "../lib/download-media";
 import { useMediaActions, displayThumbnail, displayFullAsset } from "../hooks/use-media-actions";
+import { useSimulatorLayer } from "../hooks/use-simulator-layer";
 import { ChevronLeft, MoreHorizontal, Grid3X3, PlaySquare, Bookmark, UserSquare, Download, Play, Image as ImageIcon, Heart, MessageCircle, Send, Layers, RefreshCw, Loader2, Info, CloudOff, Trash2,} from "lucide-react";
 
 interface InstagramSimulatorProps {
@@ -13,20 +16,44 @@ interface InstagramSimulatorProps {
   username: string;
   targetId: string;
   onDataChanged?: () => void;
+  /** Edge-to-edge phone view. Post navigation then lives in the browser history. */
+  fullscreen?: boolean;
+  onClose?: () => void;
 }
 
 const SCROLL_AREA = "flex-1 min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
 
-export function InstagramSimulator({ snapshot, media, username, targetId, onDataChanged, }: InstagramSimulatorProps) {
-  const [view, setView] = useState<"profile" | "post">("profile");
-  const [selectedPost, setSelectedPost] = useState<Media | null>(null);
+export function InstagramSimulator({ snapshot, media, username, targetId, onDataChanged, fullscreen = false, onClose }: InstagramSimulatorProps) {
+  const layer = useSimulatorLayer();
+  const [localPostId, setLocalPostId] = useState<string | null>(null);
+  // Re-download returns the fresh row before the detail refetch lands.
+  const [postOverride, setPostOverride] = useState<Media | null>(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const profileScroll = useRef(0);
 
+  const postId = fullscreen ? layer.postId : localPostId;
+  const selectedPost = postId
+    ? (postOverride?.id === postId ? postOverride : media.find((m) => m.id === postId) ?? null)
+    : null;
+  const selectedPostId = selectedPost?.id;
+
+  const openPost = (item: Media) => {
+    profileScroll.current = scrollRef.current?.scrollTop ?? 0;
+    setPostOverride(null);
+    if (fullscreen) layer.openPost(item.id);
+    else setLocalPostId(item.id);
+  };
+  const closePost = () => {
+    if (fullscreen) layer.back();
+    else setLocalPostId(null);
+  };
+
+  // A post opens at the top; going back returns to where you were in the grid.
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: 0 });
-  }, [view, selectedPost?.id]);
+    scrollRef.current?.scrollTo({ top: selectedPostId ? 0 : profileScroll.current });
+  }, [selectedPostId]);
 
   const profilePic = snapshot?.profilePictureStorageUrl || snapshot?.profilePictureUrl || "";
   const postsCount = snapshot?.mediaCount ?? media.length;
@@ -41,7 +68,9 @@ export function InstagramSimulator({ snapshot, media, username, targetId, onData
       await apiFetch(`/api/targets/${targetId}/check`, { method: "POST" });
       onDataChanged?.();
     } catch (err) {
-      setCheckError(err instanceof Error ? err.message : "Check failed.");
+      const message = friendlyError(err, "Check failed.");
+      if (fullscreen) toast.error(message);
+      else setCheckError(message);
     } finally {
       setChecking(false);
     }
@@ -54,8 +83,17 @@ export function InstagramSimulator({ snapshot, media, username, targetId, onData
   };
 
   return (
-    <div className="flex flex-col items-center sm:gap-3">
-      <div className="w-full sm:max-w-sm bg-background sm:border sm:rounded-2xl overflow-hidden relative sm:shadow-xl flex flex-col text-foreground h-dvh sm:h-162.5 sm:max-h-[calc(100vh-5rem)]">
+    <div className={fullscreen ? "flex h-full flex-col" : "flex flex-col items-center gap-3"}>
+      <div
+        className={
+          fullscreen
+            ? "relative flex h-full w-full flex-col overflow-hidden bg-background text-foreground"
+            : "relative flex h-162.5 max-h-[calc(100vh-5rem)] w-full max-w-sm flex-col overflow-hidden rounded-2xl border bg-background text-foreground shadow-xl"
+        }
+      >
+        {fullscreen && checking && (
+          <div aria-hidden className="absolute inset-x-0 top-0 z-40 h-0.5 animate-pulse bg-primary" />
+        )}
         <div ref={scrollRef} className={SCROLL_AREA}>
           {!hasData && (
             <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
@@ -90,14 +128,26 @@ export function InstagramSimulator({ snapshot, media, username, targetId, onData
             </div>
           )}
 
-          {hasData && view === "profile" && (
+          {hasData && !selectedPost && (
             <div className="flex flex-col pb-10">
               <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border/40 bg-background/95 px-4 py-3 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                  <ChevronLeft className="size-6" aria-hidden />
-                  <h1 className="text-xl font-bold tracking-tight">{username}</h1>
+                <div className="flex min-w-0 items-center gap-2">
+                  {fullscreen ? (
+                    <button type="button" onClick={onClose} aria-label="Close Instagram view" className="-m-1.5 rounded-full p-1.5 active:bg-muted">
+                      <ChevronLeft className="size-6" />
+                    </button>
+                  ) : (
+                    <ChevronLeft className="size-6" aria-hidden />
+                  )}
+                  <h1 className="truncate text-xl font-bold tracking-tight">{username}</h1>
                 </div>
-                <MoreHorizontal className="size-6" aria-hidden />
+                {fullscreen ? (
+                  <button type="button" onClick={runCheck} disabled={checking} aria-label="Run check now" className="-m-1.5 rounded-full p-1.5 active:bg-muted disabled:opacity-60">
+                    <RefreshCw className={checking ? "size-5 animate-spin" : "size-5"} />
+                  </button>
+                ) : (
+                  <MoreHorizontal className="size-6" aria-hidden />
+                )}
               </div>
 
               {/* Profile info */}
@@ -172,7 +222,7 @@ export function InstagramSimulator({ snapshot, media, username, targetId, onData
                       const isVideoKind = item.mediaType === "VIDEO" || item.mediaType === "REEL";
                       const isCarousel = item.mediaType === "CAROUSEL_ALBUM";
                       return (
-                        <button key={item.id} type="button" className="group relative aspect-square bg-muted" onClick={() => { setSelectedPost(item); setView("post"); }}>
+                        <button key={item.id} type="button" className="group relative aspect-square bg-muted" onClick={() => openPost(item)}>
                           {displayUrl ? (
                             <img src={displayUrl} alt={item.caption?.slice(0, 80) || `Post by ${username}`} className="h-full w-full object-cover transition-opacity group-active:opacity-80" loading="lazy" />
                           ) : (
@@ -213,23 +263,23 @@ export function InstagramSimulator({ snapshot, media, username, targetId, onData
             </div>
           )}
 
-          {hasData && view === "post" && selectedPost && (
-            <PostView post={selectedPost} username={username} profilePic={profilePic} onBack={() => {
-              setView("profile");
-              setSelectedPost(null);
-            }}
+          {hasData && selectedPost && (
+            <PostView
+              post={selectedPost}
+              username={username}
+              profilePic={profilePic}
+              onBack={closePost}
               onDataChanged={onDataChanged}
-              onPostUpdated={setSelectedPost}
-              onPostDeleted={() => {
-                setView("profile");
-                setSelectedPost(null);
-              }}
+              onPostUpdated={setPostOverride}
+              onPostDeleted={closePost}
             />
           )}
+          {/* Room for the phone tab bar, which stays on top of the full-screen view. */}
+          {fullscreen && hasData && <div aria-hidden className="h-[calc(4.5rem+env(safe-area-inset-bottom))] md:hidden" />}
         </div>
       </div>
 
-      {hasData && (
+      {hasData && !fullscreen && (
         <button type="button" onClick={runCheck} disabled={checking} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-60">
           {checking ? (
             <Fragment>
@@ -242,7 +292,7 @@ export function InstagramSimulator({ snapshot, media, username, targetId, onData
           )}
         </button>
       )}
-      {hasData && checkError && <p className="text-xs text-destructive">{checkError}</p>}
+      {hasData && !fullscreen && checkError && <p className="text-xs text-destructive">{checkError}</p>}
     </div>
   );
 }
@@ -291,7 +341,7 @@ function PostView({
   return (
     <div className="flex min-h-full flex-col bg-background pb-10">
       <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/40 bg-background/95 px-4 py-3 backdrop-blur-sm">
-        <button type="button" onClick={onBack} aria-label="Back to profile">
+        <button type="button" onClick={onBack} aria-label="Back to profile" className="-m-1.5 rounded-full p-1.5 active:bg-muted">
           <ChevronLeft className="size-6" />
         </button>
         <h1 className="text-base font-bold tracking-tight">Posts</h1>

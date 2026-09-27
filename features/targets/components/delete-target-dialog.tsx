@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -86,7 +87,7 @@ export function DeleteTargetDialog({
       }
       onDeleted();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't delete.");
+      toast.error(friendlyError(err, "Couldn't delete."));
       onDeleteFailed?.();
     } finally {
       setBusy(false);

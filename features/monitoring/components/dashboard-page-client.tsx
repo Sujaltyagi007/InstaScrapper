@@ -7,6 +7,7 @@ import { useMetaStatus } from "@/features/account/hooks/use-meta-status";
 import { formatDistanceToNow } from "date-fns";
 import { EmptyState } from "@/components/common/empty-state";
 import { LoadingState } from "@/components/common/loading-state";
+import { ErrorState } from "@/components/common/error-state";
 import { EventTypeBadge } from "@/features/monitoring/components/event-type-badge";
 import { TargetStatusBadge } from "@/features/targets/components/target-status-badge";
 import { Radar, Bell, AlertTriangle, Activity, Plus } from "lucide-react";
@@ -16,7 +17,7 @@ import { SystemHealthBadge } from "@/features/monitoring/components/system-healt
 /** All the interactivity for the dashboard. Rendered by the server page below, inside an SWRConfig that already has targets/events for the first paint. */
 export function DashboardPageClient() {
   const { targets, loading: targetsLoading } = useTargets();
-  const { events, loading: eventsLoading } = useEvents();
+  const { events, loading: eventsLoading, error: eventsError, refresh: refreshEvents } = useEvents();
   const { metaStatus } = useMetaStatus();
   const metaMock = metaStatus?.mock ?? false;
 
@@ -90,8 +91,10 @@ export function DashboardPageClient() {
           <CardDescription>The latest detected changes across all your targets.</CardDescription>
         </CardHeader>
         <CardContent>
-          {eventsLoading ? (
-            <LoadingState />
+          {eventsLoading && !events ? (
+            <LoadingState rows={4} />
+          ) : eventsError && !events ? (
+            <ErrorState title="Couldn't load recent activity" message={eventsError} onRetry={refreshEvents} />
           ) : !events || events.length === 0 ? (
             <EmptyState
               icon={Bell}

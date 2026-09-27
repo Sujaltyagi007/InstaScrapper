@@ -16,6 +16,13 @@ export const TARGETS_KEY = "/api/targets";
 export const TARGET_QUOTA_KEY = "/api/account/quota";
 export const EVENTS_KEY = "/api/events";
 export const META_STATUS_KEY = "/api/meta/status";
+export const NICHE_KEY = "/api/niche";
+export const CHANNELS_KEY = "/api/notification-channels";
+export const SESSIONS_KEY = "/api/sessions";
+export const SETTINGS_KEY = "/api/settings";
+export const JOBS_KEY = "/api/jobs";
+export const STORAGE_KEY = "/api/storage";
+export const PUSH_KEY = "/api/push/subscriptions";
 
 export function targetDetailKey(targetId: string) {
   return `/api/targets/${targetId}`;

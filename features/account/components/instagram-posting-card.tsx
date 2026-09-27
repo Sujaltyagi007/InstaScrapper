@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -59,22 +60,22 @@ export function InstagramPostingCard() {
       toast.success("Instagram posting account disconnected.");
       refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to disconnect.");
+      toast.error(friendlyError(err, "Failed to disconnect."));
     }
   }
 
   const accounts = data?.accounts ?? [];
 
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader>
         <CardTitle>Instagram posting account</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           Connect the Instagram account your reels are posted to, through Instagram&apos;s official API. No
-          Facebook Page needed. The account must be a Creator or Business account.
+          Facebook Page needed. Must be a Creator or Business account.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3">
+      <CardContent className="flex flex-col gap-2">
         {data && !data.configured && (
           <Alert>
             <AlertTriangle />
@@ -89,7 +90,7 @@ export function InstagramPostingCard() {
           <p className="text-sm text-muted-foreground">No posting account connected yet.</p>
         ) : (
           accounts.map((account) => (
-            <div key={account.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+            <div key={account.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
               <div className="flex flex-col gap-1 text-sm">
                 <span className="flex items-center gap-2">
                   {account.status !== "ACTIVE" ? (
@@ -100,7 +101,7 @@ export function InstagramPostingCard() {
                     <CheckCircle2 className="size-4 text-emerald-600" />
                   )}
                   {account.username ? `@${account.username}` : account.igUserId}
-                  <Badge variant="outline">{account.postingPaused ? "PAUSED" : account.status}</Badge>
+                  <Badge variant="outline" className="text-[11px] px-1.5 py-0">{account.postingPaused ? "PAUSED" : account.status}</Badge>
                 </span>
                 {account.postingPaused && account.pausedReason && (
                   <span className="text-xs text-destructive">Posting paused: {account.pausedReason}</span>
@@ -115,16 +116,16 @@ export function InstagramPostingCard() {
                   </span>
                 )}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => disconnect(account.id)}>
-                <Trash2 /> Disconnect
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => disconnect(account.id)}>
+                <Trash2 className="size-3.5" /> Disconnect
               </Button>
             </div>
           ))
         )}
 
-        <Button asChild variant="outline" className="w-fit" disabled={!data?.configured}>
+        <Button asChild variant="outline" size="sm" className="w-fit" disabled={!data?.configured}>
           <a href="/api/ig/connect">
-            <Link2 /> {accounts.length > 0 ? "Reconnect" : "Connect Instagram"}
+            <Link2 className="size-3.5" /> {accounts.length > 0 ? "Reconnect" : "Connect Instagram"}
           </a>
         </Button>
       </CardContent>

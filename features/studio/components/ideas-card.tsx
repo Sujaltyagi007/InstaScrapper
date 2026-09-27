@@ -1,6 +1,10 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
-import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
+import { useCallback, useState } from "react";
+import { ErrorState } from "@/components/common/error-state";
+import { LoadingState } from "@/components/common/loading-state";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Check, ExternalLink, Loader2, Sparkles, X } from "lucide-react";
@@ -43,18 +47,11 @@ function sourceStat(s: IdeaSource): string {
 }
 
 export function IdeasCard({ onApproved }: { onApproved?: () => void }) {
-  const [ideas, setIdeas] = useState<Idea[] | null>(null);
+  const { data, error, isLoading, mutate } = useSWR<{ ideas: Idea[] }>("/api/ideas");
+  const ideas = data?.ideas ?? null;
   const [generating, setGenerating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-
-  const refresh = useCallback(async () => {
-    const res = await apiFetch<{ ideas: Idea[] }>("/api/ideas");
-    setIdeas(res.ideas);
-  }, []);
-
-  useEffect(() => {
-    refresh().catch(() => setIdeas([]));
-  }, [refresh]);
+  const refresh = useCallback(() => mutate(), [mutate]);
 
   async function generate() {
     setGenerating(true);
@@ -65,7 +62,7 @@ export function IdeasCard({ onApproved }: { onApproved?: () => void }) {
       toast.success(`${res.created} new idea${res.created === 1 ? "" : "s"} from ${res.candidatesConsidered} trending posts.`);
       await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to find ideas.");
+      toast.error(friendlyError(err, "Failed to find ideas."));
     } finally {
       setGenerating(false);
     }
@@ -73,14 +70,25 @@ export function IdeasCard({ onApproved }: { onApproved?: () => void }) {
 
   async function setStatus(id: string, status: "APPROVED" | "DISMISSED") {
     setBusyId(id);
+    // Optimistic: a dismissed idea disappears and an approved one flips at once.
+    mutate(
+      (cur) =>
+        cur && {
+          ideas:
+            status === "DISMISSED"
+              ? cur.ideas.filter((i) => i.id !== id)
+              : cur.ideas.map((i) => (i.id === id ? { ...i, status: "APPROVED" as const } : i)),
+        },
+      { revalidate: false },
+    );
     try {
       await apiFetch(`/api/ideas/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
       if (status === "APPROVED") toast.success("Approved. Writing the script and voiceover now.");
-      await refresh();
       if (status === "APPROVED") onApproved?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update idea.");
+      toast.error(friendlyError(err, "Couldn't update that idea."));
     } finally {
+      await refresh();
       setBusyId(null);
     }
   }
@@ -99,7 +107,11 @@ export function IdeasCard({ onApproved }: { onApproved?: () => void }) {
           {generating ? <Loader2 className="animate-spin" /> : <Sparkles />} Find trending ideas
         </Button>
 
-        {ideas === null ? null : ideas.length === 0 ? (
+        {isLoading && !ideas ? (
+          <LoadingState rows={2} />
+        ) : error && !ideas ? (
+          <ErrorState title="Couldn't load your ideas" message={friendlyError(error)} onRetry={refresh} />
+        ) : !ideas || ideas.length === 0 ? (
           <p className="text-sm text-muted-foreground">No ideas yet.</p>
         ) : (
           <ul className="flex flex-col gap-3">

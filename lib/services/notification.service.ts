@@ -151,9 +151,11 @@ export async function dispatchDueNotifications(limit = 25) {
         body: eventBody(notification.event),
         eventType: notification.event.type,
         targetUsername: notification.event.target.username,
+        appPath: `/targets/${notification.event.targetId}`,
+        tag: `${notification.event.targetId}:${notification.event.type}`,
       };
 
-      await dispatchToProvider(notification.provider, config, message);
+      await dispatchToProvider(notification.provider, config, message, { userId: notification.channel.userId });
 
       await prisma.notification.update({
         where: { id: notification.id },
@@ -183,16 +185,29 @@ export async function sendTestNotification(channelId: string, userId: string) {
   const channel = await prisma.notificationChannel.findFirstOrThrow({
     where: { id: channelId, userId },
   });
+  if (channel.provider === "WEBPUSH") {
+    // Says so when no device is subscribed, instead of "sent" to nobody.
+    const { sendPushTest } = await import("@/lib/services/push.service");
+    await sendPushTest(userId);
+    return;
+  }
   const config = decryptJson<ChannelConfig>({
     ciphertext: channel.encryptedConfig,
     iv: channel.encryptedConfigIv,
   });
-  await dispatchToProvider(channel.provider, config, {
-    title: "Test notification",
-    body: `This is a test delivery from your monitoring app's "${channel.name}" channel.`,
-    eventType: "TEST",
-    targetUsername: "test",
-  });
+  await dispatchToProvider(
+    channel.provider,
+    config,
+    {
+      title: "Test notification",
+      body: `This is a test delivery from your monitoring app's "${channel.name}" channel.`,
+      eventType: "TEST",
+      targetUsername: "test",
+      appPath: "/notifications",
+      tag: "test",
+    },
+    { userId: channel.userId },
+  );
 }
 
 export async function sendAccountAlert(
@@ -211,13 +226,20 @@ export async function sendAccountAlert(
         ciphertext: channel.encryptedConfig,
         iv: channel.encryptedConfigIv,
       });
-      await dispatchToProvider(channel.provider, config, {
-        title: message.title,
-        body: message.body,
-        url: message.url,
-        eventType: message.kind,
-        targetUsername: "account",
-      });
+      await dispatchToProvider(
+        channel.provider,
+        config,
+        {
+          title: message.title,
+          body: message.body,
+          url: message.url,
+          eventType: message.kind,
+          targetUsername: "account",
+          appPath: "/settings",
+          tag: `account:${message.kind}`,
+        },
+        { userId },
+      );
       sent += 1;
     } catch (err) {
       failed += 1;

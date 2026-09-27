@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import Link from "next/link";
 import { mutate } from "swr";
 import { toast } from "sonner";
@@ -22,7 +23,8 @@ import { DeleteTargetDialog } from "@/features/targets/components/delete-target-
 import { TargetsListSkeleton } from "@/features/targets/components/targets-list-skeleton";
 import { TargetStatusDot, targetStatusInfo } from "@/features/targets/components/target-status-badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu";
-import { AlertTriangle, ExternalLink, Loader2, MoreHorizontal, Pause, Play, Plus, Radar, RotateCw, Search, SearchX, Trash2, WifiOff, X } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Pause, Play, Plus, Radar, Search, SearchX, Trash2, X } from "lucide-react";
+import { ErrorState, InlineRefreshError } from "@/components/common/error-state";
 
 const ATTENTION_STATUSES = new Set([
   "RATE_LIMITED",
@@ -172,7 +174,7 @@ export function TargetsPageClient() {
       refresh();
       refreshQuota();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(friendlyError(err, "Something went wrong."));
       refresh(); // undo the optimistic flip with the real server state
     } finally {
       setBusyId(null);
@@ -208,7 +210,7 @@ export function TargetsPageClient() {
       refresh();
       refreshQuota();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(friendlyError(err, "Something went wrong."));
       refresh(); // undo the optimistic flip with the real server state
     } finally {
       setBulkBusy(false);
@@ -353,31 +355,12 @@ export function TargetsPageClient() {
 
       {/* List */}
       {/* A refresh failed but we still have the last list: keep showing it. */}
-      {error && targets && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-          <WifiOff className="size-3.5 shrink-0" />
-          <span className="min-w-0 flex-1">Couldn&apos;t refresh ({error}). Showing the last loaded list.</span>
-          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={loading} onClick={refresh}>
-            {loading ? <Loader2 className="animate-spin" /> : <RotateCw />} Retry
-          </Button>
-        </div>
-      )}
+      {error && targets && <InlineRefreshError message={error} onRetry={refresh} />}
 
       {firstLoad ? (
         <TargetsListSkeleton />
       ) : error && !targets ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-12 text-center">
-          <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <AlertTriangle className="size-5" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Couldn&apos;t load your targets</p>
-            <p className="max-w-sm text-xs text-muted-foreground">{error}</p>
-          </div>
-          <Button size="sm" variant="outline" disabled={loading} onClick={refresh}>
-            {loading ? <Loader2 className="animate-spin" /> : <RotateCw />} Try again
-          </Button>
-        </div>
+        <ErrorState title="Couldn't load your targets" message={error} onRetry={refresh} />
       ) : !hasTargets ? (
         <div className="rounded-xl border">
           <EmptyState icon={Radar} title="No targets yet"
@@ -543,7 +526,7 @@ export function TargetsPageClient() {
 
       {/* Floating bulk-action bar */}
       {selected.size > 0 && (
-        <div className="sticky bottom-3 z-30 mx-auto flex w-fit max-w-full items-center gap-1 rounded-full border bg-popover/95 p-1 pl-3 shadow-lg backdrop-blur">
+        <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-3 z-30mx-auto flex w-fit max-w-full items-center gap-1 rounded-full border bg-popover/95 p-1 pl-3 shadow-lg backdrop-blur">
           <span className="mr-1 whitespace-nowrap text-xs font-medium tabular-nums">{selected.size} selected</span>
           <Button size="sm" variant="ghost" className="h-8 rounded-full" disabled={bulkBusy}
             onClick={() => bulkAction("pause")} aria-label="Pause selected" >

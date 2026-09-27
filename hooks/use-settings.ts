@@ -1,6 +1,8 @@
 "use client";
-import { apiFetch } from "@/lib/fetcher";
-import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
+import { useCallback } from "react";
+import { SETTINGS_KEY } from "@/lib/swr-keys";
+import { friendlyError } from "@/lib/friendly-error";
 
 export interface UserSettings {
   id: string;
@@ -14,22 +16,7 @@ export interface UserSettings {
 }
 
 export function useSettings() {
-  const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await apiFetch<{ user: UserSettings }>("/api/settings");
-      setSettings(data.user);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { settings, loading, refresh };
+  const { data, error, isLoading, mutate } = useSWR<{ user: UserSettings }>(SETTINGS_KEY);
+  const refresh = useCallback(() => mutate(), [mutate]);
+  return { settings: data?.user ?? null, loading: isLoading, error: error ? friendlyError(error) : null, refresh };
 }

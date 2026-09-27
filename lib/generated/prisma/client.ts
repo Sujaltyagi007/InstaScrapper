@@ -47,6 +47,12 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
+ * Model PushSubscription
+ * One browser/device subscribed to Web Push. Delivered through the user's
+ * WEBPUSH NotificationChannel (which holds the event-type preferences).
+ */
+export type PushSubscription = Prisma.PushSubscriptionModel
+/**
  * Model MetaConnection
  * 
  */

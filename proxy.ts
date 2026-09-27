@@ -4,14 +4,19 @@ import { NextResponse } from "next/server";
 const PUBLIC_PATHS = ["/login", "/register"];
 
 export default withAuth(
-  function middleware(req: any) {
+  function middleware() {
     return NextResponse.next();
   }, {
   callbacks: {
-    authorized: ({ req, token }: { req: any; token: any }) => {
+    authorized: ({ req, token }) => {
       const { pathname } = req.nextUrl;
       const isPublic =
         PUBLIC_PATHS.includes(pathname) ||
+        // PWA files are fetched without a session (install check, service worker update).
+        pathname === "/sw.js" ||
+        pathname === "/offline.html" ||
+        pathname === "/manifest.webmanifest" ||
+        pathname.startsWith("/icons/") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/cron") ||
         pathname.startsWith("/api/dev") ||

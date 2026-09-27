@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline · IG Monitor</title>
+    <style>
+      :root { --bg: #ffffff; --fg: #0a0a0a; --muted: #6b7280; --border: #e5e7eb; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #0a0a0a; --fg: #fafafa; --muted: #9ca3af; --border: #262626; } }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+        background: var(--bg); color: var(--fg);
+        font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      .box { max-width: 320px; text-align: center; border: 1px dashed var(--border); border-radius: 16px; padding: 32px 20px; }
+      img { width: 48px; height: 48px; border-radius: 12px; }
+      h1 { font-size: 16px; margin: 16px 0 4px; }
+      p { margin: 0; color: var(--muted); font-size: 13px; }
+      button {
+        margin-top: 16px; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+        background: transparent; color: var(--fg); font: inherit; font-size: 13px; cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <img src="/icons/icon-192.png" alt="" />
+      <h1>You're offline</h1>
+      <p>IG Monitor needs a connection to show your accounts. We'll reload as soon as you're back online.</p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+    <script>
+      window.addEventListener("online", () => location.reload());
+    </script>
+  </body>
+</html>

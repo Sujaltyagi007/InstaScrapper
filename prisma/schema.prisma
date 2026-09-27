@@ -106,8 +106,29 @@ model User {
   targets               Target[]
   notificationChannels  NotificationChannel[]
   authRateLimits        AuthRateLimit[]
+  pushSubscriptions     PushSubscription[]
 
   @@map("users")
+}
+
+/// One browser/device subscribed to Web Push. Delivered through the user's
+/// WEBPUSH NotificationChannel (which holds the event-type preferences).
+model PushSubscription {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint      String    @unique
+  p256dh        String
+  auth          String
+  /// "Chrome on Windows" etc., derived from the user agent when subscribing.
+  label         String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+  lastSuccessAt DateTime?
+  failureCount  Int       @default(0)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 model MetaConnection {
@@ -517,6 +538,7 @@ enum NotificationProvider {
   DISCORD
   NTFY
   WEBHOOK
+  WEBPUSH
 }
 
 model NotificationChannel {

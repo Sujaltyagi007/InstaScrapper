@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
 import { useEffect, useState } from "react";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useJobs } from "@/features/monitoring/hooks/use-jobs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingState } from "@/components/common/loading-state";
+import { ErrorState } from "@/components/common/error-state";
 import { useSessions } from "@/features/sessions/hooks/use-sessions";
 import { useSettings, type UserSettings } from "@/hooks/use-settings";
 import { TargetLimitCard } from "@/features/account/components/target-limit-card";
@@ -29,9 +31,17 @@ const JOB_STATUS_VARIANT: Record<string, "secondary" | "success" | "destructive"
 };
 
 export default function SettingsPage() {
-  const { settings, loading: settingsLoading, refresh } = useSettings();
-  const { jobs, loading: jobsLoading, refresh: refreshJobs } = useJobs();
-  const { sessions, poolHealth, loading: sessionsLoading, refresh: refreshSessions, setSessionStatus, resetSession } = useSessions();
+  const { settings, error: settingsError, refresh } = useSettings();
+  const { jobs, loading: jobsLoading, error: jobsError, refresh: refreshJobs } = useJobs();
+  const {
+    sessions,
+    poolHealth,
+    loading: sessionsLoading,
+    error: sessionsError,
+    refresh: refreshSessions,
+    setSessionStatus,
+    resetSession,
+  } = useSessions();
   const { metaStatus, refresh: refreshMetaStatus } = useMetaStatus();
   const [addSessionOpen, setAddSessionOpen] = useState(false);
   const [testingSessionId, setTestingSessionId] = useState<string | null>(null);
@@ -55,7 +65,7 @@ export default function SettingsPage() {
       toast.success("Instagram account disconnected.");
       refreshMetaStatus();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to disconnect.");
+      toast.error(friendlyError(err, "Failed to disconnect."));
     }
   }
 
@@ -70,7 +80,7 @@ export default function SettingsPage() {
       else { toast.error(res.message || "Session test failed."); }
       refreshSessions();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to test session.");
+      toast.error(friendlyError(err, "Failed to test session."));
     } finally { setTestingSessionId(null); }
   }
 
@@ -80,38 +90,40 @@ export default function SettingsPage() {
       toast.success("Session deleted.");
       refreshSessions();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete session.");
+      toast.error(friendlyError(err, "Failed to delete session."));
     }
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">Manage your account, integrations, and data retention.</p>
       </div>
 
-      <Card>
+      <Card size="sm">
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <CardTitle>Instagram Sessions & Stealth Engine</CardTitle>
-              <CardDescription>
-                Bypass bot detection with browser TLS (JA3/JA4) impersonation, session reuse, and automatic checkpoint health probing.
+              <CardTitle>Instagram sessions & stealth engine</CardTitle>
+              <CardDescription className="text-xs">
+                Browser TLS impersonation, session reuse, and automatic checkpoint health probing.
               </CardDescription>
             </div>
             <Button onClick={() => setAddSessionOpen(true)} size="sm" className="w-fit">
-              <Plus className="size-4 mr-1.5" /> Connect Session
+              <Plus className="size-3.5 mr-1" /> Connect session
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {sessionsLoading ? (
-            <LoadingState />
+        <CardContent className="flex flex-col gap-2">
+          {sessionsLoading && !sessions ? (
+            <LoadingState rows={2} />
+          ) : sessionsError && !sessions ? (
+            <ErrorState title="Couldn't load your sessions" message={sessionsError} onRetry={refreshSessions} />
           ) : !sessions || sessions.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-6 text-center">
+            <div className="rounded-lg border border-dashed p-5 text-center">
               <p className="text-sm text-muted-foreground">
-                No Instagram sessions configured yet. Connect a session via browser import or cookies to enable stories, reels, private account detection, and follower churn.
+                No Instagram sessions yet. Connect one to enable stories, reels, private account detection, and follower churn.
               </p>
               <Button
                 variant="outline"
@@ -119,40 +131,39 @@ export default function SettingsPage() {
                 className="mt-3"
                 onClick={() => setAddSessionOpen(true)}
               >
-                <Plus className="size-4 mr-1.5" /> Connect Session
+                <Plus className="size-3.5 mr-1" /> Connect session
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {poolHealth && poolHealth.total > 0 && (
-                <div className="text-sm text-muted-foreground font-medium pb-2 border-b mb-1">
+                <div className="text-xs text-muted-foreground font-medium pb-1.5 border-b">
                   Pool: {poolHealth.active} active &middot; {poolHealth.cooling} cooling &middot; {poolHealth.flagged} flagged
                 </div>
               )}
               {sessions.map((sess) => (
                 <div
                   key={sess.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-4"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-3"
                 >
-                  <div className="flex flex-col gap-1">
-                    <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className="font-semibold text-sm">@{sess.username}</span>
-                      <Badge variant={
-                        sess.status === "ACTIVE" ? "success"
-                          : sess.status === "FLAGGED" ? "destructive" : "outline"
-                      }
+                      <Badge
+                        variant={
+                          sess.status === "ACTIVE" ? "success"
+                            : sess.status === "FLAGGED" ? "destructive" : "outline"
+                        }
+                        className="text-[11px] px-1.5 py-0"
                       >
                         {sess.status}
                       </Badge>
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
                         {sess.authMethod}
                       </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        TLS: {sess.impersonateTarget}
-                      </Badge>
                       {sess.proxyUrl && (
-                        <Badge variant="outline" className="text-xs">
-                          Proxy Active
+                        <Badge variant="outline" className="text-[11px] px-1.5 py-0">
+                          Proxy
                         </Badge>
                       )}
                     </div>
@@ -163,45 +174,49 @@ export default function SettingsPage() {
                       {sess.lastTestedAt
                         ? `Tested ${formatDistanceToNow(new Date(sess.lastTestedAt), { addSuffix: true })}`
                         : "Not tested yet"}
-                    </p>
-                    <p className="text-xs font-medium">
+                      {" · "}
                       {sess.status === "ACTIVE" && (!sess.cooldownUntil || new Date(sess.cooldownUntil) < new Date()) && "In rotation"}
                       {sess.status === "ACTIVE" && sess.cooldownUntil && new Date(sess.cooldownUntil) > new Date() && `Cooling down until ${new Date(sess.cooldownUntil).toLocaleTimeString()}`}
-                      {sess.status === "PAUSED" && "Paused (excluded from pool)"}
-                      {sess.status === "FLAGGED" && "Flagged — manual reset required"}
+                      {sess.status === "PAUSED" && "Paused"}
+                      {sess.status === "FLAGGED" && "Needs manual reset"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap justify-end">
+                  <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap justify-end">
                     {sess.status === "FLAGGED" && (
-                      <Button variant="outline" size="sm" onClick={() => resetSession(sess.id)}>
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => resetSession(sess.id).catch((err) => toast.error(friendlyError(err, "Couldn't reset that session.")))}>
                         Reset
                       </Button>
                     )}
                     {sess.status !== "FLAGGED" && (
-                      <Button variant="outline" size="sm" onClick={() => setSessionStatus(sess.id, sess.status === "ACTIVE" ? "PAUSED" : "ACTIVE")}>
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() =>
+                          setSessionStatus(sess.id, sess.status === "ACTIVE" ? "PAUSED" : "ACTIVE").catch((err) =>
+                            toast.error(friendlyError(err, "Couldn't update that session.")),
+                          )
+                        }>
                         {sess.status === "ACTIVE" ? "Pause" : "Resume"}
                       </Button>
                     )}
                     <Button
                       variant="outline"
                       size="sm"
+                      className="h-7 text-xs"
                       disabled={testingSessionId === sess.id}
                       onClick={() => handleTestSession(sess.id)}
                     >
                       {testingSessionId === sess.id ? (
-                        <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                        <Loader2 className="size-3 animate-spin mr-1" />
                       ) : (
-                        <Activity className="size-3.5 mr-1.5" />
+                        <Activity className="size-3 mr-1" />
                       )}
-                      Test Health
+                      Test
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:bg-destructive/10"
+                      className="h-7 w-7 text-destructive hover:bg-destructive/10"
                       onClick={() => handleDeleteSession(sess.id)}
                     >
-                      <Trash2 className="size-4" />
+                      <Trash2 className="size-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -219,16 +234,15 @@ export default function SettingsPage() {
 
       <InstagramPostingCard />
 
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <CardTitle>Instagram account (official API)</CardTitle>
-          <CardDescription>
-            Connect your own Instagram Business/Creator account. This is what reads the accounts you
-            monitor (Business Discovery) and what posts on your behalf — no proxy, no burner, and no
-            ban risk from the mechanism itself.
+          <CardDescription className="text-xs">
+            Reads the accounts you monitor (Business Discovery) and posts on your behalf — no proxy,
+            no burner, no ban risk from the mechanism itself.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">
+        <CardContent className="flex flex-col gap-2">
           {metaStatus && !metaStatus.configured && (
             <Alert>
               <AlertTriangle />
@@ -248,7 +262,7 @@ export default function SettingsPage() {
             </Alert>
           )}
           {metaStatus?.connection ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
               <div className="flex flex-col gap-1 text-sm">
                 <span className="flex items-center gap-2">
                   {metaStatus.connection.status === "ACTIVE" ? (
@@ -259,7 +273,7 @@ export default function SettingsPage() {
                   {metaStatus.connection.igUsername
                     ? `@${metaStatus.connection.igUsername}`
                     : metaStatus.connection.externalUserId}
-                  <Badge variant="outline">{metaStatus.connection.status}</Badge>
+                  <Badge variant="outline" className="text-[11px] px-1.5 py-0">{metaStatus.connection.status}</Badge>
                 </span>
                 {metaStatus.connection.expiresAt && (
                   <span className="text-xs text-muted-foreground">
@@ -268,8 +282,8 @@ export default function SettingsPage() {
                   </span>
                 )}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => disconnectMeta(metaStatus.connection!.id)}>
-                <Trash2 /> Disconnect
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => disconnectMeta(metaStatus.connection!.id)}>
+                <Trash2 className="size-3.5" /> Disconnect
               </Button>
             </div>
           ) : (
@@ -278,9 +292,9 @@ export default function SettingsPage() {
               to a Facebook Page you manage.
             </p>
           )}
-          <Button asChild variant="outline" className="w-fit" disabled={!metaStatus?.configured}>
+          <Button asChild variant="outline" size="sm" className="w-fit" disabled={!metaStatus?.configured}>
             <a href="/api/meta/connect">
-              <Link2 /> {metaStatus?.connection ? "Reconnect" : "Connect Instagram account"}
+              <Link2 className="size-3.5" /> {metaStatus?.connection ? "Reconnect" : "Connect Instagram account"}
             </a>
           </Button>
         </CardContent>
@@ -296,53 +310,59 @@ export default function SettingsPage() {
         />
       )}
 
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <CardTitle>Account</CardTitle>
         </CardHeader>
-        {settingsLoading || !settings ? (
+        {!settings ? (
           <CardContent>
-            <LoadingState />
+            {settingsError ? (
+              <ErrorState title="Couldn't load your account" message={settingsError} onRetry={refresh} />
+            ) : (
+              <LoadingState rows={2} />
+            )}
           </CardContent>
         ) : (
           <AccountForm key={settings.id} settings={settings} onSaved={refresh} />
         )}
       </Card>
 
-      <Card className="mb-6!">
+      <Card size="sm" className="mb-4!">
         <CardHeader>
           <CardTitle>System health</CardTitle>
-          <CardDescription>Recent background job runs (target checks, notifications, cleanup).</CardDescription>
+          <CardDescription className="text-xs">Recent background job runs (target checks, notifications, cleanup).</CardDescription>
         </CardHeader>
-        <CardContent className="px-0 sm:px-6">
-          {jobsLoading ? (
-            <LoadingState />
+        <CardContent className="px-0 sm:px-5">
+          {jobsLoading && !jobs ? (
+            <LoadingState rows={4} className="px-4 sm:px-0" />
+          ) : jobsError && !jobs ? (
+            <ErrorState title="Couldn't load recent jobs" message={jobsError} onRetry={refreshJobs} className="mx-4 sm:mx-0" />
           ) : !jobs || jobs.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">No job runs recorded yet.</p>
+            <p className="p-5 text-sm text-muted-foreground">No job runs recorded yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Target</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Ran</TableHead>
-                    <TableHead>Summary</TableHead>
+                    <TableHead className="h-8 text-xs">Type</TableHead>
+                    <TableHead className="h-8 text-xs">Target</TableHead>
+                    <TableHead className="h-8 text-xs">Status</TableHead>
+                    <TableHead className="h-8 text-xs">Ran</TableHead>
+                    <TableHead className="h-8 text-xs">Summary</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {jobs.map((job) => (
                     <TableRow key={job.id}>
-                      <TableCell>{job.type.replace(/_/g, " ")}</TableCell>
-                      <TableCell>{job.target ? `@${job.target.username}` : "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant={JOB_STATUS_VARIANT[job.status]}>{job.status}</Badge>
+                      <TableCell className="py-1.5 text-xs">{job.type.replace(/_/g, " ")}</TableCell>
+                      <TableCell className="py-1.5 text-xs">{job.target ? `@${job.target.username}` : "—"}</TableCell>
+                      <TableCell className="py-1.5">
+                        <Badge variant={JOB_STATUS_VARIANT[job.status]} className="text-[11px] px-1.5 py-0">{job.status}</Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="py-1.5 text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(job.runAt), { addSuffix: true })}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{job.resultSummary ?? job.lastError ?? "—"}</TableCell>
+                      <TableCell className="py-1.5 text-xs text-muted-foreground">{job.resultSummary ?? job.lastError ?? "—"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -373,7 +393,7 @@ function AccountForm({ settings, onSaved }: { settings: UserSettings; onSaved: (
       toast.success("Settings saved.");
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save settings.");
+      toast.error(friendlyError(err, "Failed to save settings."));
     } finally {
       setSaving(false);
     }
@@ -381,17 +401,17 @@ function AccountForm({ settings, onSaved }: { settings: UserSettings; onSaved: (
 
   return (
     <form onSubmit={saveAccount}>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <Label>Email</Label>
-          <Input value={settings.email} disabled />
+          <Label className="text-xs">Email</Label>
+          <Input value={settings.email} disabled className="h-9" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+          <Label htmlFor="name" className="text-xs">Name</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="h-9" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="retention">Data retention (days)</Label>
+          <Label htmlFor="retention" className="text-xs">Data retention (days)</Label>
           <Input
             id="retention"
             type="number"
@@ -399,6 +419,7 @@ function AccountForm({ settings, onSaved }: { settings: UserSettings; onSaved: (
             max={3650}
             value={retentionDays}
             onChange={(e) => setRetentionDays(Number(e.target.value))}
+            className="h-9 max-w-32"
           />
           <p className="text-xs text-muted-foreground">
             Event and snapshot history older than this is deleted automatically. Default is 90 days.
@@ -406,7 +427,7 @@ function AccountForm({ settings, onSaved }: { settings: UserSettings; onSaved: (
         </div>
       </CardContent>
       <CardFooter>
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" size="sm" disabled={saving}>
           {saving && <Loader2 className="animate-spin" />}
           Save changes
         </Button>

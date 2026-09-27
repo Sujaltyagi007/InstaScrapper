@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2, ShieldAlert } from "lucide-react";
@@ -67,7 +68,7 @@ export function AddSessionDialog({ open, onOpenChange, onCreated }: AddSessionDi
       close();
       onCreated();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to connect session.");
+      toast.error(friendlyError(err, "Failed to connect session."));
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,7 @@ export function AddSessionDialog({ open, onOpenChange, onCreated }: AddSessionDi
       if (err instanceof FetchError && err.code === "IG_CHECKPOINT") {
         setCheckpoint(err.message);
       } else {
-        toast.error(err instanceof Error ? err.message : "Login failed.");
+        toast.error(friendlyError(err, "Login failed."));
       }
     } finally {
       setLoading(false);

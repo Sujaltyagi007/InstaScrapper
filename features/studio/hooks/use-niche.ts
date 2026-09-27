@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/fetcher";
+import useSWR from "swr";
+import { useCallback } from "react";
+import { NICHE_KEY } from "@/lib/swr-keys";
+import { friendlyError } from "@/lib/friendly-error";
 
 export interface NicheAccountRow {
   id: string;
@@ -29,20 +31,7 @@ export interface NicheData {
 }
 
 export function useNiche() {
-  const [data, setData] = useState<NicheData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    try {
-      setData(await apiFetch<NicheData>("/api/niche"));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh().catch(() => undefined);
-  }, [refresh]);
-
-  return { data, loading, refresh };
+  const { data, error, isLoading, mutate } = useSWR<NicheData>(NICHE_KEY);
+  const refresh = useCallback(() => mutate(), [mutate]);
+  return { data: data ?? null, loading: isLoading, error: error ? friendlyError(error) : null, refresh };
 }

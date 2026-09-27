@@ -1,30 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/lib/fetcher";
+import useSWR from "swr";
+import { useCallback } from "react";
+import { CHANNELS_KEY } from "@/lib/swr-keys";
+import { friendlyError } from "@/lib/friendly-error";
 import type { NotificationChannelSummary } from "@/types/domain";
 
+export { CHANNELS_KEY };
+export type ChannelsPayload = { channels: NotificationChannelSummary[] };
+
 export function useNotificationChannels() {
-  const [channels, setChannels] = useState<NotificationChannelSummary[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await apiFetch<{ channels: NotificationChannelSummary[] }>("/api/notification-channels");
-      setChannels(data.channels);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load notification channels.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { channels, loading, error, refresh };
+  const { data, error, isLoading, mutate } = useSWR<ChannelsPayload>(CHANNELS_KEY);
+  const refresh = useCallback(() => mutate(), [mutate]);
+  return {
+    channels: data?.channels ?? null,
+    loading: isLoading,
+    error: error ? friendlyError(error) : null,
+    refresh,
+    mutate,
+  };
 }

@@ -1,4 +1,5 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ExternalLink, Loader2, Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import useSWR from "swr";
+import { useCallback, useRef, useState } from "react";
+import { ErrorState } from "@/components/common/error-state";
+import { LoadingState } from "@/components/common/loading-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Sound {
@@ -31,7 +35,8 @@ function duration(ms: number): string {
 }
 
 export function SoundBankCard() {
-  const [sounds, setSounds] = useState<Sound[] | null>(null);
+  const { data, error, isLoading, mutate } = useSWR<{ sounds: Sound[] }>("/api/sounds");
+  const sounds = data?.sounds ?? null;
   const [kind, setKind] = useState<"MUSIC" | "SFX">("MUSIC");
   const [url, setUrl] = useState("");
   const [licenseUrl, setLicenseUrl] = useState("");
@@ -39,14 +44,7 @@ export function SoundBankCard() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const refresh = useCallback(async () => {
-    const res = await apiFetch<{ sounds: Sound[] }>("/api/sounds");
-    setSounds(res.sounds);
-  }, []);
-
-  useEffect(() => {
-    refresh().catch(() => setSounds([]));
-  }, [refresh]);
+  const refresh = useCallback(() => mutate(), [mutate]);
 
   async function add() {
     const file = fileRef.current?.files?.[0];
@@ -80,7 +78,7 @@ export function SoundBankCard() {
       if (fileRef.current) fileRef.current.value = "";
       await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add the sound.");
+      toast.error(friendlyError(err, "Failed to add the sound."));
     } finally {
       setAdding(false);
     }
@@ -88,12 +86,14 @@ export function SoundBankCard() {
 
   async function remove(sound: Sound) {
     setDeleting(sound.id);
+    // Optimistic: the row disappears at once; a failure brings it back via the re-fetch.
+    mutate((cur) => cur && { sounds: cur.sounds.filter((s) => s.id !== sound.id) }, { revalidate: false });
     try {
       await apiFetch(`/api/sounds/${sound.id}`, { method: "DELETE" });
-      await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete the sound.");
+      toast.error(friendlyError(err, "Couldn't delete that sound."));
     } finally {
+      await refresh();
       setDeleting(null);
     }
   }
@@ -145,7 +145,11 @@ export function SoundBankCard() {
           </Button>
         </div>
 
-        {sounds === null ? null : sounds.length === 0 ? (
+        {isLoading && !sounds ? (
+          <LoadingState rows={3} />
+        ) : error && !sounds ? (
+          <ErrorState title="Couldn't load your sound bank" message={friendlyError(error)} onRetry={refresh} />
+        ) : !sounds || sounds.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No sounds yet. Reels will still be made, with the voice only. Around 20 tracks and 10 effects (whoosh, pop,
             riser, ding) give good variety.

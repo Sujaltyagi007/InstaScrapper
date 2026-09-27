@@ -1,6 +1,8 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
-import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -20,7 +22,9 @@ import {
   X,
 } from "lucide-react";
 import { apiFetch, FetchError } from "@/lib/fetcher";
-import { LoadingState } from "@/components/common/loading-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/common/error-state";
+import { CardSkeleton } from "@/components/common/page-skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,34 +37,23 @@ const POLL_MS = 6_000;
 export default function ReelPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [reel, setReel] = useState<Reel | null>(null);
-  const [missing, setMissing] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [postedUrl, setPostedUrl] = useState("");
 
-  const refresh = useCallback(async () => {
-    try {
-      const res = await apiFetch<{ reel: Reel }>(`/api/reels/${id}`);
-      setReel(res.reel);
-    } catch (err) {
-      if (err instanceof FetchError && err.status === 404) setMissing(true);
-    }
-  }, [id]);
+  // Polls while the reel is still being made; SWR pauses it while the tab is hidden.
+  const { data, error, mutate } = useSWR<{ reel: Reel }>(`/api/reels/${id}`, {
+    refreshInterval: (latest) => (latest && ACTIVE_STAGES.has(latest.reel.stage) ? POLL_MS : 0),
+  });
+  const reel = data?.reel ?? null;
+  const missing = error instanceof FetchError && error.status === 404;
+  const loadError = error && !missing ? friendlyError(error) : null;
+  const refresh = useCallback(() => mutate(), [mutate]);
   const refreshQuietly = useCallback(() => {
-    refresh().catch(() => {});
-  }, [refresh]);
-
-  useEffect(() => {
-    refreshQuietly();
-  }, [refreshQuietly]);
-
+    mutate().catch(() => {});
+  }, [mutate]);
   const active = reel ? ACTIVE_STAGES.has(reel.stage) : false;
-  useEffect(() => {
-    if (!active) return;
-    const timer = setInterval(refreshQuietly, POLL_MS);
-    return () => clearInterval(timer);
-  }, [active, refreshQuietly]);
-  useReelAutorun(reel ? [reel] : null, refreshQuietly);
+  const reelList = useMemo(() => (reel ? [reel] : null), [reel]);
+  useReelAutorun(reelList, refreshQuietly);
 
   async function run(label: string, action: () => Promise<string | void>) {
     setBusy(label);
@@ -69,7 +62,7 @@ export default function ReelPage() {
       if (message) toast.success(message);
       await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(friendlyError(err, "Something went wrong."));
     } finally {
       setBusy(null);
     }
@@ -88,19 +81,36 @@ export default function ReelPage() {
     }
   }
 
-  if (missing) {
+  if (missing || (!reel && loadError)) {
     return (
-      <div className="flex flex-col gap-4">
-        <p className="text-sm text-muted-foreground">This reel doesn&apos;t exist any more.</p>
-        <Button variant="outline" className="w-fit" asChild>
-          <Link href="/studio">
-            <ArrowLeft /> Back to Studio
-          </Link>
-        </Button>
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+        <Link href="/studio" className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline">
+          <ArrowLeft className="size-4" /> Studio
+        </Link>
+        {missing ? (
+          <ErrorState title="This reel isn't here anymore" message="It may have been deleted. Your other reels are in Studio." />
+        ) : (
+          <ErrorState title="Couldn't load this reel" message={loadError} onRetry={refresh} />
+        )}
       </div>
     );
   }
-  if (!reel) return <LoadingState />;
+  if (!reel) {
+    return (
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4" aria-busy="true" aria-label="Loading reel">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-7 w-2/3" />
+        <div className="flex gap-2">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-5 w-10 rounded-full" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,240px)_1fr]">
+          <Skeleton className="aspect-9/16 w-full rounded-xl" />
+          <CardSkeleton rows={4} />
+        </div>
+      </div>
+    );
+  }
 
   const finished = reel.stage === "READY" || reel.stage === "POSTED";
   const locked = reel.running || busy !== null;

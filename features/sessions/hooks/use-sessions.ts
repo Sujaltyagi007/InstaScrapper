@@ -1,6 +1,9 @@
 "use client";
+import useSWR from "swr";
+import { useCallback } from "react";
 import { apiFetch } from "@/lib/fetcher";
-import { useCallback, useEffect, useState } from "react";
+import { SESSIONS_KEY } from "@/lib/swr-keys";
+import { friendlyError } from "@/lib/friendly-error";
 
 export interface InstagramSessionSummary {
   id: string;
@@ -27,53 +30,45 @@ export interface PoolHealth {
   nextAvailableAt: string | null;
 }
 
+type SessionsPayload = { sessions: InstagramSessionSummary[]; poolHealth: PoolHealth };
+
 export function useSessions() {
-  const [sessions, setSessions] = useState<InstagramSessionSummary[] | null>(null);
-  const [poolHealth, setPoolHealth] = useState<PoolHealth | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, error, isLoading, mutate } = useSWR<SessionsPayload>(SESSIONS_KEY);
+  const refresh = useCallback(() => mutate(), [mutate]);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await apiFetch<{ sessions: InstagramSessionSummary[], poolHealth: PoolHealth }>("/api/sessions");
-      setSessions(data.sessions);
-      setPoolHealth(data.poolHealth);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load Instagram sessions.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const patch = useCallback(
+    async (id: string, body: object, optimistic: Partial<InstagramSessionSummary>) => {
+      // Optimistic: the row changes at once; the re-fetch after corrects it either way.
+      mutate(
+        (cur) => cur && { ...cur, sessions: cur.sessions.map((s) => (s.id === id ? { ...s, ...optimistic } : s)) },
+        { revalidate: false },
+      );
+      try {
+        await apiFetch(`/api/sessions/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+      } finally {
+        await mutate();
+      }
+    },
+    [mutate],
+  );
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  const setSessionStatus = useCallback(
+    (id: string, status: "ACTIVE" | "PAUSED") => patch(id, { status }, { status }),
+    [patch],
+  );
+  const resetSession = useCallback(
+    (id: string) => patch(id, { resetFlag: true }, { status: "ACTIVE", lastErrorMessage: null }),
+    [patch],
+  );
 
-  const setSessionStatus = useCallback(async (id: string, status: "ACTIVE" | "PAUSED") => {
-    try {
-      await apiFetch(`/api/sessions/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-      });
-      await refresh();
-    } catch (err) {
-      throw err;
-    }
-  }, [refresh]);
-
-  const resetSession = useCallback(async (id: string) => {
-    try {
-      await apiFetch(`/api/sessions/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ resetFlag: true }),
-      });
-      await refresh();
-    } catch (err) {
-      throw err;
-    }
-  }, [refresh]);
-
-  return { sessions, poolHealth, loading, error, refresh, setSessionStatus, resetSession };
+  return {
+    sessions: data?.sessions ?? null,
+    poolHealth: data?.poolHealth ?? null,
+    loading: isLoading,
+    error: error ? friendlyError(error) : null,
+    refresh,
+    mutate,
+    setSessionStatus,
+    resetSession,
+  };
 }

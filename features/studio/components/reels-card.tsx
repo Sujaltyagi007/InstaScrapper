@@ -1,5 +1,7 @@
 "use client";
+import { friendlyError } from "@/lib/friendly-error";
 
+import useSWR from "swr";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -15,40 +17,37 @@ import { ReelStageBadge, ReelSteps } from "./reel-status";
 const POLL_MS = 8_000;
 
 export function ReelsCard({ refreshKey }: { refreshKey: number }) {
-  const [reels, setReels] = useState<Reel[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-
-  const refresh = useCallback(async () => {
-    const res = await apiFetch<{ reels: Reel[] }>("/api/reels");
-    setReels(res.reels);
-  }, []);
+  // Keep polling while anything is still being worked on (SWR pauses it while the tab is hidden).
+  const { data, mutate } = useSWR<{ reels: Reel[] }>("/api/reels", {
+    refreshInterval: (latest) => (latest?.reels.some((r) => ACTIVE_STAGES.has(r.stage)) ? POLL_MS : 0),
+  });
+  const reels = data?.reels ?? null;
+  const refresh = useCallback(() => mutate(), [mutate]);
   const refreshQuietly = useCallback(() => {
-    refresh().catch(() => {});
-  }, [refresh]);
+    mutate().catch(() => {});
+  }, [mutate]);
 
+  // A newly approved idea (refreshKey bump) means a new reel exists: fetch now.
   useEffect(() => {
-    refresh().catch(() => setReels([]));
-  }, [refresh, refreshKey]);
-
-  // Keep polling while anything is still being worked on.
-  const active = reels?.some((r) => ACTIVE_STAGES.has(r.stage)) ?? false;
-  useEffect(() => {
-    if (!active) return;
-    const timer = setInterval(refreshQuietly, POLL_MS);
-    return () => clearInterval(timer);
-  }, [active, refreshQuietly]);
+    if (refreshKey > 0) mutate().catch(() => {});
+  }, [refreshKey, mutate]);
   useReelAutorun(reels, refreshQuietly);
 
   async function act(reel: Reel, action: "retry" | "delete") {
     setBusyId(reel.id);
+    // Optimistic delete: the row goes at once; the re-fetch after restores it on failure.
+    if (action === "delete") {
+      mutate((cur) => cur && { reels: cur.reels.filter((r) => r.id !== reel.id) }, { revalidate: false });
+    }
     try {
       if (action === "retry") await apiFetch(`/api/reels/${reel.id}/retry`, { method: "POST" });
       else await apiFetch(`/api/reels/${reel.id}`, { method: "DELETE" });
       if (action === "delete") toast.success("Reel deleted. Its idea is back in the list.");
-      await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(friendlyError(err, "Couldn't do that. Please try again."));
     } finally {
+      await refresh();
       setBusyId(null);
     }
   }

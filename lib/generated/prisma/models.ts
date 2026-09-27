@@ -9,6 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/User'
+export type * from './models/PushSubscription'
 export type * from './models/MetaConnection'
 export type * from './models/IgAccount'
 export type * from './models/MediaMetricSnapshot'
