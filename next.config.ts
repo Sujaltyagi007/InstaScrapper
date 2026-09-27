@@ -20,8 +20,10 @@ const stealthRoutes = [
   "/api/niche/suggestions",
 ];
 
-// Routes that spawn ffmpeg. They need the binary and the caption font shipped
-// with the function; neither is reachable through a static import the tracer follows.
+// Routes that burn captions. They need the font shipped with the function, which
+// no import reaches. The ffmpeg binary is NOT listed: the tracer already ships it
+// via its real .pnpm path, and "node_modules/ffmpeg-static/ffmpeg" goes through
+// pnpm's symlink, which Vercel rejects ("files in symlinked directories").
 const renderRoutes = [
   "/api/dev/render-test",
   "/api/dev/voice-test",
@@ -38,7 +40,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     ...Object.fromEntries(stealthRoutes.map((route) => [route, ["lib/native/**/*"]])),
     ...Object.fromEntries(
-      renderRoutes.map((route) => [route, ["node_modules/ffmpeg-static/ffmpeg", "lib/render/fonts/**/*"]]),
+      renderRoutes.map((route) => [route, ["lib/render/fonts/**/*"]]),
     ),
   },
 };
