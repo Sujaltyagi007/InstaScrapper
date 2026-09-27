@@ -1,5 +1,5 @@
-import { Menu, Radar } from "lucide-react";
 import "../globals.css"
+import { Menu, Radar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { ThemeToggle } from "@/components/common/theme-toggle";
@@ -39,7 +39,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 min-h-0 flex flex-col">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6  min-h-0 flex flex-col">
           <div className="mx-auto w-full max-w-6xl flex-1 flex flex-col min-h-0">{children}</div>
         </main>
       </div>

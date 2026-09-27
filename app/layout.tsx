@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppSessionProvider } from "@/components/providers/session-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { SWRProvider } from "@/components/providers/swr-provider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -23,8 +24,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
           <AppSessionProvider>
-            {children}
-            <Toaster position="top-right" />
+            <SWRProvider>
+              {children}
+              <Toaster position="top-right" />
+            </SWRProvider>
           </AppSessionProvider>
         </ThemeProvider>
       </body>

@@ -178,7 +178,16 @@ export async function createTarget(params: {
 export async function listTargets(userId: string) {
   return prisma.target.findMany({
     where: { userId },
-    include: { monitor: true, _count: { select: { events: true } } },
+    include: {
+      monitor: true,
+      _count: { select: { events: true } },
+      // Latest name + picture for the list's avatar.
+      snapshots: {
+        take: 1,
+        orderBy: { capturedAt: "desc" },
+        select: { name: true, profilePictureStorageUrl: true, followersCount: true },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 }

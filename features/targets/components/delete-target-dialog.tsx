@@ -22,24 +22,43 @@ interface DeleteTargetDialogProps {
   onOpenChange: (open: boolean) => void;
   /** One target, or several for a bulk delete. */
   targets: { id: string; username: string }[];
+  /** Fires immediately, before the request — hide the rows and close the dialog without waiting. */
+  onOptimisticDelete?: (ids: string[]) => void;
+  /** Fires once the request actually succeeds (bulk: even if some of it failed). */
   onDeleted: () => void;
+  /** Fires if the request fails outright — undo the optimistic removal (e.g. re-fetch the list). */
+  onDeleteFailed?: () => void;
 }
 
 /**
  * Asks what happens to an account's stored files when it's deleted: delete
  * them too, or keep them (they stay on the Storage page under the account's name).
  */
-export function DeleteTargetDialog({ open, onOpenChange, targets, onDeleted }: DeleteTargetDialogProps) {
+export function DeleteTargetDialog({
+  open,
+  onOpenChange,
+  targets,
+  onOptimisticDelete,
+  onDeleted,
+  onDeleteFailed,
+}: DeleteTargetDialogProps) {
   const [deleteFiles, setDeleteFiles] = useState(false);
   const [busy, setBusy] = useState(false);
   const [usage, setUsage] = useState<{ files: number; bytes: number } | null>(null);
+  const [wasOpen, setWasOpen] = useState(open);
   const single = targets.length === 1 ? targets[0] : null;
 
+  // Reset the choice each time the dialog opens (during render, not in an effect).
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setDeleteFiles(false);
+      setUsage(null);
+    }
+  }
+
   useEffect(() => {
-    if (!open) return;
-    setDeleteFiles(false);
-    setUsage(null);
-    if (!single) return;
+    if (!open || !single) return;
     apiFetch<{ files: number; bytes: number }>(`/api/targets/${single.id}/files`)
       .then(setUsage)
       .catch(() => setUsage(null));
@@ -47,6 +66,10 @@ export function DeleteTargetDialog({ open, onOpenChange, targets, onDeleted }: D
 
   async function confirm() {
     setBusy(true);
+    // Hide the rows and close right away — don't make the user watch a spinner
+    // for a delete they already confirmed. A failure below undoes this.
+    onOptimisticDelete?.(targets.map((t) => t.id));
+    onOpenChange(false);
     try {
       if (single) {
         await apiFetch(`/api/targets/${single.id}?deleteFiles=${deleteFiles ? "1" : "0"}`, { method: "DELETE" });
@@ -56,13 +79,15 @@ export function DeleteTargetDialog({ open, onOpenChange, targets, onDeleted }: D
           method: "POST",
           body: JSON.stringify({ ids: targets.map((t) => t.id), action: "delete", deleteFiles }),
         });
+        // A partial bulk failure leaves some targets not actually deleted; onDeleted's
+        // refresh() below re-fetches the true list, so any survivor reappears.
         if (res.count < res.total) toast.warning(`${res.count} of ${res.total} deleted; the rest failed.`);
         else toast.success(`${res.count} account${res.count === 1 ? "" : "s"} deleted.`);
       }
-      onOpenChange(false);
       onDeleted();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't delete.");
+      onDeleteFailed?.();
     } finally {
       setBusy(false);
     }

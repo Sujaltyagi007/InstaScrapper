@@ -1,7 +1,7 @@
 "use client";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -13,27 +13,13 @@ import { LoadingState } from "@/components/common/loading-state";
 import { useSessions } from "@/features/sessions/hooks/use-sessions";
 import { useSettings, type UserSettings } from "@/hooks/use-settings";
 import { TargetLimitCard } from "@/features/account/components/target-limit-card";
+import { useMetaStatus } from "@/features/account/hooks/use-meta-status";
 import { AddSessionDialog } from "@/features/sessions/components/add-session-dialog";
 import { CheckScheduleCard } from "@/features/account/components/check-schedule-card";
 import { InstagramPostingCard } from "@/features/account/components/instagram-posting-card";
 import { Loader2, Link2, CheckCircle2, AlertTriangle, Plus, Activity, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-
-interface MetaStatus {
-  mock: boolean;
-  mode: "MOCK" | "GRAPH" | "STEALTH";
-  configured: boolean;
-  connection: {
-    id: string;
-    status: string;
-    accountType: string | null;
-    igUsername: string | null;
-    externalUserId: string;
-    expiresAt: string | null;
-    lastVerifiedAt: string | null;
-  } | null;
-}
 
 const JOB_STATUS_VARIANT: Record<string, "secondary" | "success" | "destructive" | "outline"> = {
   QUEUED: "secondary",
@@ -46,17 +32,9 @@ export default function SettingsPage() {
   const { settings, loading: settingsLoading, refresh } = useSettings();
   const { jobs, loading: jobsLoading, refresh: refreshJobs } = useJobs();
   const { sessions, poolHealth, loading: sessionsLoading, refresh: refreshSessions, setSessionStatus, resetSession } = useSessions();
-  const [metaStatus, setMetaStatus] = useState<MetaStatus | null>(null);
+  const { metaStatus, refresh: refreshMetaStatus } = useMetaStatus();
   const [addSessionOpen, setAddSessionOpen] = useState(false);
   const [testingSessionId, setTestingSessionId] = useState<string | null>(null);
-
-  const refreshMetaStatus = useCallback(() => {
-    apiFetch<MetaStatus>("/api/meta/status").then(setMetaStatus).catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
-    refreshMetaStatus();
-  }, [refreshMetaStatus]);
 
   // The OAuth callback redirects back here with the outcome in the query string,
   // then we strip it so a refresh doesn't replay the same toast.

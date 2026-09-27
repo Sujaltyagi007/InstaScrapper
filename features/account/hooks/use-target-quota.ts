@@ -1,6 +1,10 @@
 "use client";
+import useSWR from "swr";
+import { useCallback } from "react";
 import { apiFetch } from "@/lib/fetcher";
-import { useCallback, useEffect, useState } from "react";
+import { TARGET_QUOTA_KEY } from "@/lib/swr-keys";
+
+export { TARGET_QUOTA_KEY };
 
 export interface TargetQuota {
   used: number;
@@ -14,28 +18,20 @@ export interface TargetQuota {
 }
 
 export function useTargetQuota() {
-  const [quota, setQuota] = useState<TargetQuota | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, mutate } = useSWR<{ quota: TargetQuota }>(TARGET_QUOTA_KEY);
 
-  const refresh = useCallback(async () => {
-    try {
-      const data = await apiFetch<{ quota: TargetQuota }>("/api/account/quota");
-      setQuota(data.quota);
-    } catch { setQuota(null); }
-    finally { setLoading(false); }
-  }, []);
+  const updateLimit = useCallback(
+    async (maxTargets: number) => {
+      const res = await apiFetch<{ quota: TargetQuota }>(TARGET_QUOTA_KEY, {
+        method: "PATCH",
+        body: JSON.stringify({ maxTargets }),
+      });
+      await mutate(res, { revalidate: false });
+      return res.quota;
+    },
+    [mutate],
+  );
+  const refresh = useCallback(() => mutate(), [mutate]);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  const updateLimit = useCallback(async (maxTargets: number) => {
-    const data = await apiFetch<{ quota: TargetQuota }>("/api/account/quota", {
-      method: "PATCH",
-      body: JSON.stringify({ maxTargets }),
-    });
-    setQuota(data.quota);
-    return data.quota;
-  }, []);
-  return { quota, loading, refresh, updateLimit };
+  return { quota: data?.quota ?? null, loading: isLoading, refresh, updateLimit };
 }

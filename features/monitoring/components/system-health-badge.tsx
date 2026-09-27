@@ -1,6 +1,7 @@
 "use client";
+import useSWR from "swr";
 import { cn } from "@/lib/utils";
-import { Fragment, useEffect, useState, useTransition } from "react";
+import { Fragment, useState } from "react";
 import { Activity, CheckCircle2, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
 
 interface HealthData {
@@ -15,56 +16,32 @@ interface HealthData {
   };
 }
 
+const FALLBACK: HealthData = {
+  status: "healthy",
+  timestamp: new Date(0).toISOString(),
+  durationMs: 0,
+  subsystems: {
+    database: { status: "up", latencyMs: 25 },
+    storage: { provider: "imagekit.io", status: "checking...", enabled: true },
+    scraperEngine: { mode: "STEALTH", status: "ready" },
+  },
+};
+
+/**
+ * The same "/api/health" cache key this app uses everywhere else, so this
+ * badge (rendered once in the desktop sidebar, again in the mobile menu)
+ * shares one request instead of firing two, and won't re-fetch if the
+ * targets/settings pages already refreshed it moments ago.
+ */
 export function SystemHealthBadge({ direction = "up" }: { direction?: "up" | "down" } = {}) {
-  const [data, setData] = useState<HealthData>({
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    durationMs: 0,
-    subsystems: {
-      database: { status: "up", latencyMs: 25 },
-      storage: { provider: "imagekit.io", status: "checking...", enabled: true },
-      scraperEngine: { mode: "STEALTH", status: "ready" },
-    },
+  const { data, isValidating, mutate } = useSWR<HealthData>("/api/health", {
+    refreshInterval: 20000, // paused automatically while the tab is hidden
   });
-  const [isPending, startTransition] = useTransition();
   const [showDetails, setShowDetails] = useState(false);
 
-  const checkHealth = async () => {
-    try {
-      const res = await fetch("/api/health", { cache: "no-store" });
-      if (!res.ok) {
-        setData((prev) => ({ ...prev, status: "degraded" }));
-        return;
-      }
-      const json: HealthData = await res.json();
-      startTransition(() => {
-        setData(json);
-      });
-    } catch {
-      startTransition(() => {
-        setData((prev) => ({ ...prev, status: "down" }));
-      });
-    }
-  };
-
-  useEffect(() => {
-    checkHealth();
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") { checkHealth(); }
-    }, 20000);
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") { checkHealth(); }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, []);
-
-  const isHealthy = data.status === "healthy" || data.status === "operational";
-  const isDown = data.status === "down";
+  const health = data ?? FALLBACK;
+  const isHealthy = health.status === "healthy" || health.status === "operational";
+  const isDown = health.status === "down";
 
   return (
     <div className="relative">
@@ -79,7 +56,7 @@ export function SystemHealthBadge({ direction = "up" }: { direction?: "up" | "do
           </span>
         </div>
         <span className="text-[10px] text-muted-foreground/80 font-mono">
-          {data.subsystems?.database?.latencyMs ? `${data.subsystems.database.latencyMs}ms` : "Live"}
+          {health.subsystems?.database?.latencyMs ? `${health.subsystems.database.latencyMs}ms` : "Live"}
         </span>
       </button>
 
@@ -90,8 +67,8 @@ export function SystemHealthBadge({ direction = "up" }: { direction?: "up" | "do
               <Activity className="size-3.5 text-primary" />
               <span>Real-Time Health Status</span>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); checkHealth(); }} className="text-muted-foreground hover:text-foreground transition" title="Refresh health check">
-              <RefreshCw className={cn("size-3", isPending && "animate-spin")} />
+            <button onClick={(e) => { e.stopPropagation(); mutate(); }} className="text-muted-foreground hover:text-foreground transition" title="Refresh health check">
+              <RefreshCw className={cn("size-3", isValidating && "animate-spin")} />
             </button>
           </div>
 
@@ -99,10 +76,10 @@ export function SystemHealthBadge({ direction = "up" }: { direction?: "up" | "do
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Postgres Database</span>
               <span className="flex items-center gap-1 font-mono font-medium">
-                {data.subsystems?.database.status === "up" ? (
+                {health.subsystems?.database.status === "up" ? (
                   <Fragment>
                     <CheckCircle2 className="size-3 text-emerald-500" />
-                    <span>{data.subsystems?.database.latencyMs}ms</span>
+                    <span>{health.subsystems?.database.latencyMs}ms</span>
                   </Fragment>
                 ) : (
                   <Fragment>
@@ -116,7 +93,7 @@ export function SystemHealthBadge({ direction = "up" }: { direction?: "up" | "do
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">ImageKit Storage</span>
               <span className="flex items-center gap-1 font-mono">
-                {data.subsystems?.storage.enabled ? (
+                {health.subsystems?.storage.enabled ? (
                   <Fragment>
                     <CheckCircle2 className="size-3 text-emerald-500" />
                     <span className="text-emerald-500">Active</span>
@@ -133,7 +110,7 @@ export function SystemHealthBadge({ direction = "up" }: { direction?: "up" | "do
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Scraper Mode</span>
               <span className="font-mono text-muted-foreground font-medium">
-                {data.subsystems?.scraperEngine.mode ?? "STEALTH"}
+                {health.subsystems?.scraperEngine.mode ?? "STEALTH"}
               </span>
             </div>
           </div>

@@ -1,47 +1,55 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
+import { useCallback, useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
 import type { EventWithTarget } from "@/types/domain";
+import { EVENTS_KEY } from "@/lib/swr-keys";
+
+export { EVENTS_KEY };
+
+type EventsPage = { events: EventWithTarget[]; nextCursor: string | null };
 
 export function useEvents() {
-  const [events, setEvents] = useState<EventWithTarget[] | null>(null);
+  // Pages beyond the first are appended client-side; SWR only caches page 1
+  // (shared with anything else that reads /api/events, e.g. the dashboard).
+  const { data, error, isLoading, mutate } = useSWR<EventsPage>(EVENTS_KEY);
+  const [extra, setExtra] = useState<EventWithTarget[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [cursorInitialized, setCursorInitialized] = useState<string | null | undefined>(undefined);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await apiFetch<{ events: EventWithTarget[]; nextCursor: string | null }>("/api/events");
-      setEvents(data.events);
-      setNextCursor(data.nextCursor);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load events.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // First page's cursor arrives async; seed our "more pages" cursor once.
+  if (data && cursorInitialized === undefined) {
+    setCursorInitialized(data.nextCursor);
+    setNextCursor(data.nextCursor);
+  }
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const data = await apiFetch<{ events: EventWithTarget[]; nextCursor: string | null }>(
-        `/api/events?cursor=${nextCursor}`
-      );
-      setEvents((prev) => [...(prev ?? []), ...data.events]);
-      setNextCursor(data.nextCursor);
+      const page = await apiFetch<EventsPage>(`/api/events?cursor=${nextCursor}`);
+      setExtra((prev) => [...prev, ...page.events]);
+      setNextCursor(page.nextCursor);
     } finally {
       setLoadingMore(false);
     }
   }, [nextCursor, loadingMore]);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  const refresh = useCallback(async () => {
+    setExtra([]);
+    setCursorInitialized(undefined);
+    await mutate();
+  }, [mutate]);
 
-  return { events, loading, loadingMore, error, refresh, loadMore, hasMore: Boolean(nextCursor) };
+  return {
+    events: data ? [...data.events, ...extra] : null,
+    loading: isLoading,
+    loadingMore,
+    error: error instanceof Error ? error.message : error ? "Failed to load events." : null,
+    refresh,
+    loadMore,
+    hasMore: Boolean(nextCursor),
+  };
 }

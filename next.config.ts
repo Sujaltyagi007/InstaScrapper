@@ -11,7 +11,9 @@ const stealthRoutes = [
   "/api/sessions/test",
   "/api/sessions/login",
   "/api/meta/status",
-  "/api/health",
+  // /api/health used to import provider-factory.ts (which pulls in the whole
+  // scraping engine) just to read a mode string. It no longer imports it, so
+  // it doesn't need the native TLS binary and isn't listed here anymore.
   "/api/media/\\[id\\]/redownload",
   "/api/media/\\[id\\]/repost",
   "/api/cron/cleanup",

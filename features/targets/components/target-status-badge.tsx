@@ -21,12 +21,52 @@ const STATUS_CONFIG: Record<string, { label: string; variant: NonNullable<BadgeP
   INVALID: { label: "Invalid", variant: "destructive" },
 };
 
+const DOT_COLOR: Record<NonNullable<BadgeProps["variant"]>, string> = {
+  success: "bg-emerald-500",
+  warning: "bg-amber-500",
+  destructive: "bg-red-500",
+  secondary: "bg-muted-foreground/50",
+  outline: "bg-muted-foreground/30",
+  default: "bg-primary",
+};
+
+export function targetStatusInfo(status: string) {
+  const config = STATUS_CONFIG[status] ?? { label: status, variant: "outline" as const };
+  return { label: config.label, dotClass: DOT_COLOR[config.variant] };
+}
+
+function statusTooltip({ nextRunAt, errorMessage }: Omit<TargetStatusBadgeProps, "status">) {
+  return (
+    errorMessage ||
+    (nextRunAt ? `Retrying ${formatDistanceToNow(new Date(nextRunAt), { addSuffix: true })}` : undefined)
+  );
+}
+
+/** Compact status: a coloured dot plus the label (label hidden with `dotOnly`). */
+export function TargetStatusDot({
+  status,
+  nextRunAt,
+  errorMessage,
+  dotOnly = false,
+  className,
+}: TargetStatusBadgeProps & { dotOnly?: boolean; className?: string }) {
+  const { label, dotClass } = targetStatusInfo(status);
+  const tooltip = statusTooltip({ nextRunAt, errorMessage });
+  return (
+    <span
+      title={tooltip ?? label}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap text-xs ${tooltip ? "cursor-help" : ""} ${className ?? ""}`}
+    >
+      <span className={`size-2 shrink-0 rounded-full ${dotClass}`} aria-hidden />
+      {dotOnly ? <span className="sr-only">{label}</span> : label}
+    </span>
+  );
+}
+
 export function TargetStatusBadge({ status, nextRunAt, errorMessage }: TargetStatusBadgeProps) {
   const config = STATUS_CONFIG[status] ?? { label: status, variant: "outline" as const };
 
-  const tooltip =
-    errorMessage ||
-    (nextRunAt ? `Retrying ${formatDistanceToNow(new Date(nextRunAt), { addSuffix: true })}` : undefined);
+  const tooltip = statusTooltip({ nextRunAt, errorMessage });
 
   return (
     <Badge variant={config.variant} title={tooltip} className={tooltip ? "cursor-help" : undefined}>

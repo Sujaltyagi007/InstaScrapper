@@ -1,47 +1,51 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getStorageProvider } from "@/lib/storage";
-import { getProviderMode } from "@/lib/meta/provider-factory";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Same logic as provider-factory.ts::getProviderMode(), duplicated here on
+ * purpose: that module statically imports StealthMetaProvider (the whole
+ * scraping engine, incl. the native TLS client) just to report a mode string
+ * nothing else in this route needs. This route is polled every 20s by every
+ * open tab (system-health-badge.tsx), so it stays free of that weight.
+ */
+function providerModeLabel(): string {
+  const mode = process.env.INSTAGRAM_PROVIDER_MODE?.toUpperCase();
+  if (mode === "STEALTH" || mode === "GRAPH" || mode === "MOCK") return mode;
+  if (process.env.META_APP_ID && process.env.META_APP_SECRET) return "GRAPH";
+  if (process.env.MOCK_META_API === "false") return "STEALTH";
+  return "MOCK";
+}
 
 export async function GET() {
   const start = Date.now();
 
-  // 1. Database check with latency timing
-  let dbStatus: "up" | "down" = "down";
-  let dbLatencyMs = 0;
-  let dbError: string | null = null;
-
-  try {
-    const dbStart = Date.now();
-    await prisma.$queryRaw`SELECT 1`;
-    dbLatencyMs = Date.now() - dbStart;
-    dbStatus = "up";
-  } catch (err) {
-    dbError = err instanceof Error ? err.message : String(err);
-  }
-
-  // 2. Media storage status
-  const storageProvider = getStorageProvider();
-  const r2Configured = storageProvider !== "none";
-
-  // 3. Instagram Scraper Engine Mode
-  const engineMode = getProviderMode();
-
-  // 4. Latest background job / worker activity
-  let lastJobTimestamp: string | null = null;
-  let lastJobStatus: string | null = null;
-  try {
-    const lastJob = await prisma.job.findFirst({
+  // DB check + latest job, run as one round trip instead of two in sequence.
+  const dbStart = Date.now();
+  const [dbResult, jobResult] = await Promise.allSettled([
+    prisma.$queryRaw`SELECT 1`,
+    prisma.job.findFirst({
       orderBy: { runAt: "desc" },
       select: { runAt: true, status: true, type: true },
-    });
-    if (lastJob) {
-      lastJobTimestamp = lastJob.runAt.toISOString();
-      lastJobStatus = `${lastJob.type}:${lastJob.status}`;
-    }
-  } catch { }
+    }),
+  ]);
+  const dbLatencyMs = Date.now() - dbStart;
+
+  const dbStatus: "up" | "down" = dbResult.status === "fulfilled" ? "up" : "down";
+  const dbError = dbResult.status === "rejected" ? String(dbResult.reason) : null;
+
+  let lastJobTimestamp: string | null = null;
+  let lastJobStatus: string | null = null;
+  if (jobResult.status === "fulfilled" && jobResult.value) {
+    lastJobTimestamp = jobResult.value.runAt.toISOString();
+    lastJobStatus = `${jobResult.value.type}:${jobResult.value.status}`;
+  }
+
+  const storageProvider = getStorageProvider();
+  const r2Configured = storageProvider !== "none";
+  const engineMode = providerModeLabel();
 
   // Aggregate overall status
   const isHealthy = dbStatus === "up";

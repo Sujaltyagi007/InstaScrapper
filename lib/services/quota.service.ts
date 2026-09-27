@@ -35,16 +35,16 @@ function normalizeStoredLevel(value: string | null): QuotaLevel {
 }
 
 export async function getTargetQuota(userId: string, db: Db = prisma): Promise<TargetQuota> {
-  const user = await db.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: { role: true, maxTargets: true },
-  });
+  // Independent of each other, so one round trip instead of two in sequence.
+  const [user, used] = await Promise.all([
+    db.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true, maxTargets: true } }),
+    db.target.count({ where: { userId } }),
+  ]);
   const policy = policyFor(user.role).targets;
 
   // Clamp in case the stored value predates a policy change (e.g. a role's
   // maxLimit was lowered): the policy always wins over the stored number.
   const limit = Math.min(Math.max(user.maxTargets, policy.minLimit), policy.maxLimit);
-  const used = await db.target.count({ where: { userId } });
   const warnAt = Math.max(1, Math.ceil(limit * policy.warnRatio));
 
   return {

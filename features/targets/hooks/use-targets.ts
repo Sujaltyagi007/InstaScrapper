@@ -1,29 +1,26 @@
 "use client";
+import useSWR from "swr";
+import { useCallback } from "react";
 import { getTargets } from "../api/target.api";
 import type { TargetWithMonitor } from "@/types/domain";
-import { useCallback, useEffect, useState } from "react";
+import { TARGETS_KEY } from "@/lib/swr-keys";
 
+export { TARGETS_KEY };
+
+/**
+ * Same shape as before (targets/loading/error/refresh) so callers don't
+ * change, now backed by SWR: cached across navigations, deduped across
+ * components, and correctable with `mutate(TARGETS_KEY, ...)` for optimistic
+ * updates (see the targets page).
+ */
 export function useTargets() {
-  const [targets, setTargets] = useState<TargetWithMonitor[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, error, isLoading, mutate } = useSWR<{ targets: TargetWithMonitor[] }>(TARGETS_KEY, getTargets);
+  const refresh = useCallback(() => mutate(), [mutate]);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getTargets();
-      setTargets(data.targets);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load targets.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { targets, loading, error, refresh };
+  return {
+    targets: data?.targets ?? null,
+    loading: isLoading,
+    error: error instanceof Error ? error.message : error ? "Failed to load targets." : null,
+    refresh,
+  };
 }

@@ -1,6 +1,11 @@
 import type { Target, Monitor, Event, Media, NotificationChannel, Job, TargetSnapshot } from "@prisma/client";
 
-export type TargetWithMonitor = Target & { monitor: Monitor | null; _count?: { events: number } };
+export type TargetWithMonitor = Target & {
+  monitor: Monitor | null;
+  _count?: { events: number };
+  /** Latest snapshot only (list view). */
+  snapshots?: Pick<TargetSnapshot, "name" | "profilePictureStorageUrl" | "followersCount">[];
+};
 
 export type TargetDetail = Target & {
   monitor: Monitor | null;
