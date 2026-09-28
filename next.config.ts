@@ -15,6 +15,7 @@ const stealthRoutes = [
   // scraping engine) just to read a mode string. It no longer imports it, so
   // it doesn't need the native TLS binary and isn't listed here anymore.
   "/api/media/\\[id\\]/redownload",
+  "/api/media/\\[id\\]/full",
   "/api/media/\\[id\\]/repost",
   "/api/cron/cleanup",
   "/api/niche",

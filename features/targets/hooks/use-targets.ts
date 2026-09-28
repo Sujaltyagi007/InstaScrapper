@@ -15,7 +15,13 @@ export { TARGETS_KEY };
  * updates (see the targets page). `error` is already user-friendly text.
  */
 export function useTargets() {
-  const { data, error, isLoading, mutate } = useSWR<{ targets: TargetWithMonitor[] }>(TARGETS_KEY, getTargets);
+  const { data, error, isLoading, mutate } = useSWR<{ targets: TargetWithMonitor[] }>(TARGETS_KEY, getTargets, {
+    // A freshly-added target's first check runs in the background (see
+    // POST /api/targets); poll briefly so its status/media show up without a
+    // manual refresh, then stop as soon as every target has been checked at
+    // least once (lastCheckedAt is set on every outcome, success or failure).
+    refreshInterval: (latest) => (latest?.targets.some((t) => !t.lastCheckedAt) ? 4000 : 0),
+  });
   const refresh = useCallback(() => mutate(), [mutate]);
 
   return {

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { ACCENT_STYLE_TAG_ID, ACCENT_STORAGE_KEY } from "@/lib/theme/accent";
 import { AppSessionProvider } from "@/components/providers/session-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SWRProvider } from "@/components/providers/swr-provider";
@@ -36,9 +37,25 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+// The accent color is per-user (DB-backed, see /api/settings), not per-request
+// data — reading it here with auth()+prisma would make Next treat the ENTIRE
+// app as dynamic (this layout wraps every route, including /login and every
+// other page that's otherwise statically prerendered). Per Next's own
+// guidance for exactly this situation ("Preventing flash before hydration" →
+// "Themes"), the fix is an inline script that reads a client-side mirror
+// (localStorage, kept in sync by lib/theme/apply-accent-client.ts) and builds
+// the <style> tag before first paint. No server data, so every page stays
+// static; a brand-new browser just sees the default theme until the first
+// /api/settings fetch reconciles it (same one-time cost next-themes already
+// accepts for the light/dark toggle).
+const ACCENT_BOOT_SCRIPT = `(function(){try{var c=localStorage.getItem(${JSON.stringify(ACCENT_STORAGE_KEY)});if(c){var s=document.createElement("style");s.id=${JSON.stringify(ACCENT_STYLE_TAG_ID)};s.textContent=c;document.head.appendChild(s);}}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${outfit.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: ACCENT_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
           <AppSessionProvider>

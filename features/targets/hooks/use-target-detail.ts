@@ -9,7 +9,12 @@ import { friendlyError } from "@/lib/friendly-error";
 export { targetDetailKey };
 
 export function useTargetDetail(targetId: string) {
-  const { data, error, isLoading, mutate } = useSWR<{ target: TargetDetail }>(targetDetailKey(targetId));
+  const { data, error, isLoading, mutate } = useSWR<{ target: TargetDetail }>(targetDetailKey(targetId), {
+    // Same reasoning as use-targets.ts: poll until this target's first check
+    // (queued right after creation) lands, so new media / follower counts
+    // appear without a manual refresh.
+    refreshInterval: (latest) => (latest && !latest.target.lastCheckedAt ? 4000 : 0),
+  });
   const refresh = useCallback(() => mutate(), [mutate]);
 
   return {

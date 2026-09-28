@@ -14,7 +14,27 @@ import { TargetStatusBadge } from "@/features/targets/components/target-status-b
 import { SystemHealthBadge } from "@/features/monitoring/components/system-health-badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-/** All the interactivity for the dashboard. Rendered by the server page below, inside an SWRConfig that already has targets/events for the first paint. */
+
+
+const DashboardPageCardsData = [
+  {
+    title: "Targets monitored",
+    icon: <Radar className="size-4 text-muted-foreground" />,
+    value: (targets: any) => targets?.length ?? "—",
+  },
+  {
+    title: "Actively polling",
+    icon: <Activity className="size-4 text-muted-foreground" />,
+    value: (targets: any) => targets?.filter((t: any) => t.status === "ACTIVE").length ?? "—",
+  },
+  {
+    title: "Need attention",
+    icon: <Bell className="size-4 text-muted-foreground" />,
+    value: (targets: any) =>
+      targets?.filter((t: any) => ["AUTH_ERROR", "REAUTH_REQUIRED", "NOT_FOUND", "UNAVAILABLE"].includes(t.status)).length ?? "—",
+  },
+];
+
 export function DashboardPageClient() {
   const { targets, loading: targetsLoading } = useTargets();
   const { events, loading: eventsLoading, error: eventsError, refresh: refreshEvents } = useEvents();
@@ -56,33 +76,19 @@ export function DashboardPageClient() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Targets monitored</CardTitle>
-            <Radar className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{targets?.length ?? "—"}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Actively polling</CardTitle>
-            <Activity className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{activeCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Need attention</CardTitle>
-            <Bell className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{attentionCount}</div>
-          </CardContent>
-        </Card>
+        {DashboardPageCardsData.map((card) => (
+          <Card key={card.title} className="flex flex-row justify-between pr-2 md:px-0 items-baseline  " >
+            <CardHeader className="flex-row items-end justify-between space-y-0 pb-2">
+              <div className="flex items-center gap-2">
+                {card.icon}
+                <CardTitle className="text-sm font-medium text-nowrap text-muted-foreground">{card.title}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{card.value(targets)}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card>
@@ -91,14 +97,10 @@ export function DashboardPageClient() {
           <CardDescription>The latest detected changes across all your targets.</CardDescription>
         </CardHeader>
         <CardContent>
-          {eventsLoading && !events ? (
-            <LoadingState rows={4} />
-          ) : eventsError && !events ? (
+          {eventsLoading && !events ? (<LoadingState rows={4} />) : eventsError && !events ? (
             <ErrorState title="Couldn't load recent activity" message={eventsError} onRetry={refreshEvents} />
           ) : !events || events.length === 0 ? (
-            <EmptyState
-              icon={Bell}
-              title="No activity yet"
+            <EmptyState icon={Bell} title="No activity yet"
               description="Once you add a target, detected changes will show up here."
             />
           ) : (

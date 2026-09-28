@@ -30,6 +30,14 @@ self.addEventListener("activate", (event) => {
 
 // Page navigations only: network (with navigation preload), offline page if that fails.
 self.addEventListener("fetch", (event) => {
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin === self.location.origin && requestUrl.pathname === "/icons/icon-192.png") {
+    event.respondWith(
+      caches.open(OFFLINE_CACHE).then((cache) => cache.match(requestUrl.pathname).then((cached) => cached || fetch(event.request))),
+    );
+    return;
+  }
+
   if (event.request.mode !== "navigate") return;
   event.respondWith(
     (async () => {

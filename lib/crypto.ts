@@ -57,3 +57,18 @@ export function encryptJson(value: unknown): EncryptedPayload {
 export function decryptJson<T>(payload: EncryptedPayload): T {
   return JSON.parse(decryptSecret(payload)) as T;
 }
+
+/**
+ * `null` in, `null` out — for optional secrets like a session's proxy URL,
+ * which embeds a Webshare username/password and must never sit in the DB (or
+ * a GET response) as plain text, the way cookies already don't.
+ */
+export function encryptOptional(value: string | null | undefined): EncryptedPayload | null {
+  if (!value) return null;
+  return encryptSecret(value);
+}
+
+export function decryptOptional(payload: { ciphertext: string | null; iv: string | null } | null | undefined): string | null {
+  if (!payload?.ciphertext || !payload.iv) return null;
+  return decryptSecret({ ciphertext: payload.ciphertext, iv: payload.iv });
+}

@@ -261,6 +261,9 @@ export async function deleteUserFiles(userId: string, fileIds: string[]): Promis
       data: { storageUrl: null, storageFileId: null, isExpired: true, expiredAt: now },
     }),
     prisma.media.updateMany({ where: { target: { userId }, thumbnailFileId: ids }, data: { thumbnailUrl: null, thumbnailFileId: null } }),
+    // A carousel item whose file is gone has nothing left to show.
+    prisma.mediaAsset.deleteMany({ where: { media: { target: { userId } }, storageFileId: ids } }),
+    prisma.mediaAsset.updateMany({ where: { media: { target: { userId } }, thumbnailFileId: ids }, data: { thumbnailUrl: null, thumbnailFileId: null } }),
     prisma.targetSnapshot.updateMany({
       where: { target: { userId }, profilePictureStorageId: ids },
       data: { profilePictureStorageId: null, profilePictureStorageUrl: null },

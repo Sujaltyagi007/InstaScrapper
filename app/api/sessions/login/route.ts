@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireUserId, jsonError, ApiError } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { encryptJson } from "@/lib/crypto";
+import { encryptProxyUrl } from "@/lib/meta/proxy-secret";
 import { instagramLogin, instagramSubmitTwoFactor, type LoginResult } from "@/lib/meta/instagram-login";
 import { stealthTestSession } from "@/lib/meta/stealth-engine-bridge";
 
@@ -39,7 +40,7 @@ async function storeSession(userId: string, username: string, cookies: Record<st
       authMethod: "PASSWORD_LOGIN",
       encryptedCookies: encrypted.ciphertext,
       encryptedCookiesIv: encrypted.iv,
-      proxyUrl: proxyUrl || null,
+      ...encryptProxyUrl(proxyUrl || null),
       impersonateTarget: "auto",
       status: test.flagged ? "FLAGGED" : "ACTIVE",
       lastTestedAt: new Date(),

@@ -1,9 +1,4 @@
-/**
- * The file register: one StoredFile row per object this app put in storage,
- * owned by a user. The storage facade records uploads and forgets deletions
- * here, so the Storage page can list and delete a user's files even after the
- * target they came from is gone.
- */
+
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
@@ -15,7 +10,6 @@ export interface FileOwner {
   label?: string;
   targetId?: string | null;
   targetUsername?: string | null;
-  /** Perceptual hash for images that should be de-duplicated visually (profile pictures). */
   visualHash?: string | null;
 }
 
@@ -23,7 +17,6 @@ export function contentHash(buffer: Buffer): string {
   return crypto.createHash("sha1").update(buffer).digest("hex");
 }
 
-/** Never fails the upload it describes: a missing row is repaired by the next sync. */
 export async function recordStoredFile(params: {
   owner: FileOwner;
   fileId: string;

@@ -20,8 +20,18 @@ export type InstagramSessionModel = runtime.Types.Result.DefaultSelection<Prisma
 
 export type AggregateInstagramSession = {
   _count: InstagramSessionCountAggregateOutputType | null
+  _avg: InstagramSessionAvgAggregateOutputType | null
+  _sum: InstagramSessionSumAggregateOutputType | null
   _min: InstagramSessionMinAggregateOutputType | null
   _max: InstagramSessionMaxAggregateOutputType | null
+}
+
+export type InstagramSessionAvgAggregateOutputType = {
+  usesToday: number | null
+}
+
+export type InstagramSessionSumAggregateOutputType = {
+  usesToday: number | null
 }
 
 export type InstagramSessionMinAggregateOutputType = {
@@ -35,6 +45,7 @@ export type InstagramSessionMinAggregateOutputType = {
   deviceId: string | null
   impersonateTarget: string | null
   proxyUrl: string | null
+  proxyUrlIv: string | null
   status: string | null
   lastTestedAt: Date | null
   lastSuccessAt: Date | null
@@ -43,6 +54,10 @@ export type InstagramSessionMinAggregateOutputType = {
   updatedAt: Date | null
   lastUsedAt: Date | null
   cooldownUntil: Date | null
+  usesToday: number | null
+  usesDay: string | null
+  transport: string | null
+  homeWorkerDeviceId: string | null
 }
 
 export type InstagramSessionMaxAggregateOutputType = {
@@ -56,6 +71,7 @@ export type InstagramSessionMaxAggregateOutputType = {
   deviceId: string | null
   impersonateTarget: string | null
   proxyUrl: string | null
+  proxyUrlIv: string | null
   status: string | null
   lastTestedAt: Date | null
   lastSuccessAt: Date | null
@@ -64,6 +80,10 @@ export type InstagramSessionMaxAggregateOutputType = {
   updatedAt: Date | null
   lastUsedAt: Date | null
   cooldownUntil: Date | null
+  usesToday: number | null
+  usesDay: string | null
+  transport: string | null
+  homeWorkerDeviceId: string | null
 }
 
 export type InstagramSessionCountAggregateOutputType = {
@@ -77,6 +97,7 @@ export type InstagramSessionCountAggregateOutputType = {
   deviceId: number
   impersonateTarget: number
   proxyUrl: number
+  proxyUrlIv: number
   status: number
   lastTestedAt: number
   lastSuccessAt: number
@@ -85,9 +106,21 @@ export type InstagramSessionCountAggregateOutputType = {
   updatedAt: number
   lastUsedAt: number
   cooldownUntil: number
+  usesToday: number
+  usesDay: number
+  transport: number
+  homeWorkerDeviceId: number
   _all: number
 }
 
+
+export type InstagramSessionAvgAggregateInputType = {
+  usesToday?: true
+}
+
+export type InstagramSessionSumAggregateInputType = {
+  usesToday?: true
+}
 
 export type InstagramSessionMinAggregateInputType = {
   id?: true
@@ -100,6 +133,7 @@ export type InstagramSessionMinAggregateInputType = {
   deviceId?: true
   impersonateTarget?: true
   proxyUrl?: true
+  proxyUrlIv?: true
   status?: true
   lastTestedAt?: true
   lastSuccessAt?: true
@@ -108,6 +142,10 @@ export type InstagramSessionMinAggregateInputType = {
   updatedAt?: true
   lastUsedAt?: true
   cooldownUntil?: true
+  usesToday?: true
+  usesDay?: true
+  transport?: true
+  homeWorkerDeviceId?: true
 }
 
 export type InstagramSessionMaxAggregateInputType = {
@@ -121,6 +159,7 @@ export type InstagramSessionMaxAggregateInputType = {
   deviceId?: true
   impersonateTarget?: true
   proxyUrl?: true
+  proxyUrlIv?: true
   status?: true
   lastTestedAt?: true
   lastSuccessAt?: true
@@ -129,6 +168,10 @@ export type InstagramSessionMaxAggregateInputType = {
   updatedAt?: true
   lastUsedAt?: true
   cooldownUntil?: true
+  usesToday?: true
+  usesDay?: true
+  transport?: true
+  homeWorkerDeviceId?: true
 }
 
 export type InstagramSessionCountAggregateInputType = {
@@ -142,6 +185,7 @@ export type InstagramSessionCountAggregateInputType = {
   deviceId?: true
   impersonateTarget?: true
   proxyUrl?: true
+  proxyUrlIv?: true
   status?: true
   lastTestedAt?: true
   lastSuccessAt?: true
@@ -150,6 +194,10 @@ export type InstagramSessionCountAggregateInputType = {
   updatedAt?: true
   lastUsedAt?: true
   cooldownUntil?: true
+  usesToday?: true
+  usesDay?: true
+  transport?: true
+  homeWorkerDeviceId?: true
   _all?: true
 }
 
@@ -191,6 +239,18 @@ export type InstagramSessionAggregateArgs<ExtArgs extends runtime.Types.Extensio
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: InstagramSessionAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: InstagramSessionSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: InstagramSessionMinAggregateInputType
@@ -221,6 +281,8 @@ export type InstagramSessionGroupByArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   _count?: InstagramSessionCountAggregateInputType | true
+  _avg?: InstagramSessionAvgAggregateInputType
+  _sum?: InstagramSessionSumAggregateInputType
   _min?: InstagramSessionMinAggregateInputType
   _max?: InstagramSessionMaxAggregateInputType
 }
@@ -236,6 +298,7 @@ export type InstagramSessionGroupByOutputType = {
   deviceId: string | null
   impersonateTarget: string
   proxyUrl: string | null
+  proxyUrlIv: string | null
   status: string
   lastTestedAt: Date | null
   lastSuccessAt: Date | null
@@ -244,7 +307,13 @@ export type InstagramSessionGroupByOutputType = {
   updatedAt: Date
   lastUsedAt: Date | null
   cooldownUntil: Date | null
+  usesToday: number
+  usesDay: string | null
+  transport: string
+  homeWorkerDeviceId: string | null
   _count: InstagramSessionCountAggregateOutputType | null
+  _avg: InstagramSessionAvgAggregateOutputType | null
+  _sum: InstagramSessionSumAggregateOutputType | null
   _min: InstagramSessionMinAggregateOutputType | null
   _max: InstagramSessionMaxAggregateOutputType | null
 }
@@ -278,6 +347,7 @@ export type InstagramSessionWhereInput = {
   deviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   impersonateTarget?: Prisma.StringFilter<"InstagramSession"> | string
   proxyUrl?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  proxyUrlIv?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   status?: Prisma.StringFilter<"InstagramSession"> | string
   lastTestedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
   lastSuccessAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
@@ -286,8 +356,14 @@ export type InstagramSessionWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
   lastUsedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
   cooldownUntil?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
+  usesToday?: Prisma.IntFilter<"InstagramSession"> | number
+  usesDay?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  transport?: Prisma.StringFilter<"InstagramSession"> | string
+  homeWorkerDeviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   monitors?: Prisma.MonitorListRelationFilter
+  homeWorkerDevice?: Prisma.XOR<Prisma.HomeWorkerDeviceNullableScalarRelationFilter, Prisma.HomeWorkerDeviceWhereInput> | null
+  homeWorkerJobs?: Prisma.HomeWorkerJobListRelationFilter
 }
 
 export type InstagramSessionOrderByWithRelationInput = {
@@ -301,6 +377,7 @@ export type InstagramSessionOrderByWithRelationInput = {
   deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  proxyUrlIv?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   lastTestedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -309,8 +386,14 @@ export type InstagramSessionOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   cooldownUntil?: Prisma.SortOrderInput | Prisma.SortOrder
+  usesToday?: Prisma.SortOrder
+  usesDay?: Prisma.SortOrderInput | Prisma.SortOrder
+  transport?: Prisma.SortOrder
+  homeWorkerDeviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   monitors?: Prisma.MonitorOrderByRelationAggregateInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceOrderByWithRelationInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobOrderByRelationAggregateInput
 }
 
 export type InstagramSessionWhereUniqueInput = Prisma.AtLeast<{
@@ -327,6 +410,7 @@ export type InstagramSessionWhereUniqueInput = Prisma.AtLeast<{
   deviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   impersonateTarget?: Prisma.StringFilter<"InstagramSession"> | string
   proxyUrl?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  proxyUrlIv?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   status?: Prisma.StringFilter<"InstagramSession"> | string
   lastTestedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
   lastSuccessAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
@@ -335,8 +419,14 @@ export type InstagramSessionWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
   lastUsedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
   cooldownUntil?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
+  usesToday?: Prisma.IntFilter<"InstagramSession"> | number
+  usesDay?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  transport?: Prisma.StringFilter<"InstagramSession"> | string
+  homeWorkerDeviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   monitors?: Prisma.MonitorListRelationFilter
+  homeWorkerDevice?: Prisma.XOR<Prisma.HomeWorkerDeviceNullableScalarRelationFilter, Prisma.HomeWorkerDeviceWhereInput> | null
+  homeWorkerJobs?: Prisma.HomeWorkerJobListRelationFilter
 }, "id">
 
 export type InstagramSessionOrderByWithAggregationInput = {
@@ -350,6 +440,7 @@ export type InstagramSessionOrderByWithAggregationInput = {
   deviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  proxyUrlIv?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   lastTestedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -358,9 +449,15 @@ export type InstagramSessionOrderByWithAggregationInput = {
   updatedAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   cooldownUntil?: Prisma.SortOrderInput | Prisma.SortOrder
+  usesToday?: Prisma.SortOrder
+  usesDay?: Prisma.SortOrderInput | Prisma.SortOrder
+  transport?: Prisma.SortOrder
+  homeWorkerDeviceId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.InstagramSessionCountOrderByAggregateInput
+  _avg?: Prisma.InstagramSessionAvgOrderByAggregateInput
   _max?: Prisma.InstagramSessionMaxOrderByAggregateInput
   _min?: Prisma.InstagramSessionMinOrderByAggregateInput
+  _sum?: Prisma.InstagramSessionSumOrderByAggregateInput
 }
 
 export type InstagramSessionScalarWhereWithAggregatesInput = {
@@ -377,6 +474,7 @@ export type InstagramSessionScalarWhereWithAggregatesInput = {
   deviceId?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
   impersonateTarget?: Prisma.StringWithAggregatesFilter<"InstagramSession"> | string
   proxyUrl?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
+  proxyUrlIv?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"InstagramSession"> | string
   lastTestedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"InstagramSession"> | Date | string | null
   lastSuccessAt?: Prisma.DateTimeNullableWithAggregatesFilter<"InstagramSession"> | Date | string | null
@@ -385,6 +483,10 @@ export type InstagramSessionScalarWhereWithAggregatesInput = {
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"InstagramSession"> | Date | string
   lastUsedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"InstagramSession"> | Date | string | null
   cooldownUntil?: Prisma.DateTimeNullableWithAggregatesFilter<"InstagramSession"> | Date | string | null
+  usesToday?: Prisma.IntWithAggregatesFilter<"InstagramSession"> | number
+  usesDay?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
+  transport?: Prisma.StringWithAggregatesFilter<"InstagramSession"> | string
+  homeWorkerDeviceId?: Prisma.StringNullableWithAggregatesFilter<"InstagramSession"> | string | null
 }
 
 export type InstagramSessionCreateInput = {
@@ -397,6 +499,7 @@ export type InstagramSessionCreateInput = {
   deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
+  proxyUrlIv?: string | null
   status?: string
   lastTestedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
@@ -405,8 +508,13 @@ export type InstagramSessionCreateInput = {
   updatedAt?: Date | string
   lastUsedAt?: Date | string | null
   cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
   user: Prisma.UserCreateNestedOneWithoutInstagramSessionsInput
   monitors?: Prisma.MonitorCreateNestedManyWithoutInstagramSessionInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceCreateNestedOneWithoutSessionsInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobCreateNestedManyWithoutSessionInput
 }
 
 export type InstagramSessionUncheckedCreateInput = {
@@ -420,6 +528,7 @@ export type InstagramSessionUncheckedCreateInput = {
   deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
+  proxyUrlIv?: string | null
   status?: string
   lastTestedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
@@ -428,7 +537,12 @@ export type InstagramSessionUncheckedCreateInput = {
   updatedAt?: Date | string
   lastUsedAt?: Date | string | null
   cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  homeWorkerDeviceId?: string | null
   monitors?: Prisma.MonitorUncheckedCreateNestedManyWithoutInstagramSessionInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUncheckedCreateNestedManyWithoutSessionInput
 }
 
 export type InstagramSessionUpdateInput = {
@@ -441,6 +555,7 @@ export type InstagramSessionUpdateInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -449,8 +564,13 @@ export type InstagramSessionUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutInstagramSessionsNestedInput
   monitors?: Prisma.MonitorUpdateManyWithoutInstagramSessionNestedInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceUpdateOneWithoutSessionsNestedInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUpdateManyWithoutSessionNestedInput
 }
 
 export type InstagramSessionUncheckedUpdateInput = {
@@ -464,6 +584,7 @@ export type InstagramSessionUncheckedUpdateInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -472,7 +593,12 @@ export type InstagramSessionUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  homeWorkerDeviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   monitors?: Prisma.MonitorUncheckedUpdateManyWithoutInstagramSessionNestedInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUncheckedUpdateManyWithoutSessionNestedInput
 }
 
 export type InstagramSessionCreateManyInput = {
@@ -486,6 +612,7 @@ export type InstagramSessionCreateManyInput = {
   deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
+  proxyUrlIv?: string | null
   status?: string
   lastTestedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
@@ -494,6 +621,10 @@ export type InstagramSessionCreateManyInput = {
   updatedAt?: Date | string
   lastUsedAt?: Date | string | null
   cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  homeWorkerDeviceId?: string | null
 }
 
 export type InstagramSessionUpdateManyMutationInput = {
@@ -506,6 +637,7 @@ export type InstagramSessionUpdateManyMutationInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -514,6 +646,9 @@ export type InstagramSessionUpdateManyMutationInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type InstagramSessionUncheckedUpdateManyInput = {
@@ -527,6 +662,7 @@ export type InstagramSessionUncheckedUpdateManyInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -535,6 +671,10 @@ export type InstagramSessionUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  homeWorkerDeviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type InstagramSessionListRelationFilter = {
@@ -558,6 +698,7 @@ export type InstagramSessionCountOrderByAggregateInput = {
   deviceId?: Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrder
+  proxyUrlIv?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastTestedAt?: Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrder
@@ -566,6 +707,14 @@ export type InstagramSessionCountOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrder
   cooldownUntil?: Prisma.SortOrder
+  usesToday?: Prisma.SortOrder
+  usesDay?: Prisma.SortOrder
+  transport?: Prisma.SortOrder
+  homeWorkerDeviceId?: Prisma.SortOrder
+}
+
+export type InstagramSessionAvgOrderByAggregateInput = {
+  usesToday?: Prisma.SortOrder
 }
 
 export type InstagramSessionMaxOrderByAggregateInput = {
@@ -579,6 +728,7 @@ export type InstagramSessionMaxOrderByAggregateInput = {
   deviceId?: Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrder
+  proxyUrlIv?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastTestedAt?: Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrder
@@ -587,6 +737,10 @@ export type InstagramSessionMaxOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrder
   cooldownUntil?: Prisma.SortOrder
+  usesToday?: Prisma.SortOrder
+  usesDay?: Prisma.SortOrder
+  transport?: Prisma.SortOrder
+  homeWorkerDeviceId?: Prisma.SortOrder
 }
 
 export type InstagramSessionMinOrderByAggregateInput = {
@@ -600,6 +754,7 @@ export type InstagramSessionMinOrderByAggregateInput = {
   deviceId?: Prisma.SortOrder
   impersonateTarget?: Prisma.SortOrder
   proxyUrl?: Prisma.SortOrder
+  proxyUrlIv?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastTestedAt?: Prisma.SortOrder
   lastSuccessAt?: Prisma.SortOrder
@@ -608,6 +763,19 @@ export type InstagramSessionMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   lastUsedAt?: Prisma.SortOrder
   cooldownUntil?: Prisma.SortOrder
+  usesToday?: Prisma.SortOrder
+  usesDay?: Prisma.SortOrder
+  transport?: Prisma.SortOrder
+  homeWorkerDeviceId?: Prisma.SortOrder
+}
+
+export type InstagramSessionSumOrderByAggregateInput = {
+  usesToday?: Prisma.SortOrder
+}
+
+export type InstagramSessionScalarRelationFilter = {
+  is?: Prisma.InstagramSessionWhereInput
+  isNot?: Prisma.InstagramSessionWhereInput
 }
 
 export type InstagramSessionNullableScalarRelationFilter = {
@@ -657,6 +825,62 @@ export type InstagramSessionUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.InstagramSessionScalarWhereInput | Prisma.InstagramSessionScalarWhereInput[]
 }
 
+export type InstagramSessionCreateNestedManyWithoutHomeWorkerDeviceInput = {
+  create?: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput> | Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput[] | Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput[]
+  connectOrCreate?: Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput[]
+  createMany?: Prisma.InstagramSessionCreateManyHomeWorkerDeviceInputEnvelope
+  connect?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+}
+
+export type InstagramSessionUncheckedCreateNestedManyWithoutHomeWorkerDeviceInput = {
+  create?: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput> | Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput[] | Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput[]
+  connectOrCreate?: Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput[]
+  createMany?: Prisma.InstagramSessionCreateManyHomeWorkerDeviceInputEnvelope
+  connect?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+}
+
+export type InstagramSessionUpdateManyWithoutHomeWorkerDeviceNestedInput = {
+  create?: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput> | Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput[] | Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput[]
+  connectOrCreate?: Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput[]
+  upsert?: Prisma.InstagramSessionUpsertWithWhereUniqueWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionUpsertWithWhereUniqueWithoutHomeWorkerDeviceInput[]
+  createMany?: Prisma.InstagramSessionCreateManyHomeWorkerDeviceInputEnvelope
+  set?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+  disconnect?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+  delete?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+  connect?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+  update?: Prisma.InstagramSessionUpdateWithWhereUniqueWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionUpdateWithWhereUniqueWithoutHomeWorkerDeviceInput[]
+  updateMany?: Prisma.InstagramSessionUpdateManyWithWhereWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionUpdateManyWithWhereWithoutHomeWorkerDeviceInput[]
+  deleteMany?: Prisma.InstagramSessionScalarWhereInput | Prisma.InstagramSessionScalarWhereInput[]
+}
+
+export type InstagramSessionUncheckedUpdateManyWithoutHomeWorkerDeviceNestedInput = {
+  create?: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput> | Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput[] | Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput[]
+  connectOrCreate?: Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput[]
+  upsert?: Prisma.InstagramSessionUpsertWithWhereUniqueWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionUpsertWithWhereUniqueWithoutHomeWorkerDeviceInput[]
+  createMany?: Prisma.InstagramSessionCreateManyHomeWorkerDeviceInputEnvelope
+  set?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+  disconnect?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+  delete?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+  connect?: Prisma.InstagramSessionWhereUniqueInput | Prisma.InstagramSessionWhereUniqueInput[]
+  update?: Prisma.InstagramSessionUpdateWithWhereUniqueWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionUpdateWithWhereUniqueWithoutHomeWorkerDeviceInput[]
+  updateMany?: Prisma.InstagramSessionUpdateManyWithWhereWithoutHomeWorkerDeviceInput | Prisma.InstagramSessionUpdateManyWithWhereWithoutHomeWorkerDeviceInput[]
+  deleteMany?: Prisma.InstagramSessionScalarWhereInput | Prisma.InstagramSessionScalarWhereInput[]
+}
+
+export type InstagramSessionCreateNestedOneWithoutHomeWorkerJobsInput = {
+  create?: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerJobsInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerJobsInput>
+  connectOrCreate?: Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerJobsInput
+  connect?: Prisma.InstagramSessionWhereUniqueInput
+}
+
+export type InstagramSessionUpdateOneRequiredWithoutHomeWorkerJobsNestedInput = {
+  create?: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerJobsInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerJobsInput>
+  connectOrCreate?: Prisma.InstagramSessionCreateOrConnectWithoutHomeWorkerJobsInput
+  upsert?: Prisma.InstagramSessionUpsertWithoutHomeWorkerJobsInput
+  connect?: Prisma.InstagramSessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.InstagramSessionUpdateToOneWithWhereWithoutHomeWorkerJobsInput, Prisma.InstagramSessionUpdateWithoutHomeWorkerJobsInput>, Prisma.InstagramSessionUncheckedUpdateWithoutHomeWorkerJobsInput>
+}
+
 export type InstagramSessionCreateNestedOneWithoutMonitorsInput = {
   create?: Prisma.XOR<Prisma.InstagramSessionCreateWithoutMonitorsInput, Prisma.InstagramSessionUncheckedCreateWithoutMonitorsInput>
   connectOrCreate?: Prisma.InstagramSessionCreateOrConnectWithoutMonitorsInput
@@ -683,6 +907,7 @@ export type InstagramSessionCreateWithoutUserInput = {
   deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
+  proxyUrlIv?: string | null
   status?: string
   lastTestedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
@@ -691,7 +916,12 @@ export type InstagramSessionCreateWithoutUserInput = {
   updatedAt?: Date | string
   lastUsedAt?: Date | string | null
   cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
   monitors?: Prisma.MonitorCreateNestedManyWithoutInstagramSessionInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceCreateNestedOneWithoutSessionsInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobCreateNestedManyWithoutSessionInput
 }
 
 export type InstagramSessionUncheckedCreateWithoutUserInput = {
@@ -704,6 +934,7 @@ export type InstagramSessionUncheckedCreateWithoutUserInput = {
   deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
+  proxyUrlIv?: string | null
   status?: string
   lastTestedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
@@ -712,7 +943,12 @@ export type InstagramSessionUncheckedCreateWithoutUserInput = {
   updatedAt?: Date | string
   lastUsedAt?: Date | string | null
   cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  homeWorkerDeviceId?: string | null
   monitors?: Prisma.MonitorUncheckedCreateNestedManyWithoutInstagramSessionInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUncheckedCreateNestedManyWithoutSessionInput
 }
 
 export type InstagramSessionCreateOrConnectWithoutUserInput = {
@@ -755,6 +991,7 @@ export type InstagramSessionScalarWhereInput = {
   deviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   impersonateTarget?: Prisma.StringFilter<"InstagramSession"> | string
   proxyUrl?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  proxyUrlIv?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
   status?: Prisma.StringFilter<"InstagramSession"> | string
   lastTestedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
   lastSuccessAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
@@ -763,6 +1000,214 @@ export type InstagramSessionScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"InstagramSession"> | Date | string
   lastUsedAt?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
   cooldownUntil?: Prisma.DateTimeNullableFilter<"InstagramSession"> | Date | string | null
+  usesToday?: Prisma.IntFilter<"InstagramSession"> | number
+  usesDay?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+  transport?: Prisma.StringFilter<"InstagramSession"> | string
+  homeWorkerDeviceId?: Prisma.StringNullableFilter<"InstagramSession"> | string | null
+}
+
+export type InstagramSessionCreateWithoutHomeWorkerDeviceInput = {
+  id?: string
+  username: string
+  authMethod?: string
+  encryptedCookies: string
+  encryptedCookiesIv: string
+  userAgent?: string | null
+  deviceId?: string | null
+  impersonateTarget?: string
+  proxyUrl?: string | null
+  proxyUrlIv?: string | null
+  status?: string
+  lastTestedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  lastErrorMessage?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  user: Prisma.UserCreateNestedOneWithoutInstagramSessionsInput
+  monitors?: Prisma.MonitorCreateNestedManyWithoutInstagramSessionInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobCreateNestedManyWithoutSessionInput
+}
+
+export type InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput = {
+  id?: string
+  userId: string
+  username: string
+  authMethod?: string
+  encryptedCookies: string
+  encryptedCookiesIv: string
+  userAgent?: string | null
+  deviceId?: string | null
+  impersonateTarget?: string
+  proxyUrl?: string | null
+  proxyUrlIv?: string | null
+  status?: string
+  lastTestedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  lastErrorMessage?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  monitors?: Prisma.MonitorUncheckedCreateNestedManyWithoutInstagramSessionInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUncheckedCreateNestedManyWithoutSessionInput
+}
+
+export type InstagramSessionCreateOrConnectWithoutHomeWorkerDeviceInput = {
+  where: Prisma.InstagramSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput>
+}
+
+export type InstagramSessionCreateManyHomeWorkerDeviceInputEnvelope = {
+  data: Prisma.InstagramSessionCreateManyHomeWorkerDeviceInput | Prisma.InstagramSessionCreateManyHomeWorkerDeviceInput[]
+  skipDuplicates?: boolean
+}
+
+export type InstagramSessionUpsertWithWhereUniqueWithoutHomeWorkerDeviceInput = {
+  where: Prisma.InstagramSessionWhereUniqueInput
+  update: Prisma.XOR<Prisma.InstagramSessionUpdateWithoutHomeWorkerDeviceInput, Prisma.InstagramSessionUncheckedUpdateWithoutHomeWorkerDeviceInput>
+  create: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerDeviceInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerDeviceInput>
+}
+
+export type InstagramSessionUpdateWithWhereUniqueWithoutHomeWorkerDeviceInput = {
+  where: Prisma.InstagramSessionWhereUniqueInput
+  data: Prisma.XOR<Prisma.InstagramSessionUpdateWithoutHomeWorkerDeviceInput, Prisma.InstagramSessionUncheckedUpdateWithoutHomeWorkerDeviceInput>
+}
+
+export type InstagramSessionUpdateManyWithWhereWithoutHomeWorkerDeviceInput = {
+  where: Prisma.InstagramSessionScalarWhereInput
+  data: Prisma.XOR<Prisma.InstagramSessionUpdateManyMutationInput, Prisma.InstagramSessionUncheckedUpdateManyWithoutHomeWorkerDeviceInput>
+}
+
+export type InstagramSessionCreateWithoutHomeWorkerJobsInput = {
+  id?: string
+  username: string
+  authMethod?: string
+  encryptedCookies: string
+  encryptedCookiesIv: string
+  userAgent?: string | null
+  deviceId?: string | null
+  impersonateTarget?: string
+  proxyUrl?: string | null
+  proxyUrlIv?: string | null
+  status?: string
+  lastTestedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  lastErrorMessage?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  user: Prisma.UserCreateNestedOneWithoutInstagramSessionsInput
+  monitors?: Prisma.MonitorCreateNestedManyWithoutInstagramSessionInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceCreateNestedOneWithoutSessionsInput
+}
+
+export type InstagramSessionUncheckedCreateWithoutHomeWorkerJobsInput = {
+  id?: string
+  userId: string
+  username: string
+  authMethod?: string
+  encryptedCookies: string
+  encryptedCookiesIv: string
+  userAgent?: string | null
+  deviceId?: string | null
+  impersonateTarget?: string
+  proxyUrl?: string | null
+  proxyUrlIv?: string | null
+  status?: string
+  lastTestedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  lastErrorMessage?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  homeWorkerDeviceId?: string | null
+  monitors?: Prisma.MonitorUncheckedCreateNestedManyWithoutInstagramSessionInput
+}
+
+export type InstagramSessionCreateOrConnectWithoutHomeWorkerJobsInput = {
+  where: Prisma.InstagramSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerJobsInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerJobsInput>
+}
+
+export type InstagramSessionUpsertWithoutHomeWorkerJobsInput = {
+  update: Prisma.XOR<Prisma.InstagramSessionUpdateWithoutHomeWorkerJobsInput, Prisma.InstagramSessionUncheckedUpdateWithoutHomeWorkerJobsInput>
+  create: Prisma.XOR<Prisma.InstagramSessionCreateWithoutHomeWorkerJobsInput, Prisma.InstagramSessionUncheckedCreateWithoutHomeWorkerJobsInput>
+  where?: Prisma.InstagramSessionWhereInput
+}
+
+export type InstagramSessionUpdateToOneWithWhereWithoutHomeWorkerJobsInput = {
+  where?: Prisma.InstagramSessionWhereInput
+  data: Prisma.XOR<Prisma.InstagramSessionUpdateWithoutHomeWorkerJobsInput, Prisma.InstagramSessionUncheckedUpdateWithoutHomeWorkerJobsInput>
+}
+
+export type InstagramSessionUpdateWithoutHomeWorkerJobsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
+  userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
+  proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  user?: Prisma.UserUpdateOneRequiredWithoutInstagramSessionsNestedInput
+  monitors?: Prisma.MonitorUpdateManyWithoutInstagramSessionNestedInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceUpdateOneWithoutSessionsNestedInput
+}
+
+export type InstagramSessionUncheckedUpdateWithoutHomeWorkerJobsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
+  userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
+  proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  homeWorkerDeviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  monitors?: Prisma.MonitorUncheckedUpdateManyWithoutInstagramSessionNestedInput
 }
 
 export type InstagramSessionCreateWithoutMonitorsInput = {
@@ -775,6 +1220,7 @@ export type InstagramSessionCreateWithoutMonitorsInput = {
   deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
+  proxyUrlIv?: string | null
   status?: string
   lastTestedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
@@ -783,7 +1229,12 @@ export type InstagramSessionCreateWithoutMonitorsInput = {
   updatedAt?: Date | string
   lastUsedAt?: Date | string | null
   cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
   user: Prisma.UserCreateNestedOneWithoutInstagramSessionsInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceCreateNestedOneWithoutSessionsInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobCreateNestedManyWithoutSessionInput
 }
 
 export type InstagramSessionUncheckedCreateWithoutMonitorsInput = {
@@ -797,6 +1248,7 @@ export type InstagramSessionUncheckedCreateWithoutMonitorsInput = {
   deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
+  proxyUrlIv?: string | null
   status?: string
   lastTestedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
@@ -805,6 +1257,11 @@ export type InstagramSessionUncheckedCreateWithoutMonitorsInput = {
   updatedAt?: Date | string
   lastUsedAt?: Date | string | null
   cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  homeWorkerDeviceId?: string | null
+  homeWorkerJobs?: Prisma.HomeWorkerJobUncheckedCreateNestedManyWithoutSessionInput
 }
 
 export type InstagramSessionCreateOrConnectWithoutMonitorsInput = {
@@ -833,6 +1290,7 @@ export type InstagramSessionUpdateWithoutMonitorsInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -841,7 +1299,12 @@ export type InstagramSessionUpdateWithoutMonitorsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
   user?: Prisma.UserUpdateOneRequiredWithoutInstagramSessionsNestedInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceUpdateOneWithoutSessionsNestedInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUpdateManyWithoutSessionNestedInput
 }
 
 export type InstagramSessionUncheckedUpdateWithoutMonitorsInput = {
@@ -855,6 +1318,7 @@ export type InstagramSessionUncheckedUpdateWithoutMonitorsInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -863,6 +1327,11 @@ export type InstagramSessionUncheckedUpdateWithoutMonitorsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  homeWorkerDeviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  homeWorkerJobs?: Prisma.HomeWorkerJobUncheckedUpdateManyWithoutSessionNestedInput
 }
 
 export type InstagramSessionCreateManyUserInput = {
@@ -875,6 +1344,7 @@ export type InstagramSessionCreateManyUserInput = {
   deviceId?: string | null
   impersonateTarget?: string
   proxyUrl?: string | null
+  proxyUrlIv?: string | null
   status?: string
   lastTestedAt?: Date | string | null
   lastSuccessAt?: Date | string | null
@@ -883,6 +1353,10 @@ export type InstagramSessionCreateManyUserInput = {
   updatedAt?: Date | string
   lastUsedAt?: Date | string | null
   cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+  homeWorkerDeviceId?: string | null
 }
 
 export type InstagramSessionUpdateWithoutUserInput = {
@@ -895,6 +1369,7 @@ export type InstagramSessionUpdateWithoutUserInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -903,7 +1378,12 @@ export type InstagramSessionUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
   monitors?: Prisma.MonitorUpdateManyWithoutInstagramSessionNestedInput
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceUpdateOneWithoutSessionsNestedInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUpdateManyWithoutSessionNestedInput
 }
 
 export type InstagramSessionUncheckedUpdateWithoutUserInput = {
@@ -916,6 +1396,7 @@ export type InstagramSessionUncheckedUpdateWithoutUserInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -924,7 +1405,12 @@ export type InstagramSessionUncheckedUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  homeWorkerDeviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   monitors?: Prisma.MonitorUncheckedUpdateManyWithoutInstagramSessionNestedInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUncheckedUpdateManyWithoutSessionNestedInput
 }
 
 export type InstagramSessionUncheckedUpdateManyWithoutUserInput = {
@@ -937,6 +1423,7 @@ export type InstagramSessionUncheckedUpdateManyWithoutUserInput = {
   deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
   proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -945,6 +1432,114 @@ export type InstagramSessionUncheckedUpdateManyWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  homeWorkerDeviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type InstagramSessionCreateManyHomeWorkerDeviceInput = {
+  id?: string
+  userId: string
+  username: string
+  authMethod?: string
+  encryptedCookies: string
+  encryptedCookiesIv: string
+  userAgent?: string | null
+  deviceId?: string | null
+  impersonateTarget?: string
+  proxyUrl?: string | null
+  proxyUrlIv?: string | null
+  status?: string
+  lastTestedAt?: Date | string | null
+  lastSuccessAt?: Date | string | null
+  lastErrorMessage?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastUsedAt?: Date | string | null
+  cooldownUntil?: Date | string | null
+  usesToday?: number
+  usesDay?: string | null
+  transport?: string
+}
+
+export type InstagramSessionUpdateWithoutHomeWorkerDeviceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
+  userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
+  proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  user?: Prisma.UserUpdateOneRequiredWithoutInstagramSessionsNestedInput
+  monitors?: Prisma.MonitorUpdateManyWithoutInstagramSessionNestedInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUpdateManyWithoutSessionNestedInput
+}
+
+export type InstagramSessionUncheckedUpdateWithoutHomeWorkerDeviceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
+  userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
+  proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
+  monitors?: Prisma.MonitorUncheckedUpdateManyWithoutInstagramSessionNestedInput
+  homeWorkerJobs?: Prisma.HomeWorkerJobUncheckedUpdateManyWithoutSessionNestedInput
+}
+
+export type InstagramSessionUncheckedUpdateManyWithoutHomeWorkerDeviceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookies?: Prisma.StringFieldUpdateOperationsInput | string
+  encryptedCookiesIv?: Prisma.StringFieldUpdateOperationsInput | string
+  userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deviceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  impersonateTarget?: Prisma.StringFieldUpdateOperationsInput | string
+  proxyUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proxyUrlIv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  lastTestedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSuccessAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastUsedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cooldownUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  usesToday?: Prisma.IntFieldUpdateOperationsInput | number
+  usesDay?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  transport?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 
@@ -954,10 +1549,12 @@ export type InstagramSessionUncheckedUpdateManyWithoutUserInput = {
 
 export type InstagramSessionCountOutputType = {
   monitors: number
+  homeWorkerJobs: number
 }
 
 export type InstagramSessionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   monitors?: boolean | InstagramSessionCountOutputTypeCountMonitorsArgs
+  homeWorkerJobs?: boolean | InstagramSessionCountOutputTypeCountHomeWorkerJobsArgs
 }
 
 /**
@@ -977,6 +1574,13 @@ export type InstagramSessionCountOutputTypeCountMonitorsArgs<ExtArgs extends run
   where?: Prisma.MonitorWhereInput
 }
 
+/**
+ * InstagramSessionCountOutputType without action
+ */
+export type InstagramSessionCountOutputTypeCountHomeWorkerJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.HomeWorkerJobWhereInput
+}
+
 
 export type InstagramSessionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -989,6 +1593,7 @@ export type InstagramSessionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   deviceId?: boolean
   impersonateTarget?: boolean
   proxyUrl?: boolean
+  proxyUrlIv?: boolean
   status?: boolean
   lastTestedAt?: boolean
   lastSuccessAt?: boolean
@@ -997,8 +1602,14 @@ export type InstagramSessionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   updatedAt?: boolean
   lastUsedAt?: boolean
   cooldownUntil?: boolean
+  usesToday?: boolean
+  usesDay?: boolean
+  transport?: boolean
+  homeWorkerDeviceId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   monitors?: boolean | Prisma.InstagramSession$monitorsArgs<ExtArgs>
+  homeWorkerDevice?: boolean | Prisma.InstagramSession$homeWorkerDeviceArgs<ExtArgs>
+  homeWorkerJobs?: boolean | Prisma.InstagramSession$homeWorkerJobsArgs<ExtArgs>
   _count?: boolean | Prisma.InstagramSessionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["instagramSession"]>
 
@@ -1013,6 +1624,7 @@ export type InstagramSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   deviceId?: boolean
   impersonateTarget?: boolean
   proxyUrl?: boolean
+  proxyUrlIv?: boolean
   status?: boolean
   lastTestedAt?: boolean
   lastSuccessAt?: boolean
@@ -1021,7 +1633,12 @@ export type InstagramSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   updatedAt?: boolean
   lastUsedAt?: boolean
   cooldownUntil?: boolean
+  usesToday?: boolean
+  usesDay?: boolean
+  transport?: boolean
+  homeWorkerDeviceId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  homeWorkerDevice?: boolean | Prisma.InstagramSession$homeWorkerDeviceArgs<ExtArgs>
 }, ExtArgs["result"]["instagramSession"]>
 
 export type InstagramSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1035,6 +1652,7 @@ export type InstagramSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   deviceId?: boolean
   impersonateTarget?: boolean
   proxyUrl?: boolean
+  proxyUrlIv?: boolean
   status?: boolean
   lastTestedAt?: boolean
   lastSuccessAt?: boolean
@@ -1043,7 +1661,12 @@ export type InstagramSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   updatedAt?: boolean
   lastUsedAt?: boolean
   cooldownUntil?: boolean
+  usesToday?: boolean
+  usesDay?: boolean
+  transport?: boolean
+  homeWorkerDeviceId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  homeWorkerDevice?: boolean | Prisma.InstagramSession$homeWorkerDeviceArgs<ExtArgs>
 }, ExtArgs["result"]["instagramSession"]>
 
 export type InstagramSessionSelectScalar = {
@@ -1057,6 +1680,7 @@ export type InstagramSessionSelectScalar = {
   deviceId?: boolean
   impersonateTarget?: boolean
   proxyUrl?: boolean
+  proxyUrlIv?: boolean
   status?: boolean
   lastTestedAt?: boolean
   lastSuccessAt?: boolean
@@ -1065,19 +1689,27 @@ export type InstagramSessionSelectScalar = {
   updatedAt?: boolean
   lastUsedAt?: boolean
   cooldownUntil?: boolean
+  usesToday?: boolean
+  usesDay?: boolean
+  transport?: boolean
+  homeWorkerDeviceId?: boolean
 }
 
-export type InstagramSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "authMethod" | "encryptedCookies" | "encryptedCookiesIv" | "userAgent" | "deviceId" | "impersonateTarget" | "proxyUrl" | "status" | "lastTestedAt" | "lastSuccessAt" | "lastErrorMessage" | "createdAt" | "updatedAt" | "lastUsedAt" | "cooldownUntil", ExtArgs["result"]["instagramSession"]>
+export type InstagramSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "authMethod" | "encryptedCookies" | "encryptedCookiesIv" | "userAgent" | "deviceId" | "impersonateTarget" | "proxyUrl" | "proxyUrlIv" | "status" | "lastTestedAt" | "lastSuccessAt" | "lastErrorMessage" | "createdAt" | "updatedAt" | "lastUsedAt" | "cooldownUntil" | "usesToday" | "usesDay" | "transport" | "homeWorkerDeviceId", ExtArgs["result"]["instagramSession"]>
 export type InstagramSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   monitors?: boolean | Prisma.InstagramSession$monitorsArgs<ExtArgs>
+  homeWorkerDevice?: boolean | Prisma.InstagramSession$homeWorkerDeviceArgs<ExtArgs>
+  homeWorkerJobs?: boolean | Prisma.InstagramSession$homeWorkerJobsArgs<ExtArgs>
   _count?: boolean | Prisma.InstagramSessionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type InstagramSessionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  homeWorkerDevice?: boolean | Prisma.InstagramSession$homeWorkerDeviceArgs<ExtArgs>
 }
 export type InstagramSessionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  homeWorkerDevice?: boolean | Prisma.InstagramSession$homeWorkerDeviceArgs<ExtArgs>
 }
 
 export type $InstagramSessionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1085,6 +1717,8 @@ export type $InstagramSessionPayload<ExtArgs extends runtime.Types.Extensions.In
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
     monitors: Prisma.$MonitorPayload<ExtArgs>[]
+    homeWorkerDevice: Prisma.$HomeWorkerDevicePayload<ExtArgs> | null
+    homeWorkerJobs: Prisma.$HomeWorkerJobPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1097,6 +1731,7 @@ export type $InstagramSessionPayload<ExtArgs extends runtime.Types.Extensions.In
     deviceId: string | null
     impersonateTarget: string
     proxyUrl: string | null
+    proxyUrlIv: string | null
     status: string
     lastTestedAt: Date | null
     lastSuccessAt: Date | null
@@ -1105,6 +1740,10 @@ export type $InstagramSessionPayload<ExtArgs extends runtime.Types.Extensions.In
     updatedAt: Date
     lastUsedAt: Date | null
     cooldownUntil: Date | null
+    usesToday: number
+    usesDay: string | null
+    transport: string
+    homeWorkerDeviceId: string | null
   }, ExtArgs["result"]["instagramSession"]>
   composites: {}
 }
@@ -1501,6 +2140,8 @@ export interface Prisma__InstagramSessionClient<T, Null = never, ExtArgs extends
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   monitors<T extends Prisma.InstagramSession$monitorsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.InstagramSession$monitorsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MonitorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  homeWorkerDevice<T extends Prisma.InstagramSession$homeWorkerDeviceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.InstagramSession$homeWorkerDeviceArgs<ExtArgs>>): Prisma.Prisma__HomeWorkerDeviceClient<runtime.Types.Result.GetResult<Prisma.$HomeWorkerDevicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  homeWorkerJobs<T extends Prisma.InstagramSession$homeWorkerJobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.InstagramSession$homeWorkerJobsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$HomeWorkerJobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1540,6 +2181,7 @@ export interface InstagramSessionFieldRefs {
   readonly deviceId: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly impersonateTarget: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly proxyUrl: Prisma.FieldRef<"InstagramSession", 'String'>
+  readonly proxyUrlIv: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly status: Prisma.FieldRef<"InstagramSession", 'String'>
   readonly lastTestedAt: Prisma.FieldRef<"InstagramSession", 'DateTime'>
   readonly lastSuccessAt: Prisma.FieldRef<"InstagramSession", 'DateTime'>
@@ -1548,6 +2190,10 @@ export interface InstagramSessionFieldRefs {
   readonly updatedAt: Prisma.FieldRef<"InstagramSession", 'DateTime'>
   readonly lastUsedAt: Prisma.FieldRef<"InstagramSession", 'DateTime'>
   readonly cooldownUntil: Prisma.FieldRef<"InstagramSession", 'DateTime'>
+  readonly usesToday: Prisma.FieldRef<"InstagramSession", 'Int'>
+  readonly usesDay: Prisma.FieldRef<"InstagramSession", 'String'>
+  readonly transport: Prisma.FieldRef<"InstagramSession", 'String'>
+  readonly homeWorkerDeviceId: Prisma.FieldRef<"InstagramSession", 'String'>
 }
     
 
@@ -1970,6 +2616,49 @@ export type InstagramSession$monitorsArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.MonitorScalarFieldEnum | Prisma.MonitorScalarFieldEnum[]
+}
+
+/**
+ * InstagramSession.homeWorkerDevice
+ */
+export type InstagramSession$homeWorkerDeviceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the HomeWorkerDevice
+   */
+  select?: Prisma.HomeWorkerDeviceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the HomeWorkerDevice
+   */
+  omit?: Prisma.HomeWorkerDeviceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HomeWorkerDeviceInclude<ExtArgs> | null
+  where?: Prisma.HomeWorkerDeviceWhereInput
+}
+
+/**
+ * InstagramSession.homeWorkerJobs
+ */
+export type InstagramSession$homeWorkerJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the HomeWorkerJob
+   */
+  select?: Prisma.HomeWorkerJobSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the HomeWorkerJob
+   */
+  omit?: Prisma.HomeWorkerJobOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HomeWorkerJobInclude<ExtArgs> | null
+  where?: Prisma.HomeWorkerJobWhereInput
+  orderBy?: Prisma.HomeWorkerJobOrderByWithRelationInput | Prisma.HomeWorkerJobOrderByWithRelationInput[]
+  cursor?: Prisma.HomeWorkerJobWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.HomeWorkerJobScalarFieldEnum | Prisma.HomeWorkerJobScalarFieldEnum[]
 }
 
 /**

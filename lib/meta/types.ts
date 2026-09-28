@@ -70,6 +70,16 @@ export interface NormalizedMediaItem {
   collaborators?: string[];
   /** Engagement, present only when the logged-in feed was fetched. */
   metrics?: MediaMetrics;
+  /**
+   * Every item of a carousel in order (index 0 is the cover). Only a logged-in
+   * lookup sees them; the logged-out page shows the cover alone.
+   */
+  children?: MediaChild[];
+}
+
+export interface MediaChild {
+  imageUrl: string | null;
+  videoUrl: string | null;
 }
 
 export interface MediaMetrics {
@@ -97,6 +107,12 @@ export interface TargetFetchResult {
   errorMessage?: string;
   anonymousMode?: boolean;
   deviceId?: string;
+  /**
+   * Set only when one of the check's logged-in requests got a warning. The
+   * profile itself is always read logged out, so its failures never count
+   * against the burner.
+   */
+  sessionWarning?: { kind: "RATE_LIMITED" | "FLAGGED"; message: string };
 }
 
 export interface StealthFetchOptions {
@@ -140,6 +156,11 @@ export interface StealthSessionConfig {
   impersonateTarget?: string;
   proxyUrl?: string | null;
   deviceId?: string | null;
+  /** "PROXY" (default) or "HOME_WORKER" — see lib/meta/home-worker.ts. */
+  transport?: string;
+  homeWorkerDeviceId?: string | null;
+  /** The DB id of this session, needed only to create a HomeWorkerJob. */
+  sessionId?: string;
 }
 
 export interface MetaProvider {

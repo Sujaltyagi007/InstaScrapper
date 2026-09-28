@@ -1,22 +1,9 @@
-import { Client, ID, Permission, Query, Role, Storage } from "node-appwrite";
 import { InputFile } from "node-appwrite/file";
+import { Client, ID, Permission, Query, Role, Storage } from "node-appwrite";
 
-/**
- * Appwrite Storage adapter.
- *
- * Why Appwrite: its Cloud free plan doesn't take a payment method, so the
- * worst case is hitting a limit (uploads start failing), not a surprise bill.
- * That's a hard cap by construction, which R2 doesn't offer.
- *
- * Bucket setup (Appwrite console → Storage → your bucket):
- *   - Permissions: add Role "Any" with READ, so media URLs render in <img>.
- *   - File security: leave OFF (bucket-level permissions are enough).
- *   - API key scopes: files.read + files.write.
- */
 
 export interface StoredObject {
   url: string;
-  /** Appwrite file ID — what we persist as storageFileId / thumbnailFileId. */
   fileId: string;
 }
 
@@ -26,8 +13,6 @@ function config() {
   const apiKey = process.env.APPWRITE_API_KEY?.trim();
   const bucketId = process.env.APPWRITE_BUCKET_ID?.trim();
   if (!endpoint || !projectId || !apiKey || !bucketId) return null;
-  // Reject the template placeholders, so a half-filled .env reads as
-  // "disabled" instead of failing every upload at runtime.
   if ([projectId, apiKey, bucketId].some((v) => v.startsWith("your_"))) return null;
   return { endpoint, projectId, apiKey, bucketId };
 }
@@ -55,19 +40,13 @@ export function appwriteFileUrl(fileId: string): string | null {
   return `${cfg.endpoint}/storage/buckets/${cfg.bucketId}/files/${encodeURIComponent(fileId)}/view?project=${cfg.projectId}`;
 }
 
-export async function uploadBufferToAppwrite(params: {
-  buffer: Buffer;
-  /** Human-readable name incl. path, e.g. "targets/nasa/media/nasa_123.jpg". */
-  fileName: string;
-}): Promise<StoredObject | null> {
+export async function uploadBufferToAppwrite(params: { buffer: Buffer; fileName: string; }): Promise<StoredObject | null> {
   const ctx = getStorage();
   if (!ctx) return null;
 
   try {
     const file = await ctx.storage.createFile({
       bucketId: ctx.cfg.bucketId,
-      // Appwrite IDs are capped at 36 chars from a restricted charset, so a
-      // generated ID is used and the readable path lives in the file name.
       fileId: ID.unique(),
       file: InputFile.fromBuffer(new Uint8Array(params.buffer), params.fileName),
       permissions: [Permission.read(Role.any())],
@@ -80,15 +59,7 @@ export async function uploadBufferToAppwrite(params: {
   }
 }
 
-/**
- * Deletes a file. "File not found" counts as success: the goal is "this file
- * must not exist", and failing would make the expiry sweep retry forever.
- *
- * Only that exact error type, though. Appwrite also returns 404 for
- * `project_not_found` and `storage_bucket_not_found` (verified against the
- * live API). Treating those as success would let a mistyped project or bucket
- * ID mark every item expired while its files stay in storage.
- */
+
 export async function deleteAppwriteFile(fileId: string): Promise<boolean> {
   const ctx = getStorage();
   if (!ctx) return false;
@@ -104,11 +75,6 @@ export async function deleteAppwriteFile(fileId: string): Promise<boolean> {
   }
 }
 
-/**
- * Reads a file's bytes with the API key. Unlike the public `/view` URL this
- * works without Role "Any" read on the bucket, so server-side pipelines don't
- * depend on that setting.
- */
 export async function downloadAppwriteFile(fileId: string): Promise<Buffer | null> {
   const ctx = getStorage();
   if (!ctx) return null;

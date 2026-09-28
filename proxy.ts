@@ -21,7 +21,11 @@ export default withAuth(
         pathname.startsWith("/api/cron") ||
         pathname.startsWith("/api/dev") ||
         pathname.startsWith("/api/health") ||
-        pathname.startsWith("/api/ready");
+        pathname.startsWith("/api/ready") ||
+        // The home worker script authenticates with its own paired-device
+        // bearer token (lib/meta/home-worker.ts::authenticateDevice), not a
+        // NextAuth session cookie — it's a separate machine, not a browser tab.
+        pathname.startsWith("/api/worker/");
 
       if (isPublic) return true;
       return !!token;

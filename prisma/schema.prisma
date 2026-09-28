@@ -91,7 +91,7 @@ model User {
   sleepEnabled          Boolean               @default(true)
   sleepStartHour        Int                   @default(1)
   sleepEndHour          Int                   @default(7)
-  // How long full-size scraped media is kept before only the thumbnail remains. Null = until deleted by hand.
+  accentColor           String?
   mediaKeepHours        Int?                  @default(48)
   emailVerified         DateTime?
   createdAt             DateTime              @default(now())
@@ -103,6 +103,7 @@ model User {
   soundAssets           SoundAsset[]
   storedFiles           StoredFile[]
   instagramSessions     InstagramSession[]
+  homeWorkerDevices     HomeWorkerDevice[]
   targets               Target[]
   notificationChannels  NotificationChannel[]
   authRateLimits        AuthRateLimit[]
@@ -111,8 +112,6 @@ model User {
   @@map("users")
 }
 
-/// One browser/device subscribed to Web Push. Delivered through the user's
-/// WEBPUSH NotificationChannel (which holds the event-type preferences).
 model PushSubscription {
   id            String    @id @default(cuid())
   userId        String
@@ -120,7 +119,6 @@ model PushSubscription {
   endpoint      String    @unique
   p256dh        String
   auth          String
-  /// "Chrome on Windows" etc., derived from the user agent when subscribing.
   label         String?
   userAgent     String?
   createdAt     DateTime  @default(now())
@@ -153,9 +151,6 @@ model MetaConnection {
   @@map("meta_connections")
 }
 
-// The user's own posting account via Instagram Login (graph.instagram.com, no
-// Facebook Page). Kept apart from MetaConnection (Facebook Login) because the
-// two tokens only work on their own host and must never be mixed up.
 model IgAccount {
   id                   String    @id @default(cuid())
   userId               String
@@ -166,11 +161,9 @@ model IgAccount {
   encryptedAccessToken String
   encryptedTokenIv     String
   scopes               String[]
-  // ACTIVE | REAUTH_REQUIRED | ERROR
   status               String    @default("ACTIVE")
   tokenExpiresAt       DateTime?
   tokenRefreshedAt     DateTime  @default(now())
-  // Kill switch: set when a posted reel disappears; nothing posts while true.
   postingPaused        Boolean   @default(false)
   pausedReason         String?
   createdAt            DateTime  @default(now())
@@ -210,42 +203,35 @@ model Niche {
 }
 
 model ReelIdea {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   nicheId        String
-  niche          Niche    @relation(fields: [nicheId], references: [id], onDelete: Cascade)
+  niche          Niche        @relation(fields: [nicheId], references: [id], onDelete: Cascade)
   title          String
   angle          String
   hook           String
   whyTrending    String
   score          Float
-  // Media ids of the trending reels this idea is based on (evidence, never reused as footage).
   sourceMediaIds String[]
-  // SUGGESTED | APPROVED | DISMISSED
-  status         String   @default("SUGGESTED")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  status         String       @default("SUGGESTED")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   project        ReelProject?
 
   @@index([nicheId, status, createdAt])
   @@map("reel_ideas")
 }
 
-// One reel being built from an approved idea. The pipeline advances it one
-// stage per step (lib/services/reel-pipeline.service.ts), under a lease.
 model ReelProject {
   id             String    @id @default(cuid())
   userId         String
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   ideaId         String    @unique
   idea           ReelIdea  @relation(fields: [ideaId], references: [id], onDelete: Cascade)
-  // SCRIPT | VOICE | AUDIO_PLAN | VISUALS | SAFETY | RENDER | CAPTION | READY | POSTED | FAILED
   stage          String    @default("SCRIPT")
-  // The stage to resume from when a FAILED project is retried.
   failedStage    String?
   script         Json?
   voiceUrl       String?
   voiceFileId    String?
-  // { durationSec, spans: [{ start, end }] } — one span per script sentence.
   voiceTiming    Json?
   audioBlueprint Json?
   mixUrl         String?
@@ -257,7 +243,6 @@ model ReelProject {
   coverFileId    String?
   caption        String?
   hashtags       String[]  @default([])
-  // Send to phone: when the push is due, and when it went out.
   scheduledFor   DateTime?
   sentAt         DateTime?
   postedAt       DateTime?
@@ -274,16 +259,12 @@ model ReelProject {
   @@map("reel_projects")
 }
 
-// Register of every file this app put in storage, per user (lib/storage/ledger.ts).
-// Outlives its target (targetId is cleared, targetUsername stays), so files kept
-// after deleting a target can still be found and managed on the Storage page.
 model StoredFile {
   id             String   @id @default(cuid())
   userId         String
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   fileId         String   @unique
   url            String
-  // MEDIA | THUMBNAIL | STORY | PROFILE_PIC | REEL | SOUND | OTHER
   kind           String
   label          String?
   targetId       String?
@@ -291,11 +272,7 @@ model StoredFile {
   targetUsername String?
   contentType    String?
   sizeBytes      Int?
-  // sha1 of the bytes.
   contentHash    String?
-  // Perceptual hash (16x16 grayscale average hash, hex) for images. Instagram
-  // serves the same profile picture in different sizes, so byte hashes differ;
-  // this is what stops unchanged profile pictures being stored again.
   visualHash     String?
   createdAt      DateTime @default(now())
 
@@ -304,20 +281,16 @@ model StoredFile {
   @@map("stored_files")
 }
 
-// Licensed music and sound effects the user curated (Pixabay, CC0 Freesound…).
-// Reels only ever use sounds from here, never the trending reel's audio.
 model SoundAsset {
   id            String   @id @default(cuid())
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // MUSIC | SFX
   kind          String
   title         String
   source        String?
   licenseUrl    String?
   moodTags      String[] @default([])
   bpm           Int?
-  // low | medium | high
   energy        String?
   description   String?
   durationMs    Int
@@ -335,7 +308,6 @@ model NicheAccount {
   niche     Niche    @relation(fields: [nicheId], references: [id], onDelete: Cascade)
   targetId  String
   target    Target   @relation(fields: [targetId], references: [id], onDelete: Cascade)
-  // USER (typed in) | SUGGESTED (picked from Gemini's suggestions)
   source    String   @default("USER")
   createdAt DateTime @default(now())
 
@@ -364,11 +336,11 @@ model Target {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
-  monitor   Monitor?
-  snapshots TargetSnapshot[]
-  media     Media[]
-  events    Event[]
-  jobs      Job[]
+  monitor       Monitor?
+  snapshots     TargetSnapshot[]
+  media         Media[]
+  events        Event[]
+  jobs          Job[]
   nicheAccounts NicheAccount[]
   storedFiles   StoredFile[]
 
@@ -389,7 +361,11 @@ model InstagramSession {
   userAgent          String?
   deviceId           String?
   impersonateTarget  String    @default("auto")
+  // Ciphertext, not a URL — embeds the proxy's own username/password, so it's
+  // encrypted at rest like encryptedCookies (lib/crypto.ts::encryptOptional).
+  // Read/written only via lib/meta/proxy-secret.ts, never directly.
   proxyUrl           String?
+  proxyUrlIv         String?
   status             String    @default("ACTIVE")
   lastTestedAt       DateTime?
   lastSuccessAt      DateTime?
@@ -398,12 +374,59 @@ model InstagramSession {
   updatedAt          DateTime  @updatedAt
   lastUsedAt         DateTime?
   cooldownUntil      DateTime?
+  // Daily cap on logged-in uses (lib/meta/session-pool.ts, SESSION_DAILY_LIMIT).
+  // usesDay is the UTC date usesToday counts for; a new day resets it.
+  usesToday          Int       @default(0)
+  usesDay            String?
 
   monitors Monitor[]
+
+  // Home worker routing (lib/meta/home-worker.ts): "PROXY" (default, today's
+  // Webshare-pinned-IP path) or "HOME_WORKER" (requests are executed by a
+  // script on the user's own PC instead, see homeWorkerDeviceId).
+  transport          String             @default("PROXY")
+  homeWorkerDeviceId  String?
+  homeWorkerDevice    HomeWorkerDevice?  @relation(fields: [homeWorkerDeviceId], references: [id], onDelete: SetNull)
+  homeWorkerJobs      HomeWorkerJob[]
 
   @@index([userId])
   @@index([userId, status, lastUsedAt])
   @@map("instagram_sessions")
+}
+
+model HomeWorkerDevice {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String
+  tokenHash  String    @unique
+  status     String    @default("ACTIVE") // ACTIVE | REVOKED
+  lastSeenAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  sessions InstagramSession[]
+  jobs     HomeWorkerJob[]
+
+  @@index([userId])
+  @@map("home_worker_devices")
+}
+
+
+model HomeWorkerJob {
+  id               String    @id @default(cuid())
+  deviceId         String
+  device           HomeWorkerDevice  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  sessionId        String
+  session          InstagramSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  status           String    @default("PENDING") // PENDING | CLAIMED | DONE | FAILED | EXPIRED
+  requestPayload   Json
+  responsePayload  Json?
+  createdAt        DateTime  @default(now())
+  claimedAt        DateTime?
+  expiresAt        DateTime
+
+  @@index([deviceId, status, createdAt])
+  @@map("home_worker_jobs")
 }
 
 model Monitor {
@@ -413,8 +436,6 @@ model Monitor {
   userId                 String
   engineType             String            @default("STEALTH_SCRAPER")
   triggerMode            String            @default("NEW_POSTS_ONLY")
-  // MONITOR = a watched account (events, uploads, notifications).
-  // TREND = a niche account watched only for trend data: no uploads, no events.
   purpose                String            @default("MONITOR")
   watchNewMedia          Boolean           @default(true)
   watchProfile           Boolean           @default(true)
@@ -474,29 +495,29 @@ model TargetSnapshot {
 }
 
 model Media {
-  id              String    @id @default(cuid())
-  targetId        String
-  target          Target    @relation(fields: [targetId], references: [id], onDelete: Cascade)
-  externalMediaId String
-  mediaType       String
-  permalink       String?
-  timestamp       DateTime?
-  caption         String?
-  mediaUrl        String?
-  videoUrl        String?
-  sourceMediaUrl  String?
-  sourceVideoUrl  String?
-  storageUrl      String?
-  storageFileId   String?
-  storedAt        DateTime?
-  thumbnailUrl    String?
-  thumbnailFileId String?
-  isExpired       Boolean   @default(false)
-  expiredAt       DateTime?
-  isStory         Boolean   @default(false)
-  isCollab        Boolean   @default(false)
-  collaborators   String[]  @default([])
-  firstSeenAt     DateTime  @default(now())
+  id               String                @id @default(cuid())
+  targetId         String
+  target           Target                @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  externalMediaId  String
+  mediaType        String
+  permalink        String?
+  timestamp        DateTime?
+  caption          String?
+  mediaUrl         String?
+  videoUrl         String?
+  sourceMediaUrl   String?
+  sourceVideoUrl   String?
+  storageUrl       String?
+  storageFileId    String?
+  storedAt         DateTime?
+  thumbnailUrl     String?
+  thumbnailFileId  String?
+  isExpired        Boolean               @default(false)
+  expiredAt        DateTime?
+  isStory          Boolean               @default(false)
+  isCollab         Boolean               @default(false)
+  collaborators    String[]              @default([])
+  firstSeenAt      DateTime              @default(now())
   // Engagement, only collected for niche accounts on logged-in checks.
   playCount        Int?
   likeCount        Int?
@@ -506,11 +527,30 @@ model Media {
   audioIsOriginal  Boolean?
   metricsUpdatedAt DateTime?
   metricSnapshots  MediaMetricSnapshot[]
+  assets           MediaAsset[]
 
   @@unique([targetId, externalMediaId])
   @@index([targetId])
   @@index([isExpired, storedAt])
   @@map("media")
+}
+
+model MediaAsset {
+  id              String   @id @default(cuid())
+  mediaId         String
+  media           Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  position        Int
+  isVideo         Boolean  @default(false)
+  sourceUrl       String?
+  storageUrl      String?
+  storageFileId   String?
+  thumbnailUrl    String?
+  thumbnailFileId String?
+  createdAt       DateTime @default(now())
+
+  @@unique([mediaId, position])
+  @@index([mediaId])
+  @@map("media_assets")
 }
 
 model Event {

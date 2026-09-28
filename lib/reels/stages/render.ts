@@ -1,17 +1,16 @@
-import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { runFfmpeg, stageFonts } from "@/lib/render/ffmpeg";
-import { buildAssSubtitles } from "@/lib/render/captions";
-import { buildReelRenderArgs, segmentsForSentences } from "@/lib/render/reel";
 import { captionCues } from "@/lib/render/timing";
+import { readFile, writeFile } from "node:fs/promises";
+import { buildAssSubtitles } from "@/lib/render/captions";
+import type { StageContext, StageResult } from "./context";
+import { runFfmpeg, stageFonts } from "@/lib/render/ffmpeg";
 import { fetchPublicToFile } from "@/lib/security/fetch-public";
 import { downloadStoredObject, uploadBuffer } from "@/lib/storage";
+import { buildReelRenderArgs, segmentsForSentences } from "@/lib/render/reel";
 import type { AudioBlueprint, ClipPick, ReelScript, VoiceTiming } from "@/lib/reels/types";
-import type { StageContext, StageResult } from "./context";
 
 const CLIP_MAX_BYTES = 150 * 1024 * 1024;
 const DOWNLOAD_CONCURRENCY = 3;
-/** Leaves room for downloads and the upload inside the function's 300s. */
 const RENDER_TIMEOUT_MS = 220_000;
 
 async function inBatches<T>(items: T[], size: number, run: (item: T, index: number) => Promise<void>) {

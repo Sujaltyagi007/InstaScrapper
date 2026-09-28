@@ -1,22 +1,15 @@
 import { prisma } from "@/lib/prisma";
 
 export const R2_LIMITS = {
-  // Hard limits (100% of free tier)
   STORAGE_BYTES: 10 * 1024 * 1024 * 1024, // 10 GB
   A_CLASS_OPS: 1_000_000,
   B_CLASS_OPS: 10_000_000,
-
-  // Guardrail Hard Stop (95%)
   HARD_STOP_STORAGE: 9.5 * 1024 * 1024 * 1024, // 9.5 GB
   HARD_STOP_A_CLASS: 950_000,
   HARD_STOP_B_CLASS: 9_500_000,
-
-  // Guardrail Throttle (90%)
   THROTTLE_STORAGE: 9 * 1024 * 1024 * 1024, // 9 GB
   THROTTLE_A_CLASS: 900_000,
   THROTTLE_B_CLASS: 9_000_000,
-
-  // Guardrail Warn (80%)
   WARN_STORAGE: 8 * 1024 * 1024 * 1024, // 8 GB
   WARN_A_CLASS: 800_000,
   WARN_B_CLASS: 8_000_000,
@@ -29,9 +22,6 @@ function getCurrentBillingMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-/** 
- * Gets the singleton usage counter, initializing or rolling over the month if needed.
- */
 export async function getUsageCounters() {
   const currentMonth = getCurrentBillingMonth();
 
@@ -58,10 +48,6 @@ export async function getUsageCounters() {
   return counter;
 }
 
-/**
- * Pre-flight check before EVERY upload.
- * Evaluates storage and A-Class limits.
- */
 export async function checkBeforeUpload(
   fileSizeBytes: number,
   isEssential: boolean = true
@@ -95,10 +81,7 @@ export async function checkBeforeUpload(
   return { ok: true, level: "NORMAL" };
 }
 
-/**
- * Pre-flight check before EVERY direct read (presigned URL or direct GetObject).
- * Evaluates B-Class limits.
- */
+
 export async function checkBeforeRead(): Promise<{ ok: boolean; reason?: string; level: GuardrailLevel }> {
   const counter = await getUsageCounters();
   const bClass = counter.bClassOps;

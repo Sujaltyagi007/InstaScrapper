@@ -55,6 +55,7 @@ export type UserMinAggregateOutputType = {
   sleepEnabled: boolean | null
   sleepStartHour: number | null
   sleepEndHour: number | null
+  accentColor: string | null
   mediaKeepHours: number | null
   emailVerified: Date | null
   createdAt: Date | null
@@ -74,6 +75,7 @@ export type UserMaxAggregateOutputType = {
   sleepEnabled: boolean | null
   sleepStartHour: number | null
   sleepEndHour: number | null
+  accentColor: string | null
   mediaKeepHours: number | null
   emailVerified: Date | null
   createdAt: Date | null
@@ -93,6 +95,7 @@ export type UserCountAggregateOutputType = {
   sleepEnabled: number
   sleepStartHour: number
   sleepEndHour: number
+  accentColor: number
   mediaKeepHours: number
   emailVerified: number
   createdAt: number
@@ -130,6 +133,7 @@ export type UserMinAggregateInputType = {
   sleepEnabled?: true
   sleepStartHour?: true
   sleepEndHour?: true
+  accentColor?: true
   mediaKeepHours?: true
   emailVerified?: true
   createdAt?: true
@@ -149,6 +153,7 @@ export type UserMaxAggregateInputType = {
   sleepEnabled?: true
   sleepStartHour?: true
   sleepEndHour?: true
+  accentColor?: true
   mediaKeepHours?: true
   emailVerified?: true
   createdAt?: true
@@ -168,6 +173,7 @@ export type UserCountAggregateInputType = {
   sleepEnabled?: true
   sleepStartHour?: true
   sleepEndHour?: true
+  accentColor?: true
   mediaKeepHours?: true
   emailVerified?: true
   createdAt?: true
@@ -274,6 +280,7 @@ export type UserGroupByOutputType = {
   sleepEnabled: boolean
   sleepStartHour: number
   sleepEndHour: number
+  accentColor: string | null
   mediaKeepHours: number | null
   emailVerified: Date | null
   createdAt: Date
@@ -316,6 +323,7 @@ export type UserWhereInput = {
   sleepEnabled?: Prisma.BoolFilter<"User"> | boolean
   sleepStartHour?: Prisma.IntFilter<"User"> | number
   sleepEndHour?: Prisma.IntFilter<"User"> | number
+  accentColor?: Prisma.StringNullableFilter<"User"> | string | null
   mediaKeepHours?: Prisma.IntNullableFilter<"User"> | number | null
   emailVerified?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -327,6 +335,7 @@ export type UserWhereInput = {
   soundAssets?: Prisma.SoundAssetListRelationFilter
   storedFiles?: Prisma.StoredFileListRelationFilter
   instagramSessions?: Prisma.InstagramSessionListRelationFilter
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceListRelationFilter
   targets?: Prisma.TargetListRelationFilter
   notificationChannels?: Prisma.NotificationChannelListRelationFilter
   authRateLimits?: Prisma.AuthRateLimitListRelationFilter
@@ -346,6 +355,7 @@ export type UserOrderByWithRelationInput = {
   sleepEnabled?: Prisma.SortOrder
   sleepStartHour?: Prisma.SortOrder
   sleepEndHour?: Prisma.SortOrder
+  accentColor?: Prisma.SortOrderInput | Prisma.SortOrder
   mediaKeepHours?: Prisma.SortOrderInput | Prisma.SortOrder
   emailVerified?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -357,6 +367,7 @@ export type UserOrderByWithRelationInput = {
   soundAssets?: Prisma.SoundAssetOrderByRelationAggregateInput
   storedFiles?: Prisma.StoredFileOrderByRelationAggregateInput
   instagramSessions?: Prisma.InstagramSessionOrderByRelationAggregateInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceOrderByRelationAggregateInput
   targets?: Prisma.TargetOrderByRelationAggregateInput
   notificationChannels?: Prisma.NotificationChannelOrderByRelationAggregateInput
   authRateLimits?: Prisma.AuthRateLimitOrderByRelationAggregateInput
@@ -379,6 +390,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   sleepEnabled?: Prisma.BoolFilter<"User"> | boolean
   sleepStartHour?: Prisma.IntFilter<"User"> | number
   sleepEndHour?: Prisma.IntFilter<"User"> | number
+  accentColor?: Prisma.StringNullableFilter<"User"> | string | null
   mediaKeepHours?: Prisma.IntNullableFilter<"User"> | number | null
   emailVerified?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -390,6 +402,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   soundAssets?: Prisma.SoundAssetListRelationFilter
   storedFiles?: Prisma.StoredFileListRelationFilter
   instagramSessions?: Prisma.InstagramSessionListRelationFilter
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceListRelationFilter
   targets?: Prisma.TargetListRelationFilter
   notificationChannels?: Prisma.NotificationChannelListRelationFilter
   authRateLimits?: Prisma.AuthRateLimitListRelationFilter
@@ -409,6 +422,7 @@ export type UserOrderByWithAggregationInput = {
   sleepEnabled?: Prisma.SortOrder
   sleepStartHour?: Prisma.SortOrder
   sleepEndHour?: Prisma.SortOrder
+  accentColor?: Prisma.SortOrderInput | Prisma.SortOrder
   mediaKeepHours?: Prisma.SortOrderInput | Prisma.SortOrder
   emailVerified?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -436,6 +450,7 @@ export type UserScalarWhereWithAggregatesInput = {
   sleepEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   sleepStartHour?: Prisma.IntWithAggregatesFilter<"User"> | number
   sleepEndHour?: Prisma.IntWithAggregatesFilter<"User"> | number
+  accentColor?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   mediaKeepHours?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   emailVerified?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -455,6 +470,7 @@ export type UserCreateInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -466,6 +482,7 @@ export type UserCreateInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -485,6 +502,7 @@ export type UserUncheckedCreateInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -496,6 +514,7 @@ export type UserUncheckedCreateInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -515,6 +534,7 @@ export type UserUpdateInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -526,6 +546,7 @@ export type UserUpdateInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -545,6 +566,7 @@ export type UserUncheckedUpdateInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -556,6 +578,7 @@ export type UserUncheckedUpdateInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -575,6 +598,7 @@ export type UserCreateManyInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -594,6 +618,7 @@ export type UserUpdateManyMutationInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -613,6 +638,7 @@ export type UserUncheckedUpdateManyInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -632,6 +658,7 @@ export type UserCountOrderByAggregateInput = {
   sleepEnabled?: Prisma.SortOrder
   sleepStartHour?: Prisma.SortOrder
   sleepEndHour?: Prisma.SortOrder
+  accentColor?: Prisma.SortOrder
   mediaKeepHours?: Prisma.SortOrder
   emailVerified?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -659,6 +686,7 @@ export type UserMaxOrderByAggregateInput = {
   sleepEnabled?: Prisma.SortOrder
   sleepStartHour?: Prisma.SortOrder
   sleepEndHour?: Prisma.SortOrder
+  accentColor?: Prisma.SortOrder
   mediaKeepHours?: Prisma.SortOrder
   emailVerified?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -678,6 +706,7 @@ export type UserMinOrderByAggregateInput = {
   sleepEnabled?: Prisma.SortOrder
   sleepStartHour?: Prisma.SortOrder
   sleepEndHour?: Prisma.SortOrder
+  accentColor?: Prisma.SortOrder
   mediaKeepHours?: Prisma.SortOrder
   emailVerified?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -864,6 +893,20 @@ export type UserUpdateOneRequiredWithoutInstagramSessionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutInstagramSessionsInput, Prisma.UserUpdateWithoutInstagramSessionsInput>, Prisma.UserUncheckedUpdateWithoutInstagramSessionsInput>
 }
 
+export type UserCreateNestedOneWithoutHomeWorkerDevicesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutHomeWorkerDevicesInput, Prisma.UserUncheckedCreateWithoutHomeWorkerDevicesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutHomeWorkerDevicesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutHomeWorkerDevicesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutHomeWorkerDevicesInput, Prisma.UserUncheckedCreateWithoutHomeWorkerDevicesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutHomeWorkerDevicesInput
+  upsert?: Prisma.UserUpsertWithoutHomeWorkerDevicesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutHomeWorkerDevicesInput, Prisma.UserUpdateWithoutHomeWorkerDevicesInput>, Prisma.UserUncheckedUpdateWithoutHomeWorkerDevicesInput>
+}
+
 export type UserCreateNestedOneWithoutNotificationChannelsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationChannelsInput, Prisma.UserUncheckedCreateWithoutNotificationChannelsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationChannelsInput
@@ -907,6 +950,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -918,6 +962,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -936,6 +981,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -947,6 +993,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -981,6 +1028,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -992,6 +1040,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -1010,6 +1059,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1021,6 +1071,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -1039,6 +1090,7 @@ export type UserCreateWithoutMetaConnectionsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1049,6 +1101,7 @@ export type UserCreateWithoutMetaConnectionsInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -1068,6 +1121,7 @@ export type UserUncheckedCreateWithoutMetaConnectionsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1078,6 +1132,7 @@ export type UserUncheckedCreateWithoutMetaConnectionsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -1113,6 +1168,7 @@ export type UserUpdateWithoutMetaConnectionsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1123,6 +1179,7 @@ export type UserUpdateWithoutMetaConnectionsInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -1142,6 +1199,7 @@ export type UserUncheckedUpdateWithoutMetaConnectionsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1152,6 +1210,7 @@ export type UserUncheckedUpdateWithoutMetaConnectionsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -1171,6 +1230,7 @@ export type UserCreateWithoutIgAccountsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1181,6 +1241,7 @@ export type UserCreateWithoutIgAccountsInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -1200,6 +1261,7 @@ export type UserUncheckedCreateWithoutIgAccountsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1210,6 +1272,7 @@ export type UserUncheckedCreateWithoutIgAccountsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -1245,6 +1308,7 @@ export type UserUpdateWithoutIgAccountsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1255,6 +1319,7 @@ export type UserUpdateWithoutIgAccountsInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -1274,6 +1339,7 @@ export type UserUncheckedUpdateWithoutIgAccountsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1284,6 +1350,7 @@ export type UserUncheckedUpdateWithoutIgAccountsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -1303,6 +1370,7 @@ export type UserCreateWithoutNichesInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1313,6 +1381,7 @@ export type UserCreateWithoutNichesInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -1332,6 +1401,7 @@ export type UserUncheckedCreateWithoutNichesInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1342,6 +1412,7 @@ export type UserUncheckedCreateWithoutNichesInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -1377,6 +1448,7 @@ export type UserUpdateWithoutNichesInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1387,6 +1459,7 @@ export type UserUpdateWithoutNichesInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -1406,6 +1479,7 @@ export type UserUncheckedUpdateWithoutNichesInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1416,6 +1490,7 @@ export type UserUncheckedUpdateWithoutNichesInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -1435,6 +1510,7 @@ export type UserCreateWithoutReelProjectsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1445,6 +1521,7 @@ export type UserCreateWithoutReelProjectsInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -1464,6 +1541,7 @@ export type UserUncheckedCreateWithoutReelProjectsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1474,6 +1552,7 @@ export type UserUncheckedCreateWithoutReelProjectsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -1509,6 +1588,7 @@ export type UserUpdateWithoutReelProjectsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1519,6 +1599,7 @@ export type UserUpdateWithoutReelProjectsInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -1538,6 +1619,7 @@ export type UserUncheckedUpdateWithoutReelProjectsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1548,6 +1630,7 @@ export type UserUncheckedUpdateWithoutReelProjectsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -1567,6 +1650,7 @@ export type UserCreateWithoutStoredFilesInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1577,6 +1661,7 @@ export type UserCreateWithoutStoredFilesInput = {
   reelProjects?: Prisma.ReelProjectCreateNestedManyWithoutUserInput
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -1596,6 +1681,7 @@ export type UserUncheckedCreateWithoutStoredFilesInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1606,6 +1692,7 @@ export type UserUncheckedCreateWithoutStoredFilesInput = {
   reelProjects?: Prisma.ReelProjectUncheckedCreateNestedManyWithoutUserInput
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -1641,6 +1728,7 @@ export type UserUpdateWithoutStoredFilesInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1651,6 +1739,7 @@ export type UserUpdateWithoutStoredFilesInput = {
   reelProjects?: Prisma.ReelProjectUpdateManyWithoutUserNestedInput
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -1670,6 +1759,7 @@ export type UserUncheckedUpdateWithoutStoredFilesInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1680,6 +1770,7 @@ export type UserUncheckedUpdateWithoutStoredFilesInput = {
   reelProjects?: Prisma.ReelProjectUncheckedUpdateManyWithoutUserNestedInput
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -1699,6 +1790,7 @@ export type UserCreateWithoutSoundAssetsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1709,6 +1801,7 @@ export type UserCreateWithoutSoundAssetsInput = {
   reelProjects?: Prisma.ReelProjectCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -1728,6 +1821,7 @@ export type UserUncheckedCreateWithoutSoundAssetsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1738,6 +1832,7 @@ export type UserUncheckedCreateWithoutSoundAssetsInput = {
   reelProjects?: Prisma.ReelProjectUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -1773,6 +1868,7 @@ export type UserUpdateWithoutSoundAssetsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1783,6 +1879,7 @@ export type UserUpdateWithoutSoundAssetsInput = {
   reelProjects?: Prisma.ReelProjectUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -1802,6 +1899,7 @@ export type UserUncheckedUpdateWithoutSoundAssetsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1812,6 +1910,7 @@ export type UserUncheckedUpdateWithoutSoundAssetsInput = {
   reelProjects?: Prisma.ReelProjectUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -1831,6 +1930,7 @@ export type UserCreateWithoutTargetsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1842,6 +1942,7 @@ export type UserCreateWithoutTargetsInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
@@ -1860,6 +1961,7 @@ export type UserUncheckedCreateWithoutTargetsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1871,6 +1973,7 @@ export type UserUncheckedCreateWithoutTargetsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
@@ -1905,6 +2008,7 @@ export type UserUpdateWithoutTargetsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1916,6 +2020,7 @@ export type UserUpdateWithoutTargetsInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
@@ -1934,6 +2039,7 @@ export type UserUncheckedUpdateWithoutTargetsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1945,6 +2051,7 @@ export type UserUncheckedUpdateWithoutTargetsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
@@ -1963,6 +2070,7 @@ export type UserCreateWithoutInstagramSessionsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -1973,6 +2081,7 @@ export type UserCreateWithoutInstagramSessionsInput = {
   reelProjects?: Prisma.ReelProjectCreateNestedManyWithoutUserInput
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
@@ -1992,6 +2101,7 @@ export type UserUncheckedCreateWithoutInstagramSessionsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -2002,6 +2112,7 @@ export type UserUncheckedCreateWithoutInstagramSessionsInput = {
   reelProjects?: Prisma.ReelProjectUncheckedCreateNestedManyWithoutUserInput
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
@@ -2037,6 +2148,7 @@ export type UserUpdateWithoutInstagramSessionsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2047,6 +2159,7 @@ export type UserUpdateWithoutInstagramSessionsInput = {
   reelProjects?: Prisma.ReelProjectUpdateManyWithoutUserNestedInput
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
@@ -2066,6 +2179,7 @@ export type UserUncheckedUpdateWithoutInstagramSessionsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2076,6 +2190,147 @@ export type UserUncheckedUpdateWithoutInstagramSessionsInput = {
   reelProjects?: Prisma.ReelProjectUncheckedUpdateManyWithoutUserNestedInput
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
+  targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
+  notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
+  authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutHomeWorkerDevicesInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name?: string | null
+  timezone?: string
+  retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
+  accentColor?: string | null
+  mediaKeepHours?: number | null
+  emailVerified?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  metaConnections?: Prisma.MetaConnectionCreateNestedManyWithoutUserInput
+  igAccounts?: Prisma.IgAccountCreateNestedManyWithoutUserInput
+  niches?: Prisma.NicheCreateNestedManyWithoutUserInput
+  reelProjects?: Prisma.ReelProjectCreateNestedManyWithoutUserInput
+  soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
+  instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  targets?: Prisma.TargetCreateNestedManyWithoutUserInput
+  notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
+  authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutHomeWorkerDevicesInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name?: string | null
+  timezone?: string
+  retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
+  accentColor?: string | null
+  mediaKeepHours?: number | null
+  emailVerified?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  metaConnections?: Prisma.MetaConnectionUncheckedCreateNestedManyWithoutUserInput
+  igAccounts?: Prisma.IgAccountUncheckedCreateNestedManyWithoutUserInput
+  niches?: Prisma.NicheUncheckedCreateNestedManyWithoutUserInput
+  reelProjects?: Prisma.ReelProjectUncheckedCreateNestedManyWithoutUserInput
+  soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
+  instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
+  notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
+  authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutHomeWorkerDevicesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutHomeWorkerDevicesInput, Prisma.UserUncheckedCreateWithoutHomeWorkerDevicesInput>
+}
+
+export type UserUpsertWithoutHomeWorkerDevicesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutHomeWorkerDevicesInput, Prisma.UserUncheckedUpdateWithoutHomeWorkerDevicesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutHomeWorkerDevicesInput, Prisma.UserUncheckedCreateWithoutHomeWorkerDevicesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutHomeWorkerDevicesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutHomeWorkerDevicesInput, Prisma.UserUncheckedUpdateWithoutHomeWorkerDevicesInput>
+}
+
+export type UserUpdateWithoutHomeWorkerDevicesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  metaConnections?: Prisma.MetaConnectionUpdateManyWithoutUserNestedInput
+  igAccounts?: Prisma.IgAccountUpdateManyWithoutUserNestedInput
+  niches?: Prisma.NicheUpdateManyWithoutUserNestedInput
+  reelProjects?: Prisma.ReelProjectUpdateManyWithoutUserNestedInput
+  soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
+  instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
+  notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
+  authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutHomeWorkerDevicesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  metaConnections?: Prisma.MetaConnectionUncheckedUpdateManyWithoutUserNestedInput
+  igAccounts?: Prisma.IgAccountUncheckedUpdateManyWithoutUserNestedInput
+  niches?: Prisma.NicheUncheckedUpdateManyWithoutUserNestedInput
+  reelProjects?: Prisma.ReelProjectUncheckedUpdateManyWithoutUserNestedInput
+  soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
+  instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
@@ -2095,6 +2350,7 @@ export type UserCreateWithoutNotificationChannelsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -2106,6 +2362,7 @@ export type UserCreateWithoutNotificationChannelsInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
@@ -2124,6 +2381,7 @@ export type UserUncheckedCreateWithoutNotificationChannelsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -2135,6 +2393,7 @@ export type UserUncheckedCreateWithoutNotificationChannelsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
@@ -2169,6 +2428,7 @@ export type UserUpdateWithoutNotificationChannelsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2180,6 +2440,7 @@ export type UserUpdateWithoutNotificationChannelsInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
@@ -2198,6 +2459,7 @@ export type UserUncheckedUpdateWithoutNotificationChannelsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2209,6 +2471,7 @@ export type UserUncheckedUpdateWithoutNotificationChannelsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
@@ -2227,6 +2490,7 @@ export type UserCreateWithoutAuthRateLimitsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -2238,6 +2502,7 @@ export type UserCreateWithoutAuthRateLimitsInput = {
   soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
@@ -2256,6 +2521,7 @@ export type UserUncheckedCreateWithoutAuthRateLimitsInput = {
   sleepEnabled?: boolean
   sleepStartHour?: number
   sleepEndHour?: number
+  accentColor?: string | null
   mediaKeepHours?: number | null
   emailVerified?: Date | string | null
   createdAt?: Date | string
@@ -2267,6 +2533,7 @@ export type UserUncheckedCreateWithoutAuthRateLimitsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
   storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
   instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
@@ -2301,6 +2568,7 @@ export type UserUpdateWithoutAuthRateLimitsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2312,6 +2580,7 @@ export type UserUpdateWithoutAuthRateLimitsInput = {
   soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
@@ -2330,6 +2599,7 @@ export type UserUncheckedUpdateWithoutAuthRateLimitsInput = {
   sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
   sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2341,6 +2611,7 @@ export type UserUncheckedUpdateWithoutAuthRateLimitsInput = {
   soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
   storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
   instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
@@ -2359,6 +2630,7 @@ export type UserCountOutputType = {
   soundAssets: number
   storedFiles: number
   instagramSessions: number
+  homeWorkerDevices: number
   targets: number
   notificationChannels: number
   authRateLimits: number
@@ -2373,6 +2645,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   soundAssets?: boolean | UserCountOutputTypeCountSoundAssetsArgs
   storedFiles?: boolean | UserCountOutputTypeCountStoredFilesArgs
   instagramSessions?: boolean | UserCountOutputTypeCountInstagramSessionsArgs
+  homeWorkerDevices?: boolean | UserCountOutputTypeCountHomeWorkerDevicesArgs
   targets?: boolean | UserCountOutputTypeCountTargetsArgs
   notificationChannels?: boolean | UserCountOutputTypeCountNotificationChannelsArgs
   authRateLimits?: boolean | UserCountOutputTypeCountAuthRateLimitsArgs
@@ -2441,6 +2714,13 @@ export type UserCountOutputTypeCountInstagramSessionsArgs<ExtArgs extends runtim
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountHomeWorkerDevicesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.HomeWorkerDeviceWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountTargetsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.TargetWhereInput
 }
@@ -2480,6 +2760,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   sleepEnabled?: boolean
   sleepStartHour?: boolean
   sleepEndHour?: boolean
+  accentColor?: boolean
   mediaKeepHours?: boolean
   emailVerified?: boolean
   createdAt?: boolean
@@ -2491,6 +2772,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   soundAssets?: boolean | Prisma.User$soundAssetsArgs<ExtArgs>
   storedFiles?: boolean | Prisma.User$storedFilesArgs<ExtArgs>
   instagramSessions?: boolean | Prisma.User$instagramSessionsArgs<ExtArgs>
+  homeWorkerDevices?: boolean | Prisma.User$homeWorkerDevicesArgs<ExtArgs>
   targets?: boolean | Prisma.User$targetsArgs<ExtArgs>
   notificationChannels?: boolean | Prisma.User$notificationChannelsArgs<ExtArgs>
   authRateLimits?: boolean | Prisma.User$authRateLimitsArgs<ExtArgs>
@@ -2511,6 +2793,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   sleepEnabled?: boolean
   sleepStartHour?: boolean
   sleepEndHour?: boolean
+  accentColor?: boolean
   mediaKeepHours?: boolean
   emailVerified?: boolean
   createdAt?: boolean
@@ -2530,6 +2813,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   sleepEnabled?: boolean
   sleepStartHour?: boolean
   sleepEndHour?: boolean
+  accentColor?: boolean
   mediaKeepHours?: boolean
   emailVerified?: boolean
   createdAt?: boolean
@@ -2549,13 +2833,14 @@ export type UserSelectScalar = {
   sleepEnabled?: boolean
   sleepStartHour?: boolean
   sleepEndHour?: boolean
+  accentColor?: boolean
   mediaKeepHours?: boolean
   emailVerified?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "timezone" | "retentionDays" | "role" | "maxTargets" | "targetQuotaAlertLevel" | "sleepEnabled" | "sleepStartHour" | "sleepEndHour" | "mediaKeepHours" | "emailVerified" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "timezone" | "retentionDays" | "role" | "maxTargets" | "targetQuotaAlertLevel" | "sleepEnabled" | "sleepStartHour" | "sleepEndHour" | "accentColor" | "mediaKeepHours" | "emailVerified" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   metaConnections?: boolean | Prisma.User$metaConnectionsArgs<ExtArgs>
   igAccounts?: boolean | Prisma.User$igAccountsArgs<ExtArgs>
@@ -2564,6 +2849,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   soundAssets?: boolean | Prisma.User$soundAssetsArgs<ExtArgs>
   storedFiles?: boolean | Prisma.User$storedFilesArgs<ExtArgs>
   instagramSessions?: boolean | Prisma.User$instagramSessionsArgs<ExtArgs>
+  homeWorkerDevices?: boolean | Prisma.User$homeWorkerDevicesArgs<ExtArgs>
   targets?: boolean | Prisma.User$targetsArgs<ExtArgs>
   notificationChannels?: boolean | Prisma.User$notificationChannelsArgs<ExtArgs>
   authRateLimits?: boolean | Prisma.User$authRateLimitsArgs<ExtArgs>
@@ -2583,6 +2869,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     soundAssets: Prisma.$SoundAssetPayload<ExtArgs>[]
     storedFiles: Prisma.$StoredFilePayload<ExtArgs>[]
     instagramSessions: Prisma.$InstagramSessionPayload<ExtArgs>[]
+    homeWorkerDevices: Prisma.$HomeWorkerDevicePayload<ExtArgs>[]
     targets: Prisma.$TargetPayload<ExtArgs>[]
     notificationChannels: Prisma.$NotificationChannelPayload<ExtArgs>[]
     authRateLimits: Prisma.$AuthRateLimitPayload<ExtArgs>[]
@@ -2601,6 +2888,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     sleepEnabled: boolean
     sleepStartHour: number
     sleepEndHour: number
+    accentColor: string | null
     mediaKeepHours: number | null
     emailVerified: Date | null
     createdAt: Date
@@ -3006,6 +3294,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   soundAssets<T extends Prisma.User$soundAssetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$soundAssetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SoundAssetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   storedFiles<T extends Prisma.User$storedFilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$storedFilesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoredFilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   instagramSessions<T extends Prisma.User$instagramSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$instagramSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InstagramSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  homeWorkerDevices<T extends Prisma.User$homeWorkerDevicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$homeWorkerDevicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$HomeWorkerDevicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   targets<T extends Prisma.User$targetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$targetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TargetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationChannels<T extends Prisma.User$notificationChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   authRateLimits<T extends Prisma.User$authRateLimitsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$authRateLimitsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuthRateLimitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3051,6 +3340,7 @@ export interface UserFieldRefs {
   readonly sleepEnabled: Prisma.FieldRef<"User", 'Boolean'>
   readonly sleepStartHour: Prisma.FieldRef<"User", 'Int'>
   readonly sleepEndHour: Prisma.FieldRef<"User", 'Int'>
+  readonly accentColor: Prisma.FieldRef<"User", 'String'>
   readonly mediaKeepHours: Prisma.FieldRef<"User", 'Int'>
   readonly emailVerified: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -3613,6 +3903,30 @@ export type User$instagramSessionsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.InstagramSessionScalarFieldEnum | Prisma.InstagramSessionScalarFieldEnum[]
+}
+
+/**
+ * User.homeWorkerDevices
+ */
+export type User$homeWorkerDevicesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the HomeWorkerDevice
+   */
+  select?: Prisma.HomeWorkerDeviceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the HomeWorkerDevice
+   */
+  omit?: Prisma.HomeWorkerDeviceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.HomeWorkerDeviceInclude<ExtArgs> | null
+  where?: Prisma.HomeWorkerDeviceWhereInput
+  orderBy?: Prisma.HomeWorkerDeviceOrderByWithRelationInput | Prisma.HomeWorkerDeviceOrderByWithRelationInput[]
+  cursor?: Prisma.HomeWorkerDeviceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.HomeWorkerDeviceScalarFieldEnum | Prisma.HomeWorkerDeviceScalarFieldEnum[]
 }
 
 /**

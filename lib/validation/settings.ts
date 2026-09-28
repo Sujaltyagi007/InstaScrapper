@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidTimeZone } from "@/lib/scheduling/time-windows";
+import { HEX_COLOR_REGEX } from "@/lib/theme/accent";
 
 export const updateSettingsSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
@@ -13,4 +14,6 @@ export const updateSettingsSchema = z.object({
   sleepStartHour: z.number().int().min(0).max(23).optional(),
   sleepEndHour: z.number().int().min(0).max(23).optional(),
   retentionDays: z.number().int().min(1).max(3650).optional(),
+  // Null resets to the app's default neutral theme.
+  accentColor: z.string().regex(HEX_COLOR_REGEX, "Use a hex color like #7c3aed.").nullable().optional(),
 });

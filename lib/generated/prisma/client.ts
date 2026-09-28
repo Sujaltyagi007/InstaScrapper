@@ -48,8 +48,7 @@ export { Prisma }
 export type User = Prisma.UserModel
 /**
  * Model PushSubscription
- * One browser/device subscribed to Web Push. Delivered through the user's
- * WEBPUSH NotificationChannel (which holds the event-type preferences).
+ * 
  */
 export type PushSubscription = Prisma.PushSubscriptionModel
 /**
@@ -108,6 +107,16 @@ export type Target = Prisma.TargetModel
  */
 export type InstagramSession = Prisma.InstagramSessionModel
 /**
+ * Model HomeWorkerDevice
+ * 
+ */
+export type HomeWorkerDevice = Prisma.HomeWorkerDeviceModel
+/**
+ * Model HomeWorkerJob
+ * 
+ */
+export type HomeWorkerJob = Prisma.HomeWorkerJobModel
+/**
  * Model Monitor
  * 
  */
@@ -122,6 +131,11 @@ export type TargetSnapshot = Prisma.TargetSnapshotModel
  * 
  */
 export type Media = Prisma.MediaModel
+/**
+ * Model MediaAsset
+ * 
+ */
+export type MediaAsset = Prisma.MediaAssetModel
 /**
  * Model Event
  * 

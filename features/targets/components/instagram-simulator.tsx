@@ -2,10 +2,11 @@
 import { friendlyError } from "@/lib/friendly-error";
 import { apiFetch } from "@/lib/fetcher";
 import { format, formatDistanceToNow } from "date-fns";
-import type { Media, TargetSnapshot } from "@prisma/client";
+import type { TargetSnapshot } from "@prisma/client";
+import type { MediaWithAssets as Media } from "@/types/domain";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { downloadMedia, isThumbnailOnlyVideo } from "../lib/download-media";
+import { downloadMedia, instagramEmbedUrl, isThumbnailOnlyVideo } from "../lib/download-media";
 import { useMediaActions, displayThumbnail, displayFullAsset } from "../hooks/use-media-actions";
 import { useSimulatorLayer } from "../hooks/use-simulator-layer";
 import { ChevronLeft, MoreHorizontal, Grid3X3, PlaySquare, Bookmark, UserSquare, Download, Play, Image as ImageIcon, Heart, MessageCircle, Send, Layers, RefreshCw, Loader2, Info, CloudOff, Trash2,} from "lucide-react";
@@ -306,6 +307,84 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+type PostAsset = NonNullable<Media["assets"]>[number];
+
+/** Every item of a carousel, swiped sideways like Instagram. */
+function CarouselGallery({ assets, alt }: { assets: PostAsset[]; alt: string }) {
+  const [index, setIndex] = useState(0);
+  return (
+    <div className="relative w-full">
+      <div
+        className="flex w-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          setIndex(Math.round(el.scrollLeft / Math.max(el.clientWidth, 1)));
+        }}
+      >
+        {assets.map((asset) => {
+          const src = asset.storageUrl || asset.sourceUrl || "";
+          const poster = asset.thumbnailUrl || undefined;
+          return (
+            <div key={asset.id} className="flex w-full shrink-0 snap-center items-center justify-center">
+              {asset.isVideo ? (
+                <video src={src} poster={poster} controls playsInline preload="none" className="max-h-105 w-full object-contain" />
+              ) : (
+                <img src={src || poster || ""} alt={alt} loading="lazy" className="max-h-105 w-full object-contain" />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {assets.length > 1 && (
+        <span className="absolute top-2 right-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-white">
+          {Math.min(index + 1, assets.length)}/{assets.length}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Height of the embed's own header (avatar, name, "View profile"); the same at every width. */
+const EMBED_HEADER_PX = 54;
+
+/**
+ * Instagram's embed player cropped to just the media: the iframe is shifted up
+ * past its header and the box stops where the media ends, so the name bar and
+ * the likes/comments footer are cut off. The embed sizes its media box by the
+ * post's shape (clamped between 1.91:1 and 4:5; reels are always 4:5), which
+ * the stored cover image tells us.
+ */
+function EmbedPlayer({ src, title, coverUrl, isReel }: { src: string; title: string; coverUrl: string | null; isReel: boolean }) {
+  const [ratio, setRatio] = useState(isReel ? 1.25 : 1);
+  return (
+    <div className="relative w-full overflow-hidden bg-black" style={{ aspectRatio: `1 / ${ratio}` }}>
+      {coverUrl && !isReel && (
+        <img
+          src={coverUrl}
+          alt=""
+          aria-hidden
+          className="hidden"
+          onLoad={(e) => {
+            const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+            if (w > 0) setRatio(Math.min(1.25, Math.max(1 / 1.91, h / w)));
+          }}
+        />
+      )}
+      <iframe
+        src={src}
+        title={title}
+        scrolling="no"
+        className="absolute left-0 w-full border-0"
+        // Taller than the whole embed, so it never shows its own scrollbar.
+        style={{ top: -EMBED_HEADER_PX, height: `calc(100% + ${EMBED_HEADER_PX}px + 480px)` }}
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+        loading="lazy"
+      />
+    </div>
+  );
+}
+
 function PostView({
   post,
   username,
@@ -324,15 +403,39 @@ function PostView({
   onPostDeleted?: () => void;
 }) {
   const [downloading, setDownloading] = useState(false);
-  const { redownload, permanentDelete, busyId } = useMediaActions(onDataChanged);
+  const { redownload, loadFull, permanentDelete, busyId } = useMediaActions(onDataChanged);
   const thumbnailOnly = isThumbnailOnlyVideo(post);
   const assetUrl = displayFullAsset(post) ?? "";
   const busy = busyId === post.id;
+  // Logged-out checks store only a reel's cover and a carousel's first image.
+  const canLoadFull =
+    !post.isExpired && (thumbnailOnly || (post.mediaType === "CAROUSEL_ALBUM" && !post.assets?.length));
+  // Tapping the cover saves the full post (usually from the public embed page,
+  // no burner) and then shows it in our own player. Only if that fails does
+  // Instagram's cropped player appear, so the post can still be watched.
+  const embedUrl = canLoadFull ? instagramEmbedUrl(post.permalink) : null;
+  const [embedFallback, setEmbedFallback] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const loadAndShow = async () => {
+    const updated = await loadFull(post.id);
+    if (updated) {
+      setAutoPlay(true);
+      onPostUpdated?.(updated);
+    } else if (embedUrl) {
+      setEmbedFallback(true);
+    }
+  };
 
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      await downloadMedia(assetUrl, post.mediaType, post.externalMediaId, username);
+      await downloadMedia(
+        assetUrl,
+        post.mediaType,
+        post.externalMediaId,
+        username,
+        post.storageFileId ? `/api/media/${post.id}/download` : undefined,
+      );
     } finally {
       setDownloading(false);
     }
@@ -377,8 +480,17 @@ function PostView({
               </p>
             </div>
           </div>
+        ) : post.assets && post.assets.length > 0 ? (
+          <CarouselGallery assets={post.assets} alt={post.caption ?? ""} />
         ) : post.videoUrl ? (
-          <video src={post.storageUrl || post.videoUrl} controls playsInline className="max-h-105 w-full object-contain" />
+          <video src={post.storageUrl || post.videoUrl} controls playsInline autoPlay={autoPlay} className="max-h-105 w-full object-contain" />
+        ) : embedFallback && embedUrl ? (
+          <EmbedPlayer
+            src={embedUrl}
+            title={`Post by @${username} on Instagram`}
+            coverUrl={displayThumbnail(post)}
+            isReel={post.mediaType === "REEL"}
+          />
         ) : assetUrl ? (
           <img src={assetUrl} alt={post.caption ?? ""} className="max-h-105 w-full object-contain" />
         ) : (
@@ -386,10 +498,24 @@ function PostView({
             <ImageIcon className="size-8" />
           </div>
         )}
-        {thumbnailOnly && (
-          <span className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-[10px] font-medium text-white">
-            Thumbnail only — video needs a logged-in session
-          </span>
+        {canLoadFull && !embedFallback && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={loadAndShow}
+            aria-label={thumbnailOnly ? "Play video" : "Show all photos"}
+            className="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors hover:bg-black/25"
+          >
+            <span className="flex size-16 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+              {busy ? (
+                <Loader2 className="size-7 animate-spin" />
+              ) : thumbnailOnly ? (
+                <Play className="ml-1 size-7 fill-white" />
+              ) : (
+                <Layers className="size-7" />
+              )}
+            </span>
+          </button>
         )}
       </div>
 

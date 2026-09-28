@@ -204,7 +204,7 @@ export async function getTargetDetail(userId: string, targetId: string) {
       // catalogue is unreachable without a session). Media therefore
       // accumulates slowly over many checks — capping at 24 was discarding
       // history we had already collected and made the grid look near-empty.
-      media: { orderBy: [{ timestamp: "desc" }, { firstSeenAt: "desc" }], take: 120 },
+      media: { orderBy: [{ timestamp: "desc" }, { firstSeenAt: "desc" }], take: 120, include: { assets: { orderBy: { position: "asc" } } } },
     },
   });
 }

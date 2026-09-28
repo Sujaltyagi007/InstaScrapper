@@ -2,8 +2,9 @@
 import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
 import { useState } from "react";
-import { apiFetch } from "@/lib/fetcher";
+import { apiFetch, FetchError } from "@/lib/fetcher";
 import type { Media } from "@prisma/client";
+import type { MediaWithAssets } from "@/types/domain";
 
 export function useMediaActions(onChanged?: () => void) {
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -20,6 +21,27 @@ export function useMediaActions(onChanged?: () => void) {
       return data.media;
     } catch (err) {
       toast.error(friendlyError(err, "Re-download failed."));
+      return null;
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // One logged-in request for a post's real video file or all carousel items.
+  const loadFull = async (mediaId: string): Promise<MediaWithAssets | null> => {
+    setBusyId(mediaId);
+    try {
+      const data = await apiFetch<{ media: MediaWithAssets }>(`/api/media/${mediaId}/full`, { method: "POST" });
+      onChanged?.();
+      return data.media;
+    } catch (err) {
+      const availableAt = err instanceof FetchError && err.code === "NO_SESSION_AVAILABLE" ? err.details?.availableAt : null;
+      if (typeof availableAt === "string") {
+        const when = new Date(availableAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
+        toast.error(`Your Instagram session is resting until ${when}. The post still plays here; save it after that.`);
+      } else {
+        toast.error(friendlyError(err, "Could not load the full post."));
+      }
       return null;
     } finally {
       setBusyId(null);
@@ -55,7 +77,7 @@ export function useMediaActions(onChanged?: () => void) {
     }
   };
 
-  return { redownload, permanentDelete, busyId };
+  return { redownload, loadFull, permanentDelete, busyId };
 }
 
 /** Best available image for a grid tile: thumbnail first, so expired items still render. */

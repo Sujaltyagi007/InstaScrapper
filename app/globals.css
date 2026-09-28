@@ -60,7 +60,7 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: oklch(0.374 0.01 67);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
@@ -81,6 +81,10 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Overridden per-user by lib/theme/accent.ts when an accent color is set;
+     these are the no-accent-picked defaults (headings look like today, no glow). */
+  --heading: var(--foreground);
+  --shadow-accent: transparent;
 }
 
 .dark {
@@ -94,7 +98,7 @@
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(26.862% 0.00003 271.152);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
@@ -115,6 +119,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --heading: var(--foreground);
+  --shadow-accent: transparent;
 }
 
 @layer base {
@@ -127,6 +133,22 @@
   html {
     @apply font-sans;
   }
+  /* Tinted by the user's accent color (lib/theme/accent.ts); plain --foreground
+     until they pick one, so this is a no-op by default. */
+  h1, h2, h3, h4, h5, h6, [data-slot="card-title"] {
+    color: var(--heading);
+  }
+}
+
+/* Colored glow for the primary button — transparent (invisible) until an
+   accent color sets --shadow-accent, see lib/theme/accent.ts. */
+.shadow-accent {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 8px 20px -6px var(--shadow-accent, transparent);
+}
+
+.shadow-selection {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px color-mix(in srgb, var(--primary) 65%, transparent),
+    0 2px 8px 1px color-mix(in srgb, var(--primary) 45%, transparent);
 }
 
 /* Super Cool, Slim Compact & Animated Glowing Scrollbar */

@@ -410,9 +410,12 @@ export const ModelName = {
   NicheAccount: 'NicheAccount',
   Target: 'Target',
   InstagramSession: 'InstagramSession',
+  HomeWorkerDevice: 'HomeWorkerDevice',
+  HomeWorkerJob: 'HomeWorkerJob',
   Monitor: 'Monitor',
   TargetSnapshot: 'TargetSnapshot',
   Media: 'Media',
+  MediaAsset: 'MediaAsset',
   Event: 'Event',
   NotificationChannel: 'NotificationChannel',
   Notification: 'Notification',
@@ -436,7 +439,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "pushSubscription" | "metaConnection" | "igAccount" | "mediaMetricSnapshot" | "niche" | "reelIdea" | "reelProject" | "storedFile" | "soundAsset" | "nicheAccount" | "target" | "instagramSession" | "monitor" | "targetSnapshot" | "media" | "event" | "notificationChannel" | "notification" | "job" | "authRateLimit" | "r2UsageCounter" | "scrapeThrottle" | "repost"
+    modelProps: "user" | "pushSubscription" | "metaConnection" | "igAccount" | "mediaMetricSnapshot" | "niche" | "reelIdea" | "reelProject" | "storedFile" | "soundAsset" | "nicheAccount" | "target" | "instagramSession" | "homeWorkerDevice" | "homeWorkerJob" | "monitor" | "targetSnapshot" | "media" | "mediaAsset" | "event" | "notificationChannel" | "notification" | "job" | "authRateLimit" | "r2UsageCounter" | "scrapeThrottle" | "repost"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1402,6 +1405,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    HomeWorkerDevice: {
+      payload: Prisma.$HomeWorkerDevicePayload<ExtArgs>
+      fields: Prisma.HomeWorkerDeviceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.HomeWorkerDeviceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.HomeWorkerDeviceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>
+        }
+        findFirst: {
+          args: Prisma.HomeWorkerDeviceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.HomeWorkerDeviceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>
+        }
+        findMany: {
+          args: Prisma.HomeWorkerDeviceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>[]
+        }
+        create: {
+          args: Prisma.HomeWorkerDeviceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>
+        }
+        createMany: {
+          args: Prisma.HomeWorkerDeviceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.HomeWorkerDeviceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>[]
+        }
+        delete: {
+          args: Prisma.HomeWorkerDeviceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>
+        }
+        update: {
+          args: Prisma.HomeWorkerDeviceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>
+        }
+        deleteMany: {
+          args: Prisma.HomeWorkerDeviceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.HomeWorkerDeviceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.HomeWorkerDeviceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>[]
+        }
+        upsert: {
+          args: Prisma.HomeWorkerDeviceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerDevicePayload>
+        }
+        aggregate: {
+          args: Prisma.HomeWorkerDeviceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateHomeWorkerDevice>
+        }
+        groupBy: {
+          args: Prisma.HomeWorkerDeviceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.HomeWorkerDeviceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.HomeWorkerDeviceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.HomeWorkerDeviceCountAggregateOutputType> | number
+        }
+      }
+    }
+    HomeWorkerJob: {
+      payload: Prisma.$HomeWorkerJobPayload<ExtArgs>
+      fields: Prisma.HomeWorkerJobFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.HomeWorkerJobFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.HomeWorkerJobFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>
+        }
+        findFirst: {
+          args: Prisma.HomeWorkerJobFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.HomeWorkerJobFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>
+        }
+        findMany: {
+          args: Prisma.HomeWorkerJobFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>[]
+        }
+        create: {
+          args: Prisma.HomeWorkerJobCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>
+        }
+        createMany: {
+          args: Prisma.HomeWorkerJobCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.HomeWorkerJobCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>[]
+        }
+        delete: {
+          args: Prisma.HomeWorkerJobDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>
+        }
+        update: {
+          args: Prisma.HomeWorkerJobUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>
+        }
+        deleteMany: {
+          args: Prisma.HomeWorkerJobDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.HomeWorkerJobUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.HomeWorkerJobUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>[]
+        }
+        upsert: {
+          args: Prisma.HomeWorkerJobUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HomeWorkerJobPayload>
+        }
+        aggregate: {
+          args: Prisma.HomeWorkerJobAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateHomeWorkerJob>
+        }
+        groupBy: {
+          args: Prisma.HomeWorkerJobGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.HomeWorkerJobGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.HomeWorkerJobCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.HomeWorkerJobCountAggregateOutputType> | number
+        }
+      }
+    }
     Monitor: {
       payload: Prisma.$MonitorPayload<ExtArgs>
       fields: Prisma.MonitorFieldRefs
@@ -1621,6 +1772,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.MediaCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.MediaCountAggregateOutputType> | number
+        }
+      }
+    }
+    MediaAsset: {
+      payload: Prisma.$MediaAssetPayload<ExtArgs>
+      fields: Prisma.MediaAssetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MediaAssetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MediaAssetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>
+        }
+        findFirst: {
+          args: Prisma.MediaAssetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MediaAssetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>
+        }
+        findMany: {
+          args: Prisma.MediaAssetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>[]
+        }
+        create: {
+          args: Prisma.MediaAssetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>
+        }
+        createMany: {
+          args: Prisma.MediaAssetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MediaAssetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>[]
+        }
+        delete: {
+          args: Prisma.MediaAssetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>
+        }
+        update: {
+          args: Prisma.MediaAssetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>
+        }
+        deleteMany: {
+          args: Prisma.MediaAssetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MediaAssetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MediaAssetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>[]
+        }
+        upsert: {
+          args: Prisma.MediaAssetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MediaAssetPayload>
+        }
+        aggregate: {
+          args: Prisma.MediaAssetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMediaAsset>
+        }
+        groupBy: {
+          args: Prisma.MediaAssetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MediaAssetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MediaAssetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MediaAssetCountAggregateOutputType> | number
         }
       }
     }
@@ -2268,6 +2493,7 @@ export const UserScalarFieldEnum = {
   sleepEnabled: 'sleepEnabled',
   sleepStartHour: 'sleepStartHour',
   sleepEndHour: 'sleepEndHour',
+  accentColor: 'accentColor',
   mediaKeepHours: 'mediaKeepHours',
   emailVerified: 'emailVerified',
   createdAt: 'createdAt',
@@ -2496,6 +2722,7 @@ export const InstagramSessionScalarFieldEnum = {
   deviceId: 'deviceId',
   impersonateTarget: 'impersonateTarget',
   proxyUrl: 'proxyUrl',
+  proxyUrlIv: 'proxyUrlIv',
   status: 'status',
   lastTestedAt: 'lastTestedAt',
   lastSuccessAt: 'lastSuccessAt',
@@ -2503,10 +2730,42 @@ export const InstagramSessionScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   lastUsedAt: 'lastUsedAt',
-  cooldownUntil: 'cooldownUntil'
+  cooldownUntil: 'cooldownUntil',
+  usesToday: 'usesToday',
+  usesDay: 'usesDay',
+  transport: 'transport',
+  homeWorkerDeviceId: 'homeWorkerDeviceId'
 } as const
 
 export type InstagramSessionScalarFieldEnum = (typeof InstagramSessionScalarFieldEnum)[keyof typeof InstagramSessionScalarFieldEnum]
+
+
+export const HomeWorkerDeviceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  label: 'label',
+  tokenHash: 'tokenHash',
+  status: 'status',
+  lastSeenAt: 'lastSeenAt',
+  createdAt: 'createdAt'
+} as const
+
+export type HomeWorkerDeviceScalarFieldEnum = (typeof HomeWorkerDeviceScalarFieldEnum)[keyof typeof HomeWorkerDeviceScalarFieldEnum]
+
+
+export const HomeWorkerJobScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  sessionId: 'sessionId',
+  status: 'status',
+  requestPayload: 'requestPayload',
+  responsePayload: 'responsePayload',
+  createdAt: 'createdAt',
+  claimedAt: 'claimedAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type HomeWorkerJobScalarFieldEnum = (typeof HomeWorkerJobScalarFieldEnum)[keyof typeof HomeWorkerJobScalarFieldEnum]
 
 
 export const MonitorScalarFieldEnum = {
@@ -2604,6 +2863,22 @@ export const MediaScalarFieldEnum = {
 } as const
 
 export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
+
+
+export const MediaAssetScalarFieldEnum = {
+  id: 'id',
+  mediaId: 'mediaId',
+  position: 'position',
+  isVideo: 'isVideo',
+  sourceUrl: 'sourceUrl',
+  storageUrl: 'storageUrl',
+  storageFileId: 'storageFileId',
+  thumbnailUrl: 'thumbnailUrl',
+  thumbnailFileId: 'thumbnailFileId',
+  createdAt: 'createdAt'
+} as const
+
+export type MediaAssetScalarFieldEnum = (typeof MediaAssetScalarFieldEnum)[keyof typeof MediaAssetScalarFieldEnum]
 
 
 export const EventScalarFieldEnum = {
@@ -2741,6 +3016,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -3168,9 +3450,12 @@ export type GlobalOmitConfig = {
   nicheAccount?: Prisma.NicheAccountOmit
   target?: Prisma.TargetOmit
   instagramSession?: Prisma.InstagramSessionOmit
+  homeWorkerDevice?: Prisma.HomeWorkerDeviceOmit
+  homeWorkerJob?: Prisma.HomeWorkerJobOmit
   monitor?: Prisma.MonitorOmit
   targetSnapshot?: Prisma.TargetSnapshotOmit
   media?: Prisma.MediaOmit
+  mediaAsset?: Prisma.MediaAssetOmit
   event?: Prisma.EventOmit
   notificationChannel?: Prisma.NotificationChannelOmit
   notification?: Prisma.NotificationOmit

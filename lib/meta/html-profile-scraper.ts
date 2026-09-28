@@ -183,6 +183,8 @@ export interface ScrapeOptions {
    * bio and posts leave this off and hold out for the full page.
    */
   acceptLite?: boolean;
+  /** Overrides MAX_ATTEMPTS (logged-in checks use far fewer: their page rarely needs a retry). */
+  maxAttempts?: number;
 }
 
 /** Spacing between parallel launches, so hedged attempts never leave as one burst. */
@@ -196,6 +198,7 @@ export async function scrapeProfileHtml(
   const cleanUser = username.trim().toLowerCase().replace(/^@/, "");
   const url = `https://www.instagram.com/${cleanUser}/`;
   const concurrency = Math.max(1, Math.min(options.concurrency ?? 1, 6));
+  const maxAttempts = Math.max(1, Math.min(options.maxAttempts ?? MAX_ATTEMPTS, MAX_ATTEMPTS));
 
   let lastStatus = 0;
   let shells = 0;
@@ -262,7 +265,7 @@ export async function scrapeProfileHtml(
   const inFlight = new Set<Promise<void>>();
   let launched = 0;
   while (!done) {
-    while (!done && inFlight.size < concurrency && launched < MAX_ATTEMPTS) {
+    while (!done && inFlight.size < concurrency && launched < maxAttempts) {
       const attempt = launched;
       const delay =
         concurrency > 1
@@ -301,7 +304,7 @@ export async function scrapeProfileHtml(
   if (!html) {
     console.warn(
       `[html-scraper] @${cleanUser}: no real profile page ` +
-      (stoppedForDeadline ? `(stopped early for time budget) ` : `after ${MAX_ATTEMPTS} attempts `) +
+      (stoppedForDeadline ? `(stopped early for time budget) ` : `after ${maxAttempts} attempts `) +
       `(${shells} login shells, last status ${lastStatus})`
     );
     if (shells > 0) {

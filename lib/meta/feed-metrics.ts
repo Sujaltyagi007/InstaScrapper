@@ -1,4 +1,4 @@
-import type { MediaMetrics, NormalizedMediaItem } from "./types";
+import type { MediaChild, MediaMetrics, NormalizedMediaItem } from "./types";
 
 /**
  * Parses the logged-in mobile feed (`i.instagram.com/api/v1/feed/user/<id>/`),
@@ -83,6 +83,12 @@ export function parseFeedItems(body: unknown): FeedEntry[] {
     const isCarousel = raw.media_type === 8;
     const isVideo = raw.media_type === 2;
     const cover = isCarousel ? raw.carousel_media?.[0] : raw;
+    const children: MediaChild[] | undefined = isCarousel && Array.isArray(raw.carousel_media)
+      ? raw.carousel_media.map((child) => ({
+        imageUrl: largest(child.image_versions2?.candidates),
+        videoUrl: child.media_type === 2 ? largest(child.video_versions) : null,
+      }))
+      : undefined;
 
     entries.push({
       item: {
@@ -94,6 +100,7 @@ export function parseFeedItems(body: unknown): FeedEntry[] {
         mediaUrl: largest(cover?.image_versions2?.candidates),
         videoUrl: largest(raw.video_versions),
         isStory: false,
+        ...(children && children.length > 0 ? { children } : {}),
       },
       metrics: {
         playCount: num(raw.ig_play_count) ?? num(raw.play_count) ?? num(raw.view_count),
@@ -109,7 +116,8 @@ export function parseFeedItems(body: unknown): FeedEntry[] {
 /**
  * Attaches feed metrics to items already found on the profile, and appends feed
  * items the profile didn't include (the web JSON often omits reels). Existing
- * items keep their own fields; only missing video URLs are filled in.
+ * items keep their own fields; only missing video URLs and carousel items are
+ * filled in.
  */
 export function mergeFeedMetrics(media: NormalizedMediaItem[], feed: FeedEntry[]): NormalizedMediaItem[] {
   const byId = new Map(media.map((m) => [m.externalMediaId, m]));
@@ -119,6 +127,7 @@ export function mergeFeedMetrics(media: NormalizedMediaItem[], feed: FeedEntry[]
     if (existing) {
       existing.metrics = metrics;
       if (!existing.videoUrl && item.videoUrl) existing.videoUrl = item.videoUrl;
+      if (!existing.children && item.children) existing.children = item.children;
       if (item.mediaType === "REEL") existing.mediaType = "REEL";
     } else {
       const added = { ...item, metrics };

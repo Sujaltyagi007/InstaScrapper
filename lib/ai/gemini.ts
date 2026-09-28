@@ -1,12 +1,4 @@
-/**
- * Minimal Gemini client over the REST Interactions API (no SDK, keeps the
- * function bundle small). Model IDs are env-overridable because Google renames
- * and retires them often.
- *
- * Each task has a model chain. The free tier gives every model its own small
- * daily quota (gemini-3.8-flash: 20 requests/day, measured 2026-09-27), so when
- * one model's quota is used up the next one in the chain takes over.
- */
+
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions";
 
 function modelChain(list: string | undefined, single: string | undefined, defaults: string[]): string[] {
@@ -24,7 +16,6 @@ export const GEMINI_TEXT_MODELS = modelChain(process.env.GEMINI_TEXT_MODELS, pro
 ]);
 export const GEMINI_TTS_MODELS = modelChain(process.env.GEMINI_TTS_MODELS, process.env.GEMINI_TTS_MODEL, [
   "gemini-3.8-flash-tts",
-  // gemini-3.1-flash-tts-preview is left out: it rejects the style annotation (400).
   "gemini-3.8-flash-lite-tts",
 ]);
 export const GEMINI_TEXT_MODEL = GEMINI_TEXT_MODELS[0];
@@ -35,9 +26,7 @@ export class GeminiError extends Error {
   constructor(
     message: string,
     readonly status: number,
-    /** True when the free-tier daily quota is used up; callers should wait hours, not retry now. */
     readonly quotaExceeded: boolean,
-    /** Set for the per-minute rate limit: how long Gemini asked us to wait. */
     readonly retryAfterMs?: number,
   ) {
     super(message);
@@ -56,11 +45,8 @@ export function isGeminiConfigured(): boolean {
   return key.length > 0 && !key.startsWith("your_");
 }
 
-// Waits before each retry of a 5xx. Gemini's free tier often answers 503 "high demand" for a few seconds.
 const RETRY_DELAYS_MS = [2_000, 5_000];
-/** Per request. Long TTS takes ~20-30s; audio analysis similar. */
 const REQUEST_TIMEOUT_MS = 90_000;
-/** The free tier also limits requests per minute; waits up to this long for it once. */
 const MAX_RATE_LIMIT_WAIT_MS = 40_000;
 
 function errorMessage(text: string): string {
@@ -71,7 +57,6 @@ function errorMessage(text: string): string {
   }
 }
 
-/** Per-minute limits say "per minute … retry in 30s"; the daily quota doesn't. */
 function perMinuteRetryMs(message: string): number | null {
   if (!/per minute/i.test(message)) return null;
   const hint = message.match(/retry in (\d+(?:\.\d+)?)\s*s/i);
@@ -91,7 +76,6 @@ async function interact(body: Record<string, unknown>): Promise<unknown> {
         method: "POST",
         headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        // Without a limit a stalled connection would hang until the function is killed.
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
       text = await res.text();
@@ -142,9 +126,7 @@ function outputText(res: unknown): string {
   const direct = r.output_text ?? r.outputText;
   if (typeof direct === "string") return direct;
   const text = outputBlocks(res)
-    .filter((b) => b.type === "text" && typeof b.text === "string")
-    .map((b) => b.text)
-    .join("");
+    .filter((b) => b.type === "text" && typeof b.text === "string").map((b) => b.text).join("");
   if (!text) throw new GeminiError(`Gemini returned no text: ${JSON.stringify(res).slice(0, 300)}`, 200, false);
   return text;
 }
@@ -157,15 +139,9 @@ function buildInput(prompt: string, media: MediaInput[]): unknown {
   ];
 }
 
-/** Models whose daily quota ran out, until when to skip them (per server instance). */
 const exhaustedUntil = new Map<string, number>();
 const EXHAUSTED_SKIP_MS = 60 * 60_000;
 
-/**
- * Runs `call` on each model in turn until one succeeds. Moves on when a model's
- * quota or rate limit is used up, or the model no longer exists (404); any
- * other error is about the request itself, so it's thrown straight away.
- */
 async function withModelFallback<T>(models: string[], call: (model: string) => Promise<T>): Promise<T> {
   const now = Date.now();
   const available = models.filter((m) => (exhaustedUntil.get(m) ?? 0) <= now);
@@ -184,7 +160,6 @@ async function withModelFallback<T>(models: string[], call: (model: string) => P
   throw lastError;
 }
 
-/** Asks for JSON matching `schema` (a JSON Schema object) and parses it. */
 export async function generateJson<T>(params: {
   prompt: string;
   schema: Record<string, unknown>;
@@ -207,10 +182,7 @@ export async function generateJson<T>(params: {
   }
 }
 
-/**
- * Text-to-speech. Returns a WAV (24 kHz mono 16-bit PCM). Pauses can be written
- * inline as `<short pause>` / `<long pause>`.
- */
+
 export async function speak(params: {
   text: string;
   style?: string;

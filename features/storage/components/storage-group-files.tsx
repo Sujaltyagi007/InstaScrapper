@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/common/error-state";
 import { format } from "date-fns";
-import { ExternalLink, FileAudio, FileVideo, File as FileIcon, Loader2, Trash2 } from "lucide-react";
+import { Check, ExternalLink, FileAudio, FileVideo, File as FileIcon, Loader2, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/fetcher";
 import { formatBytes } from "@/lib/format-bytes";
 import { Button } from "@/components/ui/button";
@@ -142,15 +142,20 @@ export function StorageGroupFiles({ group, onChanged }: { group: string; onChang
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {data.files.map((file) => (
           <li key={file.fileId} className="flex flex-col overflow-hidden rounded-lg border">
-            <button
-              type="button"
-              onClick={() => toggle(file.fileId)}
+            <button type="button" onClick={() => toggle(file.fileId)}
               className="relative flex aspect-square items-center justify-center overflow-hidden bg-muted"
               aria-label={selected.has(file.fileId) ? "Unselect" : "Select"}
+              aria-pressed={selected.has(file.fileId)}
             >
               <Preview file={file} />
-              <span className="absolute left-2 top-2 rounded bg-background/90 p-0.5">
-                <Checkbox checked={selected.has(file.fileId)} tabIndex={-1} />
+              <span className="absolute left-3 top-3 rounded-lg bg-background/90 p-0.5">
+                <span aria-hidden="true" className={`flex size-5 items-center justify-center rounded-lg border transition-colors ${selected.has(file.fileId)
+                  ? "border-primary bg-primary text-primary-foreground shadow-selection"
+                  : "border-foreground/25 bg-background/95 text-transparent"
+                  }`}
+                >
+                  {selected.has(file.fileId) && <Check className="size-4" />}
+                </span>
               </span>
             </button>
             <div className="flex flex-col gap-0.5 p-2 text-xs">

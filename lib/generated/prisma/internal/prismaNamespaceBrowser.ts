@@ -64,9 +64,12 @@ export const ModelName = {
   NicheAccount: 'NicheAccount',
   Target: 'Target',
   InstagramSession: 'InstagramSession',
+  HomeWorkerDevice: 'HomeWorkerDevice',
+  HomeWorkerJob: 'HomeWorkerJob',
   Monitor: 'Monitor',
   TargetSnapshot: 'TargetSnapshot',
   Media: 'Media',
+  MediaAsset: 'MediaAsset',
   Event: 'Event',
   NotificationChannel: 'NotificationChannel',
   Notification: 'Notification',
@@ -106,6 +109,7 @@ export const UserScalarFieldEnum = {
   sleepEnabled: 'sleepEnabled',
   sleepStartHour: 'sleepStartHour',
   sleepEndHour: 'sleepEndHour',
+  accentColor: 'accentColor',
   mediaKeepHours: 'mediaKeepHours',
   emailVerified: 'emailVerified',
   createdAt: 'createdAt',
@@ -334,6 +338,7 @@ export const InstagramSessionScalarFieldEnum = {
   deviceId: 'deviceId',
   impersonateTarget: 'impersonateTarget',
   proxyUrl: 'proxyUrl',
+  proxyUrlIv: 'proxyUrlIv',
   status: 'status',
   lastTestedAt: 'lastTestedAt',
   lastSuccessAt: 'lastSuccessAt',
@@ -341,10 +346,42 @@ export const InstagramSessionScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   lastUsedAt: 'lastUsedAt',
-  cooldownUntil: 'cooldownUntil'
+  cooldownUntil: 'cooldownUntil',
+  usesToday: 'usesToday',
+  usesDay: 'usesDay',
+  transport: 'transport',
+  homeWorkerDeviceId: 'homeWorkerDeviceId'
 } as const
 
 export type InstagramSessionScalarFieldEnum = (typeof InstagramSessionScalarFieldEnum)[keyof typeof InstagramSessionScalarFieldEnum]
+
+
+export const HomeWorkerDeviceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  label: 'label',
+  tokenHash: 'tokenHash',
+  status: 'status',
+  lastSeenAt: 'lastSeenAt',
+  createdAt: 'createdAt'
+} as const
+
+export type HomeWorkerDeviceScalarFieldEnum = (typeof HomeWorkerDeviceScalarFieldEnum)[keyof typeof HomeWorkerDeviceScalarFieldEnum]
+
+
+export const HomeWorkerJobScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  sessionId: 'sessionId',
+  status: 'status',
+  requestPayload: 'requestPayload',
+  responsePayload: 'responsePayload',
+  createdAt: 'createdAt',
+  claimedAt: 'claimedAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type HomeWorkerJobScalarFieldEnum = (typeof HomeWorkerJobScalarFieldEnum)[keyof typeof HomeWorkerJobScalarFieldEnum]
 
 
 export const MonitorScalarFieldEnum = {
@@ -442,6 +479,22 @@ export const MediaScalarFieldEnum = {
 } as const
 
 export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
+
+
+export const MediaAssetScalarFieldEnum = {
+  id: 'id',
+  mediaId: 'mediaId',
+  position: 'position',
+  isVideo: 'isVideo',
+  sourceUrl: 'sourceUrl',
+  storageUrl: 'storageUrl',
+  storageFileId: 'storageFileId',
+  thumbnailUrl: 'thumbnailUrl',
+  thumbnailFileId: 'thumbnailFileId',
+  createdAt: 'createdAt'
+} as const
+
+export type MediaAssetScalarFieldEnum = (typeof MediaAssetScalarFieldEnum)[keyof typeof MediaAssetScalarFieldEnum]
 
 
 export const EventScalarFieldEnum = {
@@ -579,6 +632,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {

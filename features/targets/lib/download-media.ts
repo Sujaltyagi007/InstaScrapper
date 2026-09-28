@@ -28,8 +28,19 @@ export async function downloadMedia(
   url: string,
   mediaType: string,
   externalId: string,
-  username: string
+  username: string,
+  storedDownloadPath?: string,
 ) {
+  if (storedDownloadPath) {
+    const link = document.createElement("a");
+    link.href = storedDownloadPath;
+    link.download = `${username}-${externalId}.${mediaType === "VIDEO" || mediaType === "REEL" ? "mp4" : "jpg"}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    return { ok: true as const };
+  }
+
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to fetch media (HTTP ${response.status})`);
@@ -54,4 +65,22 @@ export async function downloadMedia(
 export function isThumbnailOnlyVideo(item: { mediaType: string; videoUrl: string | null; }): boolean {
   const isVideoKind = item.mediaType === "VIDEO" || item.mediaType === "REEL";
   return isVideoKind && !item.videoUrl;
+}
+
+/**
+ * Instagram's own embed player for a post. It plays reels and swipes carousels
+ * in the viewer's browser with no login, so it needs neither the burner nor
+ * a stored file. Only instagram.com post links are accepted, since the result
+ * becomes an iframe src.
+ */
+export function instagramEmbedUrl(permalink: string | null): string | null {
+  if (!permalink) return null;
+  try {
+    const url = new URL(permalink);
+    if (url.hostname !== "www.instagram.com" && url.hostname !== "instagram.com") return null;
+    const match = url.pathname.match(/^\/(p|reel|tv)\/([A-Za-z0-9_-]+)/);
+    return match ? `https://www.instagram.com/${match[1]}/${match[2]}/embed/` : null;
+  } catch {
+    return null;
+  }
 }

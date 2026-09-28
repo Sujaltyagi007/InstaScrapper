@@ -11,7 +11,8 @@ export interface InstagramSessionSummary {
   authMethod: string;
   userAgent: string | null;
   impersonateTarget: string;
-  proxyUrl: string | null;
+  /** Never the actual proxy URL (it embeds credentials) — only whether one is set. */
+  hasProxy: boolean;
   status: "ACTIVE" | "FLAGGED" | "CHECKPOINT_REQUIRED" | "EXPIRED" | "PAUSED";
   lastTestedAt: string | null;
   lastSuccessAt: string | null;
@@ -20,6 +21,8 @@ export interface InstagramSessionSummary {
   updatedAt: string;
   lastUsedAt: string | null;
   cooldownUntil: string | null;
+  transport: string;
+  homeWorkerDeviceId: string | null;
 }
 
 export interface PoolHealth {
@@ -60,6 +63,15 @@ export function useSessions() {
     (id: string) => patch(id, { resetFlag: true }, { status: "ACTIVE", lastErrorMessage: null }),
     [patch],
   );
+  const setSessionTransport = useCallback(
+    (id: string, transport: "PROXY" | "HOME_WORKER", homeWorkerDeviceId?: string) =>
+      patch(
+        id,
+        { transport, ...(homeWorkerDeviceId ? { homeWorkerDeviceId } : {}) },
+        { transport, homeWorkerDeviceId: transport === "HOME_WORKER" ? homeWorkerDeviceId ?? null : null },
+      ),
+    [patch],
+  );
 
   return {
     sessions: data?.sessions ?? null,
@@ -70,5 +82,6 @@ export function useSessions() {
     mutate,
     setSessionStatus,
     resetSession,
+    setSessionTransport,
   };
 }

@@ -1,0 +1,14 @@
+{
+  "name": "instascrapper-home-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Runs on your own PC and executes one burner session's Instagram requests from your home IP. See ../docs/home-worker-setup.md.",
+  "type": "module",
+  "main": "home-worker.mjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node home-worker.mjs"
+  }
+}

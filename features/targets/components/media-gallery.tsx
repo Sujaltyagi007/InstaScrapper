@@ -152,7 +152,7 @@ export function MediaGallery({ media, username, onMediaChanged }: MediaGalleryPr
                         </Fragment>
                       ) : (
                         displayFullAsset(selectedItem) && (
-                          <Button variant="secondary" size="sm" className="h-7 text-xs gap-1" onClick={() => downloadMedia(displayFullAsset(selectedItem) || "", selectedItem.mediaType, selectedItem.externalMediaId, username)}>
+                          <Button variant="secondary" size="sm" className="h-7 text-xs gap-1" onClick={() => downloadMedia(displayFullAsset(selectedItem) || "", selectedItem.mediaType, selectedItem.externalMediaId, username, selectedItem.storageFileId ? `/api/media/${selectedItem.id}/download` : undefined)}>
                             <Download className="size-3" />
                             <span>Download</span>
                           </Button>

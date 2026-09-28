@@ -9,9 +9,18 @@ import { saveMediaMetrics } from "./media-metrics.service";
 import { nextRunAtFromInterval, clampIntervalSeconds } from "./target.service";
 import { pickSession, reportSessionOutcome } from "@/lib/meta/session-pool";
 import type { TargetFetchResult } from "@/lib/meta/types";
-import { mediaLabel, uploadHeavyAndThumbnail } from "@/lib/services/media-storage.service";
+import { mediaLabel, storeCarouselAssets, uploadHeavyAndThumbnail, uploadVideoWithCover } from "@/lib/services/media-storage.service";
+import { enrichWithLoggedInFeed } from "@/lib/services/media-enrichment.service";
 import { contentHash } from "@/lib/storage/ledger";
-import { downloadStoredObject, isStorageEnabled, fetchToBuffer, uploadBuffer, visualDistance, visualHash } from "@/lib/storage";
+import {
+  downloadStoredObject,
+  isStorageEnabled,
+  fetchToBuffer,
+  uploadBuffer,
+  visualDistance,
+  visualHash,
+} from "@/lib/storage";
+import { stealthResolvePostMedia } from "@/lib/meta/stealth-engine-bridge";
 import { getPacingGate, reserveProfileView, recordCheckOutcome } from "./pacing.service";
 import {
   humanIntervalSeconds,
@@ -413,12 +422,12 @@ async function handleFailedFetch(
   usedSessionId: string | null = null
 ) {
   const now = new Date();
+  // A failed check never counts against the burner: the profile read that
+  // failed is always logged out (stealthFetchTargetData), and the burner's own
+  // requests only run after it succeeds. Their warnings arrive as
+  // `sessionWarning` on a successful result instead.
 
   if (fetchResult.sessionFlagged) {
-    if (usedSessionId) {
-      await reportSessionOutcome(usedSessionId, { kind: "FLAGGED", message: fetchResult.errorMessage });
-    }
-
     const otherEligible = await prisma.instagramSession.count({
       where: {
         userId: target.userId,
@@ -469,9 +478,6 @@ async function handleFailedFetch(
   }
 
   if (fetchResult.rateLimited) {
-    if (usedSessionId) {
-      await reportSessionOutcome(usedSessionId, { kind: "RATE_LIMITED", message: fetchResult.errorMessage });
-    }
     const failures = target.consecutiveFailures + 1;
     await prisma.target.update({
       where: { id: target.id },
@@ -598,27 +604,73 @@ async function handleSuccessfulFetch(
     // Collected for auto-repost below, after every row is safely written.
     const createdMediaIds: string[] = [];
 
+    // Resolving a video's real file costs its own request (post-page-scraper's
+    // retry loop, a few seconds worst case) — separate from the general upload
+    // budget so it isn't attempted this close to the deadline.
+    const hasTimeToResolveVideo = () => !deadlineAt || deadlineAt - Date.now() > 20_000;
+
+    // A logged-out check never sees a reel's video file or a carousel's other
+    // items. When this check found such posts, one logged-in feed request (the
+    // burner, through the pool's daily cap and cooldown) fills them all in.
+    // Trend accounts store no media, so they never spend a burner use on this.
+    if (!trendOnly && hasTimeToResolveVideo()) {
+      const enrichment = await enrichWithLoggedInFeed(target.userId, target.externalId, newItems).catch((err) => {
+        console.warn("[monitoring] logged-in media lookup failed:", err instanceof Error ? err.message : err);
+        return null;
+      });
+      if (enrichment?.used) {
+        console.log(`[monitoring] @${target.normalizedUsername}: logged-in media lookup ${enrichment.verdict}, filled ${enrichment.filled} post(s)`);
+      }
+    }
+
     for (const item of newItems) {
+      const isVideoKind = item.mediaType === "VIDEO" || item.mediaType === "REEL";
+
+      // Still missing after the logged-in lookup (no burner available, cooling
+      // down or over today's cap): a plain feed VIDEO can be recovered from its
+      // own logged-out post page. Reels can't: verified live (2026-09-28, 8/8
+      // attempts) that a reel's page is walled for logged-out requests, so no
+      // attempt is made for them.
+      let videoUrl = item.videoUrl;
+      if (item.mediaType === "VIDEO" && !videoUrl && item.permalink && !trendOnly && hasTimeToResolveVideo()) {
+        const resolved = await stealthResolvePostMedia(item.permalink).catch(() => null);
+        if (resolved?.videoUrl) videoUrl = resolved.videoUrl;
+      }
+
       // Upload the full-resolution file plus an independently-stored
       // compressed thumbnail. The thumbnail is what keeps the feed rendering
       // after the 48h policy deletes the heavy original.
-      const sourceUrl = item.videoUrl || item.mediaUrl;
-      const stored = sourceUrl && !trendOnly && hasTimeToUpload()
-        ? await uploadHeavyAndThumbnail({
-          sourceUrl,
-          fileNameBase: `${target.normalizedUsername}_${item.externalMediaId}`,
-          folder: `/instascrapper/targets/${target.normalizedUsername}/media`,
-          tags: [target.normalizedUsername, item.mediaType],
-          isVideo: Boolean(item.videoUrl),
-          owner: {
-            userId: target.userId,
-            kind: "MEDIA",
-            label: mediaLabel(target.normalizedUsername, item.mediaType, item.permalink ?? null),
-            targetId: target.id,
-            targetUsername: target.normalizedUsername,
-          },
-        })
-        : null;
+      let stored: Awaited<ReturnType<typeof uploadHeavyAndThumbnail>> = null;
+      const owner = {
+        userId: target.userId,
+        kind: "MEDIA" as const,
+        label: mediaLabel(target.normalizedUsername, item.mediaType, item.permalink ?? null),
+        targetId: target.id,
+        targetUsername: target.normalizedUsername,
+      };
+      const fileNameBase = `${target.normalizedUsername}_${item.externalMediaId}`;
+      const folder = `/instascrapper/targets/${target.normalizedUsername}/media`;
+      if (!trendOnly && hasTimeToUpload()) {
+        if (isVideoKind && videoUrl) {
+          stored = await uploadVideoWithCover({
+            videoUrl,
+            coverUrl: item.mediaUrl,
+            fileNameBase,
+            folder,
+            tags: [target.normalizedUsername, item.mediaType],
+            owner,
+          });
+        } else if (item.mediaUrl) {
+          stored = await uploadHeavyAndThumbnail({
+            sourceUrl: item.mediaUrl,
+            fileNameBase,
+            folder,
+            tags: [target.normalizedUsername, item.mediaType],
+            isVideo: false,
+            owner,
+          });
+        }
+      }
 
       const createdMedia = await prisma.media.create({
         data: {
@@ -630,12 +682,12 @@ async function handleSuccessfulFetch(
           caption: item.caption,
           // Display URLs: prefer storage, fall back to the live source.
           mediaUrl: stored?.storageUrl ?? item.mediaUrl,
-          videoUrl: item.videoUrl,
+          videoUrl,
           // Original upstream links, preserved verbatim for re-download.
           // Previously `mediaUrl` was overwritten with the storage URL, which
           // destroyed the only pointer back to the source.
           sourceMediaUrl: item.mediaUrl,
-          sourceVideoUrl: item.videoUrl,
+          sourceVideoUrl: videoUrl,
           storageUrl: stored?.storageUrl ?? null,
           storageFileId: stored?.storageFileId ?? null,
           storedAt: stored?.storedAt ?? null,
@@ -646,6 +698,16 @@ async function handleSuccessfulFetch(
           collaborators: item.collaborators ?? [],
         },
       });
+      if (!trendOnly && item.children?.length) {
+        await storeCarouselAssets({
+          mediaId: createdMedia.id,
+          children: item.children,
+          fileNameBase,
+          folder,
+          owner,
+          hasTime: hasTimeToUpload,
+        }).catch((err) => console.warn("[monitoring] carousel items not stored:", err instanceof Error ? err.message : err));
+      }
       // Only repost genuinely new posts — never the first-check backfill, which
       // would dump a target's whole recent feed onto the user's account at once.
       if (previousSnapshot && !trendOnly) createdMediaIds.push(createdMedia.id);
@@ -918,7 +980,10 @@ async function handleSuccessfulFetch(
   const nextRunAt = calculateNextRunAt(target.monitor, target.user);
 
   if (usedSessionId) {
-    await reportSessionOutcome(usedSessionId, { kind: "SUCCESS", deviceId: fetchResult.deviceId });
+    await reportSessionOutcome(
+      usedSessionId,
+      fetchResult.sessionWarning ?? { kind: "SUCCESS", deviceId: fetchResult.deviceId },
+    );
   }
 
   await prisma.target.update({

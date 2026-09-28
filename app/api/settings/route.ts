@@ -12,6 +12,7 @@ const SETTINGS_SELECT = {
   sleepEnabled: true,
   sleepStartHour: true,
   sleepEndHour: true,
+  accentColor: true,
 } as const;
 
 export async function GET() {

@@ -10,6 +10,7 @@
  * new IP per connection; "<user>-<n>" pins proxy n of the list (same IP every time).
  */
 import { prisma } from "@/lib/prisma";
+import { decryptProxyUrl } from "./proxy-secret";
 
 const ROTATE_SUFFIX = "-rotate";
 const MAX_STICKY_INDEX = 100;
@@ -61,9 +62,9 @@ export async function assignStickyProxy(excludeSessionId?: string): Promise<stri
   if (!base || !isRotatingProxy(base)) return null;
   const sessions = await prisma.instagramSession.findMany({
     where: excludeSessionId ? { id: { not: excludeSessionId } } : {},
-    select: { proxyUrl: true },
+    select: { proxyUrl: true, proxyUrlIv: true },
   });
-  const used = new Set(sessions.map((s) => stickyIndexOf(s.proxyUrl, base)).filter((n): n is number => n !== null));
+  const used = new Set(sessions.map((s) => stickyIndexOf(decryptProxyUrl(s), base)).filter((n): n is number => n !== null));
   for (let i = 1; i <= MAX_STICKY_INDEX; i++) {
     if (!used.has(i)) return stickyVariant(base, i);
   }

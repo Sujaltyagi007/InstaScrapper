@@ -414,6 +414,7 @@ export type MediaWhereInput = {
   metricsUpdatedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
   target?: Prisma.XOR<Prisma.TargetScalarRelationFilter, Prisma.TargetWhereInput>
   metricSnapshots?: Prisma.MediaMetricSnapshotListRelationFilter
+  assets?: Prisma.MediaAssetListRelationFilter
 }
 
 export type MediaOrderByWithRelationInput = {
@@ -448,6 +449,7 @@ export type MediaOrderByWithRelationInput = {
   metricsUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   target?: Prisma.TargetOrderByWithRelationInput
   metricSnapshots?: Prisma.MediaMetricSnapshotOrderByRelationAggregateInput
+  assets?: Prisma.MediaAssetOrderByRelationAggregateInput
 }
 
 export type MediaWhereUniqueInput = Prisma.AtLeast<{
@@ -486,6 +488,7 @@ export type MediaWhereUniqueInput = Prisma.AtLeast<{
   metricsUpdatedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
   target?: Prisma.XOR<Prisma.TargetScalarRelationFilter, Prisma.TargetWhereInput>
   metricSnapshots?: Prisma.MediaMetricSnapshotListRelationFilter
+  assets?: Prisma.MediaAssetListRelationFilter
 }, "id" | "targetId_externalMediaId">
 
 export type MediaOrderByWithAggregationInput = {
@@ -591,6 +594,7 @@ export type MediaCreateInput = {
   metricsUpdatedAt?: Date | string | null
   target: Prisma.TargetCreateNestedOneWithoutMediaInput
   metricSnapshots?: Prisma.MediaMetricSnapshotCreateNestedManyWithoutMediaInput
+  assets?: Prisma.MediaAssetCreateNestedManyWithoutMediaInput
 }
 
 export type MediaUncheckedCreateInput = {
@@ -624,6 +628,7 @@ export type MediaUncheckedCreateInput = {
   audioIsOriginal?: boolean | null
   metricsUpdatedAt?: Date | string | null
   metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedCreateNestedManyWithoutMediaInput
+  assets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutMediaInput
 }
 
 export type MediaUpdateInput = {
@@ -657,6 +662,7 @@ export type MediaUpdateInput = {
   metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   target?: Prisma.TargetUpdateOneRequiredWithoutMediaNestedInput
   metricSnapshots?: Prisma.MediaMetricSnapshotUpdateManyWithoutMediaNestedInput
+  assets?: Prisma.MediaAssetUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaUncheckedUpdateInput = {
@@ -690,6 +696,7 @@ export type MediaUncheckedUpdateInput = {
   audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedUpdateManyWithoutMediaNestedInput
+  assets?: Prisma.MediaAssetUncheckedUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaCreateManyInput = {
@@ -982,6 +989,20 @@ export type NullableBoolFieldUpdateOperationsInput = {
   set?: boolean | null
 }
 
+export type MediaCreateNestedOneWithoutAssetsInput = {
+  create?: Prisma.XOR<Prisma.MediaCreateWithoutAssetsInput, Prisma.MediaUncheckedCreateWithoutAssetsInput>
+  connectOrCreate?: Prisma.MediaCreateOrConnectWithoutAssetsInput
+  connect?: Prisma.MediaWhereUniqueInput
+}
+
+export type MediaUpdateOneRequiredWithoutAssetsNestedInput = {
+  create?: Prisma.XOR<Prisma.MediaCreateWithoutAssetsInput, Prisma.MediaUncheckedCreateWithoutAssetsInput>
+  connectOrCreate?: Prisma.MediaCreateOrConnectWithoutAssetsInput
+  upsert?: Prisma.MediaUpsertWithoutAssetsInput
+  connect?: Prisma.MediaWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MediaUpdateToOneWithWhereWithoutAssetsInput, Prisma.MediaUpdateWithoutAssetsInput>, Prisma.MediaUncheckedUpdateWithoutAssetsInput>
+}
+
 export type MediaCreateWithoutMetricSnapshotsInput = {
   id?: string
   externalMediaId: string
@@ -1012,6 +1033,7 @@ export type MediaCreateWithoutMetricSnapshotsInput = {
   audioIsOriginal?: boolean | null
   metricsUpdatedAt?: Date | string | null
   target: Prisma.TargetCreateNestedOneWithoutMediaInput
+  assets?: Prisma.MediaAssetCreateNestedManyWithoutMediaInput
 }
 
 export type MediaUncheckedCreateWithoutMetricSnapshotsInput = {
@@ -1044,6 +1066,7 @@ export type MediaUncheckedCreateWithoutMetricSnapshotsInput = {
   audioArtist?: string | null
   audioIsOriginal?: boolean | null
   metricsUpdatedAt?: Date | string | null
+  assets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutMediaInput
 }
 
 export type MediaCreateOrConnectWithoutMetricSnapshotsInput = {
@@ -1092,6 +1115,7 @@ export type MediaUpdateWithoutMetricSnapshotsInput = {
   audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   target?: Prisma.TargetUpdateOneRequiredWithoutMediaNestedInput
+  assets?: Prisma.MediaAssetUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaUncheckedUpdateWithoutMetricSnapshotsInput = {
@@ -1124,6 +1148,7 @@ export type MediaUncheckedUpdateWithoutMetricSnapshotsInput = {
   audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  assets?: Prisma.MediaAssetUncheckedUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaCreateWithoutTargetInput = {
@@ -1156,6 +1181,7 @@ export type MediaCreateWithoutTargetInput = {
   audioIsOriginal?: boolean | null
   metricsUpdatedAt?: Date | string | null
   metricSnapshots?: Prisma.MediaMetricSnapshotCreateNestedManyWithoutMediaInput
+  assets?: Prisma.MediaAssetCreateNestedManyWithoutMediaInput
 }
 
 export type MediaUncheckedCreateWithoutTargetInput = {
@@ -1188,6 +1214,7 @@ export type MediaUncheckedCreateWithoutTargetInput = {
   audioIsOriginal?: boolean | null
   metricsUpdatedAt?: Date | string | null
   metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedCreateNestedManyWithoutMediaInput
+  assets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutMediaInput
 }
 
 export type MediaCreateOrConnectWithoutTargetInput = {
@@ -1251,6 +1278,154 @@ export type MediaScalarWhereInput = {
   metricsUpdatedAt?: Prisma.DateTimeNullableFilter<"Media"> | Date | string | null
 }
 
+export type MediaCreateWithoutAssetsInput = {
+  id?: string
+  externalMediaId: string
+  mediaType: string
+  permalink?: string | null
+  timestamp?: Date | string | null
+  caption?: string | null
+  mediaUrl?: string | null
+  videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
+  storageUrl?: string | null
+  storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
+  isStory?: boolean
+  isCollab?: boolean
+  collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
+  firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
+  target: Prisma.TargetCreateNestedOneWithoutMediaInput
+  metricSnapshots?: Prisma.MediaMetricSnapshotCreateNestedManyWithoutMediaInput
+}
+
+export type MediaUncheckedCreateWithoutAssetsInput = {
+  id?: string
+  targetId: string
+  externalMediaId: string
+  mediaType: string
+  permalink?: string | null
+  timestamp?: Date | string | null
+  caption?: string | null
+  mediaUrl?: string | null
+  videoUrl?: string | null
+  sourceMediaUrl?: string | null
+  sourceVideoUrl?: string | null
+  storageUrl?: string | null
+  storageFileId?: string | null
+  storedAt?: Date | string | null
+  thumbnailUrl?: string | null
+  thumbnailFileId?: string | null
+  isExpired?: boolean
+  expiredAt?: Date | string | null
+  isStory?: boolean
+  isCollab?: boolean
+  collaborators?: Prisma.MediaCreatecollaboratorsInput | string[]
+  firstSeenAt?: Date | string
+  playCount?: number | null
+  likeCount?: number | null
+  commentCount?: number | null
+  audioTitle?: string | null
+  audioArtist?: string | null
+  audioIsOriginal?: boolean | null
+  metricsUpdatedAt?: Date | string | null
+  metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedCreateNestedManyWithoutMediaInput
+}
+
+export type MediaCreateOrConnectWithoutAssetsInput = {
+  where: Prisma.MediaWhereUniqueInput
+  create: Prisma.XOR<Prisma.MediaCreateWithoutAssetsInput, Prisma.MediaUncheckedCreateWithoutAssetsInput>
+}
+
+export type MediaUpsertWithoutAssetsInput = {
+  update: Prisma.XOR<Prisma.MediaUpdateWithoutAssetsInput, Prisma.MediaUncheckedUpdateWithoutAssetsInput>
+  create: Prisma.XOR<Prisma.MediaCreateWithoutAssetsInput, Prisma.MediaUncheckedCreateWithoutAssetsInput>
+  where?: Prisma.MediaWhereInput
+}
+
+export type MediaUpdateToOneWithWhereWithoutAssetsInput = {
+  where?: Prisma.MediaWhereInput
+  data: Prisma.XOR<Prisma.MediaUpdateWithoutAssetsInput, Prisma.MediaUncheckedUpdateWithoutAssetsInput>
+}
+
+export type MediaUpdateWithoutAssetsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  externalMediaId?: Prisma.StringFieldUpdateOperationsInput | string
+  mediaType?: Prisma.StringFieldUpdateOperationsInput | string
+  permalink?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
+  firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  target?: Prisma.TargetUpdateOneRequiredWithoutMediaNestedInput
+  metricSnapshots?: Prisma.MediaMetricSnapshotUpdateManyWithoutMediaNestedInput
+}
+
+export type MediaUncheckedUpdateWithoutAssetsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  targetId?: Prisma.StringFieldUpdateOperationsInput | string
+  externalMediaId?: Prisma.StringFieldUpdateOperationsInput | string
+  mediaType?: Prisma.StringFieldUpdateOperationsInput | string
+  permalink?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceMediaUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceVideoUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storageFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isExpired?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  expiredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  isStory?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isCollab?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  collaborators?: Prisma.MediaUpdatecollaboratorsInput | string[]
+  firstSeenAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  playCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  likeCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  commentCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  audioTitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioArtist?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedUpdateManyWithoutMediaNestedInput
+}
+
 export type MediaCreateManyTargetInput = {
   id?: string
   externalMediaId: string
@@ -1312,6 +1487,7 @@ export type MediaUpdateWithoutTargetInput = {
   audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   metricSnapshots?: Prisma.MediaMetricSnapshotUpdateManyWithoutMediaNestedInput
+  assets?: Prisma.MediaAssetUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaUncheckedUpdateWithoutTargetInput = {
@@ -1344,6 +1520,7 @@ export type MediaUncheckedUpdateWithoutTargetInput = {
   audioIsOriginal?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   metricsUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   metricSnapshots?: Prisma.MediaMetricSnapshotUncheckedUpdateManyWithoutMediaNestedInput
+  assets?: Prisma.MediaAssetUncheckedUpdateManyWithoutMediaNestedInput
 }
 
 export type MediaUncheckedUpdateManyWithoutTargetInput = {
@@ -1384,10 +1561,12 @@ export type MediaUncheckedUpdateManyWithoutTargetInput = {
 
 export type MediaCountOutputType = {
   metricSnapshots: number
+  assets: number
 }
 
 export type MediaCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   metricSnapshots?: boolean | MediaCountOutputTypeCountMetricSnapshotsArgs
+  assets?: boolean | MediaCountOutputTypeCountAssetsArgs
 }
 
 /**
@@ -1405,6 +1584,13 @@ export type MediaCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extens
  */
 export type MediaCountOutputTypeCountMetricSnapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.MediaMetricSnapshotWhereInput
+}
+
+/**
+ * MediaCountOutputType without action
+ */
+export type MediaCountOutputTypeCountAssetsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MediaAssetWhereInput
 }
 
 
@@ -1440,6 +1626,7 @@ export type MediaSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   metricsUpdatedAt?: boolean
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
   metricSnapshots?: boolean | Prisma.Media$metricSnapshotsArgs<ExtArgs>
+  assets?: boolean | Prisma.Media$assetsArgs<ExtArgs>
   _count?: boolean | Prisma.MediaCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["media"]>
 
@@ -1545,6 +1732,7 @@ export type MediaOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = ru
 export type MediaInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   target?: boolean | Prisma.TargetDefaultArgs<ExtArgs>
   metricSnapshots?: boolean | Prisma.Media$metricSnapshotsArgs<ExtArgs>
+  assets?: boolean | Prisma.Media$assetsArgs<ExtArgs>
   _count?: boolean | Prisma.MediaCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type MediaIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1559,6 +1747,7 @@ export type $MediaPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   objects: {
     target: Prisma.$TargetPayload<ExtArgs>
     metricSnapshots: Prisma.$MediaMetricSnapshotPayload<ExtArgs>[]
+    assets: Prisma.$MediaAssetPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1986,6 +2175,7 @@ export interface Prisma__MediaClient<T, Null = never, ExtArgs extends runtime.Ty
   readonly [Symbol.toStringTag]: "PrismaPromise"
   target<T extends Prisma.TargetDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TargetDefaultArgs<ExtArgs>>): Prisma.Prisma__TargetClient<runtime.Types.Result.GetResult<Prisma.$TargetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   metricSnapshots<T extends Prisma.Media$metricSnapshotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Media$metricSnapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MediaMetricSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  assets<T extends Prisma.Media$assetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Media$assetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MediaAssetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2466,6 +2656,30 @@ export type Media$metricSnapshotsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.MediaMetricSnapshotScalarFieldEnum | Prisma.MediaMetricSnapshotScalarFieldEnum[]
+}
+
+/**
+ * Media.assets
+ */
+export type Media$assetsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MediaAsset
+   */
+  select?: Prisma.MediaAssetSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MediaAsset
+   */
+  omit?: Prisma.MediaAssetOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MediaAssetInclude<ExtArgs> | null
+  where?: Prisma.MediaAssetWhereInput
+  orderBy?: Prisma.MediaAssetOrderByWithRelationInput | Prisma.MediaAssetOrderByWithRelationInput[]
+  cursor?: Prisma.MediaAssetWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MediaAssetScalarFieldEnum | Prisma.MediaAssetScalarFieldEnum[]
 }
 
 /**

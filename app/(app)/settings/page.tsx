@@ -13,6 +13,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LoadingState } from "@/components/common/loading-state";
 import { ErrorState } from "@/components/common/error-state";
 import { useSessions } from "@/features/sessions/hooks/use-sessions";
+import { HomeWorkerCard } from "@/features/sessions/components/home-worker-card";
+import { useHomeWorkerDevices } from "@/features/sessions/hooks/use-home-worker";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useSettings, type UserSettings } from "@/hooks/use-settings";
 import { TargetLimitCard } from "@/features/account/components/target-limit-card";
 import { AppearanceCard } from "@/features/account/components/appearance-card";
@@ -42,7 +45,9 @@ export default function SettingsPage() {
     refresh: refreshSessions,
     setSessionStatus,
     resetSession,
+    setSessionTransport,
   } = useSessions();
+  const { devices: homeWorkerDevices } = useHomeWorkerDevices();
   const { metaStatus, refresh: refreshMetaStatus } = useMetaStatus();
   const [addSessionOpen, setAddSessionOpen] = useState(false);
   const [testingSessionId, setTestingSessionId] = useState<string | null>(null);
@@ -102,7 +107,7 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground">Manage your account, integrations, and data retention.</p>
       </div>
 
-      <AppearanceCard />
+      <AppearanceCard settings={settings} onSaved={refresh} />
 
       <Card size="sm">
         <CardHeader>
@@ -144,7 +149,10 @@ export default function SettingsPage() {
                   Pool: {poolHealth.active} active &middot; {poolHealth.cooling} cooling &middot; {poolHealth.flagged} flagged
                 </div>
               )}
-              {sessions.map((sess) => (
+              {sessions.map((sess) => {
+                // ACTIVE alone hides a burner that is resting after a warning.
+                const resting = sess.status === "ACTIVE" && !!sess.cooldownUntil && new Date(sess.cooldownUntil) > new Date();
+                return (
                 <div
                   key={sess.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-3"
@@ -154,37 +162,61 @@ export default function SettingsPage() {
                       <span className="font-semibold text-sm">@{sess.username}</span>
                       <Badge
                         variant={
-                          sess.status === "ACTIVE" ? "success"
+                          resting ? "outline"
+                            : sess.status === "ACTIVE" ? "success"
                             : sess.status === "FLAGGED" ? "destructive" : "outline"
                         }
                         className="text-[11px] px-1.5 py-0"
                       >
-                        {sess.status}
+                        {resting ? "RESTING" : sess.status}
                       </Badge>
                       <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
                         {sess.authMethod}
                       </Badge>
-                      {sess.proxyUrl && (
+                      {sess.transport === "HOME_WORKER" ? (
+                        <Badge variant="outline" className="text-[11px] px-1.5 py-0">
+                          Home worker
+                        </Badge>
+                      ) : sess.hasProxy ? (
                         <Badge variant="outline" className="text-[11px] px-1.5 py-0">
                           Proxy
                         </Badge>
-                      )}
+                      ) : null}
                     </div>
                     {sess.lastErrorMessage && (
-                      <p className="text-xs text-destructive">{sess.lastErrorMessage}</p>
+                      <p className="text-xs text-destructive text-wrap ">{sess.lastErrorMessage}</p>
                     )}
                     <p className="text-xs text-muted-foreground">
                       {sess.lastTestedAt
                         ? `Tested ${formatDistanceToNow(new Date(sess.lastTestedAt), { addSuffix: true })}`
                         : "Not tested yet"}
                       {" · "}
-                      {sess.status === "ACTIVE" && (!sess.cooldownUntil || new Date(sess.cooldownUntil) < new Date()) && "In rotation"}
-                      {sess.status === "ACTIVE" && sess.cooldownUntil && new Date(sess.cooldownUntil) > new Date() && `Cooling down until ${new Date(sess.cooldownUntil).toLocaleTimeString()}`}
+                      {sess.status === "ACTIVE" && !resting && "In rotation"}
+                      {resting && `Resting until ${new Date(sess.cooldownUntil!).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })} (about ${formatDistanceToNow(new Date(sess.cooldownUntil!))})`}
                       {sess.status === "PAUSED" && "Paused"}
                       {sess.status === "FLAGGED" && "Needs manual reset"}
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap justify-end">
+                    <Select
+                      value={sess.transport === "HOME_WORKER" ? sess.homeWorkerDeviceId ?? "" : "PROXY"}
+                      onValueChange={(value) => {
+                        const next = value === "PROXY"
+                          ? setSessionTransport(sess.id, "PROXY")
+                          : setSessionTransport(sess.id, "HOME_WORKER", value);
+                        next.catch((err) => toast.error(friendlyError(err, "Couldn't change transport.")));
+                      }}
+                    >
+                      <SelectTrigger className="h-7 w-38 text-xs">
+                        <SelectValue placeholder="Transport" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PROXY">Webshare proxy</SelectItem>
+                        {homeWorkerDevices?.filter((d) => d.status === "ACTIVE").map((d) => (
+                          <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {sess.status === "FLAGGED" && (
                       <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => resetSession(sess.id).catch((err) => toast.error(friendlyError(err, "Couldn't reset that session.")))}>
                         Reset
@@ -223,7 +255,8 @@ export default function SettingsPage() {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -234,6 +267,8 @@ export default function SettingsPage() {
         onOpenChange={setAddSessionOpen}
         onCreated={refreshSessions}
       />
+
+      <HomeWorkerCard />
 
       <InstagramPostingCard />
 

@@ -3,6 +3,7 @@ import { resolveSessionProxy, UnsafeSessionProxyError } from "@/lib/meta/proxy-i
 import { requireUserId, jsonError } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { encryptJson } from "@/lib/crypto";
+import { encryptProxyUrl } from "@/lib/meta/proxy-secret";
 import {
   stealthTestSession,
   stealthImportBrowserSession,
@@ -27,7 +28,7 @@ function parseCookieString(raw: string): Record<string, string> {
 export async function GET() {
   try {
     const userId = await requireUserId();
-    const sessions = await prisma.instagramSession.findMany({
+    const rows = await prisma.instagramSession.findMany({
       where: { userId },
       select: {
         id: true,
@@ -44,9 +45,15 @@ export async function GET() {
         updatedAt: true,
         lastUsedAt: true,
         cooldownUntil: true,
+        transport: true,
+        homeWorkerDeviceId: true,
       },
       orderBy: { createdAt: "desc" },
     });
+    // The proxy URL embeds a Webshare username/password: encrypted at rest
+    // (lib/meta/proxy-secret.ts) and never sent to the browser — only whether
+    // one is set, which is all the UI badge needs.
+    const sessions = rows.map(({ proxyUrl, ...rest }) => ({ ...rest, hasProxy: Boolean(proxyUrl) }));
     const now = new Date();
     const active = sessions.filter(s => s.status === "ACTIVE" && (!s.cooldownUntil || s.cooldownUntil < now)).length;
     const cooling = sessions.filter(s => s.status === "ACTIVE" && s.cooldownUntil && s.cooldownUntil > now);
@@ -166,7 +173,7 @@ export async function POST(req: Request) {
         encryptedCookiesIv: encrypted.iv,
         userAgent: userAgent || null,
         impersonateTarget,
-        proxyUrl: proxyUrl || null,
+        ...encryptProxyUrl(proxyUrl || null),
         status: "ACTIVE",
         lastTestedAt: new Date(),
         lastSuccessAt: new Date(),

@@ -178,7 +178,7 @@ export default function ReelPage() {
             )}
             {reel.downloadUrl && (
               <Button variant="outline" asChild>
-                <a href={reel.downloadUrl}>
+                <a href={`/api/reels/${id}/download`}>
                   <Download /> Download video
                 </a>
               </Button>

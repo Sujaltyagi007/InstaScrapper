@@ -3,18 +3,44 @@ import { randomUUID, createHash } from "crypto";
 import { Capability } from "./types";
 import type { TargetResolution, TargetFetchResult, StealthSessionConfig, StealthFetchOptions, NormalizedMediaItem, CapabilityCheck, } from "./types";
 import { scrapeProfileHtml, LOGIN_SHELL_STATUS } from "./html-profile-scraper";
-import { scrapePostMedia } from "./post-page-scraper";
-import { mergeFeedMetrics, parseFeedItems } from "./feed-metrics";
+import { scrapeEmbedMedia, scrapePostMedia, type EmbedMedia } from "./post-page-scraper";
+import { mergeFeedMetrics, parseFeedItems, type FeedEntry } from "./feed-metrics";
+import { executeViaHomeWorker, HomeWorkerUnavailableError } from "./home-worker";
 
 const CHROME_DESKTOP_VERSIONS = ["116", "117", "119", "120"] as const;
 
-function pickChromeDesktopIdentity(): { tlsIdentifier: string; userAgent: string; secChUa: string } {
-  const version = CHROME_DESKTOP_VERSIONS[Math.floor(Math.random() * CHROME_DESKTOP_VERSIONS.length)];
+type ChromeIdentity = { tlsIdentifier: string; userAgent: string; secChUa: string };
+
+function chromeIdentityFor(version: string): ChromeIdentity {
   return {
     tlsIdentifier: `chrome_${version}`,
     userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${version}.0.0.0 Safari/537.36`,
     secChUa: `"Chromium";v="${version}", "Not_A Brand";v="24", "Google Chrome";v="${version}"`,
   };
+}
+
+function pickChromeDesktopIdentity(): ChromeIdentity {
+  return chromeIdentityFor(CHROME_DESKTOP_VERSIONS[Math.floor(Math.random() * CHROME_DESKTOP_VERSIONS.length)]);
+}
+
+/**
+ * A logged-in burner must look like one browser for its whole life. A random
+ * pick per server start would change its Chrome version on every cold start.
+ */
+function sessionChromeIdentity(session: StealthSessionConfig): ChromeIdentity {
+  const seed = session.sessionId || session.cookies?.ds_user_id || session.username || "";
+  const index = createHash("md5").update(seed).digest().readUInt32BE(0) % CHROME_DESKTOP_VERSIONS.length;
+  return chromeIdentityFor(CHROME_DESKTOP_VERSIONS[index]);
+}
+
+/**
+ * Burner cookies come from a desktop browser, so a logged-in request must not
+ * go to the iPhone-app host with iPhone headers: that shows Instagram one login
+ * on two devices at once. www.instagram.com serves the same /api/v1/ routes to
+ * the web app, so logged-in calls are sent there as the same desktop browser.
+ */
+function toWebApiUrl(url: string): string {
+  return url.replace(/^https:\/\/i\.instagram\.com\/api\/v1\//, "https://www.instagram.com/api/v1/");
 }
 
 const CHROME_IDENTITY = pickChromeDesktopIdentity();
@@ -112,8 +138,10 @@ function buildIosClientHeaders(options: {
   referer?: string;
   isAjax?: boolean;
   userAgent?: string | null;
+  identity?: ChromeIdentity;
 }): Record<string, string> {
-  const ua = options.userAgent || CHROME_USER_AGENT;
+  const identity = options.identity ?? CHROME_IDENTITY;
+  const ua = options.userAgent || identity.userAgent;
 
   const cookieStr = (options.cookies && typeof options.cookies === "object") ? Object.entries(options.cookies).map(([k, v]) => `${k}=${v}`).join("; ") : "";
 
@@ -124,7 +152,7 @@ function buildIosClientHeaders(options: {
     "Accept-Encoding": "gzip, deflate, br",
     "X-Ig-App-Id": WEB_APP_ID,
     "X-Requested-With": "XMLHttpRequest",
-    "Sec-Ch-Ua": CHROME_IDENTITY.secChUa,
+    "Sec-Ch-Ua": identity.secChUa,
     "Sec-Ch-Ua-Mobile": "?0",
     "Sec-Ch-Ua-Platform": '"Windows"',
     "Sec-Fetch-Dest": "empty",
@@ -184,17 +212,22 @@ function getTlsClient(tlsClientIdentifier: string, proxy?: string) {
   return client;
 }
 
-async function htmlPageFetch(url: string, session?: StealthSessionConfig | null): Promise<{ status: number; text: string } | null> {
+async function htmlPageFetch(
+  url: string,
+  session?: StealthSessionConfig | null,
+  dest: "document" | "iframe" = "document",
+): Promise<{ status: number; text: string } | null> {
   const proxyUrl = session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
   const cookieStr = session?.cookies ? Object.entries(session.cookies).map(([k, v]) => `${k}=${v}`).join("; ") : "";
+  const identity = session?.cookies?.sessionid ? sessionChromeIdentity(session) : CHROME_IDENTITY;
 
   const headers: Record<string, string> = {
-    "User-Agent": session?.userAgent || CHROME_USER_AGENT,
+    "User-Agent": session?.cookies?.sessionid ? identity.userAgent : session?.userAgent || identity.userAgent,
     Accept:
       "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
     "Accept-Encoding": "gzip, deflate, br",
-    "Sec-Ch-Ua": CHROME_IDENTITY.secChUa,
+    "Sec-Ch-Ua": identity.secChUa,
     "Sec-Ch-Ua-Mobile": "?0",
     "Sec-Ch-Ua-Platform": '"Windows"',
     "Sec-Fetch-Dest": "document",
@@ -203,10 +236,16 @@ async function htmlPageFetch(url: string, session?: StealthSessionConfig | null)
     "Sec-Fetch-User": "?1",
     "Upgrade-Insecure-Requests": "1",
   };
+  if (dest === "iframe") {
+    // How a browser loads an embedded post inside another site's page.
+    headers["Sec-Fetch-Dest"] = "iframe";
+    headers["Sec-Fetch-Site"] = "cross-site";
+    delete headers["Sec-Fetch-User"];
+  }
   if (cookieStr) headers["Cookie"] = cookieStr;
 
   try {
-    const client = getTlsClient(CHROME_TLS_IDENTIFIER, proxyUrl);
+    const client = getTlsClient(identity.tlsIdentifier, proxyUrl);
     // 10s cap per request (the adapter defaults to 30s). A time-budgeted run
     // plans retries around this bound, so one hung request can't push the
     // serverless function past its limit.
@@ -303,6 +342,7 @@ async function stealthRequest(
     jitter?: boolean;
     postBody?: string;  // if set, sends a POST with this URL-encoded body
     extraHeaders?: Record<string, string>;
+    deadlineAt?: number;
   } = {}
 ): Promise<{ status: number; text: string; data?: any; deviceId?: string }> {
   if (options.jitter) {
@@ -316,10 +356,15 @@ async function stealthRequest(
     options.session?.deviceId
   );
 
+  const loggedIn = Boolean(options.session?.cookies?.sessionid);
+  if (loggedIn) url = toWebApiUrl(url);
+  // The web app's own API calls always carry the page they came from.
+  const referer = options.referer ?? (loggedIn ? "https://www.instagram.com/" : undefined);
+  const identity = loggedIn ? sessionChromeIdentity(options.session!) : CHROME_IDENTITY;
   const isMobile = isMobileApiUrl(url);
 
   // Select coherent identity: TLS fingerprint and headers must match.
-  const tlsIdentifier = isMobile ? IOS_TLS_IDENTIFIER : CHROME_TLS_IDENTIFIER;
+  const tlsIdentifier = isMobile ? IOS_TLS_IDENTIFIER : identity.tlsIdentifier;
   const headers = isMobile
     ? buildMobileClientHeaders({
       deviceId,
@@ -332,10 +377,12 @@ async function stealthRequest(
       deviceId,
       uuid,
       phoneId,
-      userAgent: options.session?.userAgent,
+      // User-Agent, Sec-Ch-Ua and the TLS handshake must name the same Chrome.
+      userAgent: loggedIn ? identity.userAgent : options.session?.userAgent,
       cookies: options.session?.cookies,
-      referer: options.referer,
+      referer,
       isAjax: options.isAjax,
+      identity,
     });
 
   // Merge any caller-supplied extra headers (e.g. x-csrftoken for GraphQL POSTs)
@@ -346,29 +393,57 @@ async function stealthRequest(
   let status = 0;
   let text = "";
   try {
-    const proxyUrl = options.session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
-    const client = getTlsClient(tlsIdentifier, proxyUrl);
-
-    let res: any;
-    if (options.postBody !== undefined) {
-      // POST with URL-encoded body — exactly what instaloader.doc_id_graphql_query() does
-      res = await client.post(url, options.postBody, {
-        headers: {
-          ...headers,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        validateStatus: () => true,
-      });
+    // A burner pinned to a home worker never has its request sent from this
+    // server at all — the worker executes it and posts the result back. See
+    // "Home worker" in brain.md and lib/meta/home-worker.ts.
+    if (options.session?.transport === "HOME_WORKER") {
+      if (!options.session.homeWorkerDeviceId || !options.session.sessionId) {
+        throw new Error("Session is set to Home worker but has no paired device.");
+      }
+      const requestBody = options.postBody !== undefined
+        ? { method: "POST" as const, url, headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" }, body: options.postBody }
+        : { method: "GET" as const, url, headers };
+      const res = await executeViaHomeWorker(
+        options.session.homeWorkerDeviceId,
+        options.session.sessionId,
+        requestBody,
+        options.deadlineAt,
+      );
+      status = res.status;
+      text = res.text;
     } else {
-      res = await client.get(url, {
-        headers,
-        validateStatus: () => true,
-      });
-    }
+      const proxyUrl = options.session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
+      const client = getTlsClient(tlsIdentifier, proxyUrl);
 
-    status = res.status;
-    text = typeof res.data === "object" ? JSON.stringify(res.data) : String(res.data);
+      let res: any;
+      if (options.postBody !== undefined) {
+        // POST with URL-encoded body — exactly what instaloader.doc_id_graphql_query() does
+        res = await client.post(url, options.postBody, {
+          headers: {
+            ...headers,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          validateStatus: () => true,
+        });
+      } else {
+        res = await client.get(url, {
+          headers,
+          validateStatus: () => true,
+        });
+      }
+
+      status = res.status;
+      text = typeof res.data === "object" ? JSON.stringify(res.data) : String(res.data);
+    }
   } catch (err) {
+    if (err instanceof HomeWorkerUnavailableError) {
+      // Distinctly tagged, like PROXY_AUTH_FAILED, so callers (classifyBlock /
+      // handleFailedFetch) treat an offline PC as a temporary failure, never
+      // as a flagged session.
+      const workerErr = new Error(`HOME_WORKER_UNAVAILABLE: ${err.message}`);
+      (workerErr as any).isHomeWorkerUnavailable = true;
+      throw workerErr;
+    }
     const msg = err instanceof Error ? err.message : String(err);
     // Surface proxy 407 failures with a clear tagged error so callers can
     // distinguish proxy-layer failures from Instagram-layer blocks.
@@ -411,6 +486,10 @@ async function stealthRequestWithRetry(
     }
     try {
       const res = await stealthRequest(url, options);
+      // A logged-in 429 is Instagram's first warning to that account; retrying
+      // it is exactly the pattern that gets a burner banned. Hand it back so the
+      // caller pauses the session (session-pool COOLDOWN_HOURS).
+      if (res.status === 429 && options.session?.cookies?.sessionid) return res;
       if (res.status === 429 || res.status >= 500) {
         lastErr = new Error(`HTTP ${res.status}`);
         continue;
@@ -434,6 +513,61 @@ function anonymousConcurrency(): number {
   return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 3;
 }
 
+/** Most profile-page attempts a logged-in check makes; a logged-in page almost never needs a retry. */
+const AUTHENTICATED_PAGE_ATTEMPTS = 3;
+
+/**
+ * The web app's own profile query (the doc_id instaloader also uses). One
+ * attempt, no retries: callers use it as a single fallback.
+ */
+async function graphqlProfileQuery(
+  cleanUser: string,
+  session: StealthSessionConfig | null | undefined,
+  jitter?: boolean,
+): Promise<{ status: number; text: string; data?: any; deviceId?: string } | null> {
+  // A logged-in session already carries its own csrftoken; only a logged-out
+  // caller needs anonymous cookies fetched first.
+  const hasCsrf = Boolean(session?.cookies?.csrftoken);
+  const proxyUrl = session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
+  const anonCookies = hasCsrf ? {} : await bootstrapAnonymousCookies(proxyUrl);
+  const mergedCookies: Record<string, string> = {
+    ...anonCookies,
+    ...(session?.cookies ?? {}),
+  };
+  const csrf = mergedCookies["csrftoken"] || "";
+
+  const postBody = new URLSearchParams({
+    variables: JSON.stringify({
+      username: cleanUser,
+      "__relay_internal__pv__PolarisWebSchoolsEnabledrelayprovider": false,
+      "enable_integrity_filters": true,
+    }),
+    doc_id: "27937681195819736",
+    server_timestamps: "true",
+  }).toString();
+
+  const res = await stealthRequestWithRetry("https://www.instagram.com/graphql/query",  // no trailing slash — matches instaloader
+    {
+      session: {
+        username: session?.username ?? "",
+        cookies: mergedCookies,
+        userAgent: session?.userAgent,
+        proxyUrl: session?.proxyUrl,
+        deviceId: session?.deviceId,
+      },
+      isAjax: true,
+      referer: `https://www.instagram.com/${cleanUser}/`,
+      jitter,
+      postBody,
+      extraHeaders: csrf ? { "x-csrftoken": csrf } : {},
+    },
+    1,
+  );
+  if (!res || res.status !== 200) return res;
+  const rawUser = res.data?.data?.user ?? res.data?.user ?? null;
+  return rawUser ? { ...res, data: { status: "ok", data: { user: rawUser } } } : res;
+}
+
 async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthSessionConfig | null | undefined, options: { jitter?: boolean; deadlineAt?: number; acceptLite?: boolean } = {}): Promise<{ status: number; text: string; data?: any; deviceId?: string } | null> {
   const isUsable = (res: { status: number; data?: any } | null) =>
     Boolean(res && res.status !== 404 && res.status !== 429 && res.data?.status !== "fail" && res.data?.data?.user);
@@ -445,115 +579,52 @@ async function fetchProfileInfoWithFallback(cleanUser: string, session: StealthS
       deadlineAt: options.deadlineAt,
       concurrency: isAuthenticated ? 1 : anonymousConcurrency(),
       acceptLite: options.acceptLite,
+      maxAttempts: isAuthenticated ? AUTHENTICATED_PAGE_ATTEMPTS : undefined,
     });
 
-
-  let htmlFirst: Awaited<ReturnType<typeof tryHtml>> = null;
-  if (!isAuthenticated) {
-    htmlFirst = await tryHtml();
-    if (isUsable(htmlFirst)) return htmlFirst;
-    if (htmlFirst && htmlFirst.status === 404) return htmlFirst;
-
-    // The JSON endpoints below are walled for logged-out callers and cost
-    // several requests with multi-second retry delays. When a time budget is
-    // nearly spent, return the HTML verdict instead of starting them — they
-    // would almost certainly fail and risk the function being killed.
-    if (options.deadlineAt && options.deadlineAt - Date.now() < 20_000) {
-      return htmlFirst;
-    }
-    // Resolving (acceptLite) is interactive: the walled JSON endpoints would add
-    // several seconds for a near-certain failure, so report the HTML verdict.
-    if (options.acceptLite) return htmlFirst;
-    // Fall through: maybe the JSON API is reachable after all.
+  if (isAuthenticated) {
+    // Instagram retired web_profile_info for signed-in accounts: it answers
+    // feedback_required ("try again later") however healthy the account is, so
+    // calling it on every check (with retries) made a burner look like a broken
+    // bot and got it rate-limited. A signed-in person opens the profile page,
+    // so that's what a logged-in check does, with one GraphQL query as the only
+    // fallback. Nothing here retries a 429: the caller pauses the burner instead.
+    const page = await tryHtml();
+    if (isUsable(page) || page?.status === 404 || page?.status === 429) return page;
+    const graphql = await graphqlProfileQuery(cleanUser, session, options.jitter);
+    if (isUsable(graphql)) return graphql;
+    return page ?? graphql;
   }
 
-  const primaryUrl = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUser}`;
-  const primary = await stealthRequestWithRetry(primaryUrl, {
-    session,
-    isAjax: true,
-    referer: `https://www.instagram.com/${cleanUser}/`,
-    jitter: options.jitter,
-  });
+  const htmlFirst = await tryHtml();
+  if (isUsable(htmlFirst)) return htmlFirst;
+  if (htmlFirst && htmlFirst.status === 404) return htmlFirst;
+
+  // The JSON endpoints below are walled for logged-out callers and cost
+  // several requests with multi-second retry delays. When a time budget is
+  // nearly spent, return the HTML verdict instead of starting them — they
+  // would almost certainly fail and risk the function being killed.
+  if (options.deadlineAt && options.deadlineAt - Date.now() < 20_000) {
+    return htmlFirst;
+  }
+  // Resolving (acceptLite) is interactive: the walled JSON endpoints would add
+  // several seconds for a near-certain failure, so report the HTML verdict.
+  if (options.acceptLite) return htmlFirst;
+
+  // Fall through: maybe the JSON API is reachable after all.
+  const referer = `https://www.instagram.com/${cleanUser}/`;
+  const primary = await stealthRequestWithRetry(`https://www.instagram.com/api/v1/users/web_profile_info/?username=${cleanUser}`, { session, isAjax: true, referer, jitter: options.jitter });
   if (isUsable(primary)) return primary;
 
-  const mobileUrl = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${cleanUser}`;
-  const fallback = await stealthRequestWithRetry(mobileUrl, {
-    session,
-    isAjax: true,
-    referer: `https://www.instagram.com/${cleanUser}/`,
-    jitter: options.jitter,
-  }, 1);
+  const fallback = await stealthRequestWithRetry(`https://i.instagram.com/api/v1/users/web_profile_info/?username=${cleanUser}`, { session, isAjax: true, referer, jitter: options.jitter }, 1);
   if (isUsable(fallback)) return fallback;
-  const proxyUrl = session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
-  const anonCookies = await bootstrapAnonymousCookies(proxyUrl);
-  const mergedCookies: Record<string, string> = {
-    ...anonCookies,
-    ...(session?.cookies ?? {}),
-  };
-  const csrf = mergedCookies["csrftoken"] || "";
 
-  const variables = JSON.stringify({
-    username: cleanUser,
-    "__relay_internal__pv__PolarisWebSchoolsEnabledrelayprovider": false,
-    "enable_integrity_filters": true,
-  });
+  const graphqlRes = await graphqlProfileQuery(cleanUser, session, options.jitter);
+  if (isUsable(graphqlRes)) return graphqlRes;
 
-  const postBody = new URLSearchParams({
-    variables,
-    doc_id: "27937681195819736",
-    server_timestamps: "true",
-  }).toString();
-
-  const graphqlSession: StealthSessionConfig = {
-    username: session?.username ?? "",
-    cookies: mergedCookies,
-    userAgent: session?.userAgent,
-    proxyUrl: session?.proxyUrl,
-    deviceId: session?.deviceId,
-  };
-
-  const graphqlRes = await stealthRequestWithRetry("https://www.instagram.com/graphql/query",  // no trailing slash — matches instaloader
-    {
-      session: graphqlSession,
-      isAjax: true,
-      referer: `https://www.instagram.com/${cleanUser}/`,
-      jitter: options.jitter,
-      postBody,
-      extraHeaders: csrf ? { "x-csrftoken": csrf } : {},
-    },
-    1
-  );
-
-  if (graphqlRes && graphqlRes.status === 200) {
-    const rawUser = graphqlRes.data?.data?.user ??
-      graphqlRes.data?.user ??
-      null;
-
-    if (rawUser) {
-      const normalised = {
-        ...graphqlRes,
-        data: {
-          status: "ok",
-          data: { user: rawUser },
-        },
-      };
-      if (isUsable(normalised)) return normalised;
-    }
-  }
-
-  // Authenticated callers reach the HTML page here, after their JSON attempts.
-  const htmlRes = isAuthenticated ? await tryHtml() : null;
-
-  if (htmlRes) {
-    if (isUsable(htmlRes)) return htmlRes;
-    if (htmlRes.status === 404 || htmlRes.status === 429 || htmlRes.status === LOGIN_SHELL_STATUS) {
-      return htmlRes;
-    }
-  }
   if (htmlFirst && (htmlFirst.status === LOGIN_SHELL_STATUS || htmlFirst.status === 429)) {
     return htmlFirst;
   }
-
   return primary ?? fallback ?? graphqlRes;
 }
 
@@ -760,16 +831,19 @@ export async function stealthResolveTarget(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     const isProxyAuthFailed = (err as any).isProxyAuthFailed || msg.startsWith("PROXY_AUTH_FAILED");
+    const isHomeWorkerUnavailable = (err as any).isHomeWorkerUnavailable || msg.startsWith("HOME_WORKER_UNAVAILABLE");
     return {
       username,
       externalId: null,
       accountType: "UNKNOWN" as const,
       eligibility: "TEMPORARILY_UNAVAILABLE" as const,
       capabilities: [] as CapabilityCheck[],
-      errorCode: isProxyAuthFailed ? "PROXY_AUTH_FAILED" : "REQUEST_ERROR",
+      errorCode: isProxyAuthFailed ? "PROXY_AUTH_FAILED" : isHomeWorkerUnavailable ? "HOME_WORKER_UNAVAILABLE" : "REQUEST_ERROR",
       errorMessage: isProxyAuthFailed
         ? "Proxy authentication failed (407). Check your DEFAULT_PROXY_URL credentials in .env — make sure you're using the Proxy Username/Password from Webshare's Connections tab, not your account email/password."
-        : msg,
+        : isHomeWorkerUnavailable
+          ? "The paired home worker device didn't answer in time. Make sure worker/home-worker.mjs is running on that PC."
+          : msg,
     };
   }
 }
@@ -808,7 +882,7 @@ async function fetchFriendshipIdList(
   cleanUser: string,
   session: StealthSessionConfig | null | undefined,
   options: StealthFetchOptions | undefined
-): Promise<string[]> {
+): Promise<{ list: string[]; verdict: SessionVerdict; status: number }> {
   const list: string[] = [];
   let maxId: string | null = "";
   let pages = 0;
@@ -820,6 +894,8 @@ async function fetchFriendshipIdList(
       referer: `https://www.instagram.com/${cleanUser}/`,
       jitter: options?.jitterEnabled,
     });
+    const verdict = sessionVerdict(res);
+    if (verdict === "RATE_LIMITED" || verdict === "FLAGGED") return { list, verdict, status: res?.status ?? 0 };
     if (res && res.status === 200 && res.data?.users) {
       for (const u of res.data.users) {
         list.push(String(u.pk || u.id));
@@ -830,7 +906,14 @@ async function fetchFriendshipIdList(
     }
     pages++;
   }
-  return list;
+  return { list, verdict: "OK", status: 200 };
+}
+
+/** Turns a logged-in response's verdict into a check-level warning, if it is one. */
+function warningFrom(verdict: SessionVerdict, status: number, what: string): TargetFetchResult["sessionWarning"] {
+  if (verdict === "RATE_LIMITED") return { kind: "RATE_LIMITED", message: `Instagram limited the ${what} request (HTTP ${status}).` };
+  if (verdict === "FLAGGED") return { kind: "FLAGGED", message: `Instagram asked this account to verify on the ${what} request (HTTP ${status}).` };
+  return undefined;
 }
 
 
@@ -850,6 +933,13 @@ export async function stealthFetchTargetData(params: {
 
   const isAuthenticated = Boolean(effectiveSession?.cookies?.sessionid);
   const cleanUser = username.trim().toLowerCase().replace(/^@/, "");
+  // The profile (bio, counts, latest posts) reads fine logged out, so it never
+  // spends a burner request: a login-page bounce there is just a logged-out
+  // retry, not a warning against the account. The burner is kept for the
+  // extras only a logged-in account can see (stories, lists, the feed).
+  const anonymousSession: StealthSessionConfig | null = globalProxy
+    ? { username: "", cookies: {}, proxyUrl: globalProxy }
+    : null;
 
   try {
     // Browsing noise only makes sense for a logged-in session, and only
@@ -861,7 +951,7 @@ export async function stealthFetchTargetData(params: {
       await simulateHumanActions(effectiveSession);
     }
 
-    const res = await fetchProfileInfoWithFallback(cleanUser, effectiveSession, {
+    const res = await fetchProfileInfoWithFallback(cleanUser, anonymousSession, {
       jitter: options?.jitterEnabled,
       deadlineAt: options?.deadlineAt,
     });
@@ -888,20 +978,20 @@ export async function stealthFetchTargetData(params: {
     }
 
     if (res.status === 404) {
-      const blockKind = await classifyBlock(effectiveSession);
+      const blockKind = await classifyBlock(anonymousSession);
       return {
         ok: false,
         notFound: blockKind === "not_blocked",
         sessionFlagged: blockKind === "session_flagged",
         rateLimited: blockKind === "rate_limited" || blockKind === "ip_blocked",
-        errorMessage: blockKind === "session_flagged" ? isAuthenticated ? "Instagram checkpoint challenge required. Session needs re-authentication." : "Anonymous IP challenged by Instagram. Add a session to bypass." : blockKind === "not_blocked" ? `Target @${cleanUser} not found — account may have been deleted or renamed.` : "IP/session temporarily blocked. Will retry on next run.",
+        errorMessage: blockKind === "session_flagged" ? "Anonymous IP challenged by Instagram. Will retry on next run." : blockKind === "not_blocked" ? `Target @${cleanUser} not found — account may have been deleted or renamed.` : "IP/session temporarily blocked. Will retry on next run.",
       };
     }
 
     const userData = res.data?.data?.user;
     if (!userData) {
       // Classify before giving up — don't flat-fail on a blocked IP
-      const blockKind = await classifyBlock(effectiveSession);
+      const blockKind = await classifyBlock(anonymousSession);
       return {
         ok: false,
         sessionFlagged: blockKind === "session_flagged",
@@ -1008,15 +1098,22 @@ export async function stealthFetchTargetData(params: {
     // Optional extras are skipped when the time budget is nearly spent; the
     // core profile + media data above is already enough for this check.
     const hasTimeForExtras = !options?.deadlineAt || options.deadlineAt - Date.now() > 12_000;
+    // Logged-in extras run one attempt each, and the first warning stops the
+    // rest: repeating requests after Instagram objected is what gets burners banned.
+    let sessionWarning: TargetFetchResult["sessionWarning"];
     if (isAuthenticated && options?.watchStories && fetchedExternalId && hasTimeForExtras) {
-      const storiesUrl = `https://i.instagram.com/api/v1/feed/user/${fetchedExternalId}/reel_media/`;
-      const storiesRes = await stealthRequestWithRetry(storiesUrl, {
+      // The web app's own stories request (the iPhone-app route doesn't fit browser cookies).
+      const storiesUrl = `https://www.instagram.com/api/v1/feed/reels_media/?reel_ids=${fetchedExternalId}`;
+      const storiesRes = await stealthRequest(storiesUrl, {
         session,
         isAjax: true,
         referer: `https://www.instagram.com/${cleanUser}/`,
-      });
-      if (storiesRes && storiesRes.status === 200 && storiesRes.data?.items) {
-        for (const item of storiesRes.data.items) {
+      }).catch(() => null);
+      sessionWarning = warningFrom(sessionVerdict(storiesRes), storiesRes?.status ?? 0, "stories");
+      const storyItems =
+        storiesRes?.data?.reels?.[fetchedExternalId]?.items ?? storiesRes?.data?.reels_media?.[0]?.items ?? storiesRes?.data?.items;
+      if (storiesRes && storiesRes.status === 200 && Array.isArray(storyItems)) {
+        for (const item of storyItems) {
           const isVideo = Boolean(item.video_versions);
           stories.push({
             externalMediaId: String(item.id || item.pk),
@@ -1032,28 +1129,39 @@ export async function stealthFetchTargetData(params: {
       }
     }
 
-    // Play counts and audio only exist on the logged-in mobile feed. One extra
-    // request; a failure just means this check has no metrics.
+    // Play counts and audio only exist on the logged-in feed. One extra request;
+    // a failure just means this check has no metrics.
     let finalMedia = media;
-    if (isAuthenticated && options?.collectMetrics && fetchedExternalId && hasTimeForExtras) {
-      const feedRes = await stealthRequestWithRetry(
-        `https://i.instagram.com/api/v1/feed/user/${fetchedExternalId}/?count=24`,
+    if (isAuthenticated && !sessionWarning && options?.collectMetrics && fetchedExternalId && hasTimeForExtras) {
+      // count=12 is what the web app itself asks for when you open a profile.
+      const feedRes = await stealthRequest(
+        `https://i.instagram.com/api/v1/feed/user/${fetchedExternalId}/?count=12`,
         { session, isAjax: true, referer: `https://www.instagram.com/${cleanUser}/` },
-      );
+      ).catch(() => null);
+      sessionWarning = warningFrom(sessionVerdict(feedRes), feedRes?.status ?? 0, "feed");
       if (feedRes && feedRes.status === 200) {
         const feed = parseFeedItems(feedRes.data);
         finalMedia = mergeFeedMetrics(media, feed);
         if (feed.length === 0) console.warn(`[metrics] @${cleanUser}: feed returned no parseable items`);
       } else {
-        console.warn(`[metrics] @${cleanUser}: feed request failed (${feedRes?.status ?? "no response"})`);
+        console.warn(`[metrics] @${cleanUser}: feed request failed (${feedRes?.status ?? "no response"}): ${feedRes?.text.slice(0, 200) ?? ""}`);
       }
     }
 
     let followersList: string[] | undefined = undefined;
     let followingList: string[] | undefined = undefined;
-    if (isAuthenticated && options?.watchFollowerChurn && fetchedExternalId && hasTimeForExtras) {
-      followersList = await fetchFriendshipIdList("followers", fetchedExternalId, cleanUser, session, options);
-      followingList = await fetchFriendshipIdList("following", fetchedExternalId, cleanUser, session, options);
+    if (isAuthenticated && !sessionWarning && options?.watchFollowerChurn && fetchedExternalId && hasTimeForExtras) {
+      const followers = await fetchFriendshipIdList("followers", fetchedExternalId, cleanUser, session, options);
+      sessionWarning = warningFrom(followers.verdict, followers.status, "followers list");
+      if (!sessionWarning) {
+        const following = await fetchFriendshipIdList("following", fetchedExternalId, cleanUser, session, options);
+        sessionWarning = warningFrom(following.verdict, following.status, "following list");
+        // A half-read list would look like a mass unfollow, so churn needs both whole.
+        if (!sessionWarning) {
+          followersList = followers.list;
+          followingList = following.list;
+        }
+      }
     }
 
     return {
@@ -1076,18 +1184,24 @@ export async function stealthFetchTargetData(params: {
       followersList,
       followingList,
       anonymousMode: !isAuthenticated,
-      deviceId: res.deviceId,
+      // `res` came from the logged-out profile read, so its random device id
+      // must not overwrite the burner's own stable one.
+      deviceId: isAuthenticated ? undefined : res.deviceId,
+      sessionWarning,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     const isProxyAuthFailed = (err as any).isProxyAuthFailed || msg.startsWith("PROXY_AUTH_FAILED");
+    const isHomeWorkerUnavailable = (err as any).isHomeWorkerUnavailable || msg.startsWith("HOME_WORKER_UNAVAILABLE");
     return {
       ok: false,
       temporaryFailure: !isProxyAuthFailed,
       authError: isProxyAuthFailed,
       errorMessage: isProxyAuthFailed
         ? "Proxy authentication failed (407). Check your DEFAULT_PROXY_URL credentials in .env — use the Proxy Username/Password from Webshare's Connections tab."
-        : msg,
+        : isHomeWorkerUnavailable
+          ? "The paired home worker device didn't answer in time. Make sure worker/home-worker.mjs is running on that PC."
+          : msg,
     };
   }
 }
@@ -1195,4 +1309,83 @@ export async function stealthResolvePostMedia(
       : null;
 
   return scrapePostMedia(permalinkOrCode, (url) => htmlPageFetch(url, effectiveSession));
+}
+
+/**
+ * A post's real video file and every carousel item from Instagram's public
+ * embed page, logged out (rotating proxy, no burner). See parseEmbedPage.
+ */
+export async function stealthResolveEmbedMedia(permalinkOrCode: string): Promise<EmbedMedia | null> {
+  const globalProxy = process.env.DEFAULT_PROXY_URL;
+  const anonymous: StealthSessionConfig | null = globalProxy ? { username: "", cookies: {}, proxyUrl: globalProxy } : null;
+  return scrapeEmbedMedia(permalinkOrCode, (url) => htmlPageFetch(url, anonymous, "iframe"));
+}
+
+
+/**
+ * What a logged-in response says about the account that made it, so the pool
+ * can stop on the first warning (see session-pool reportSessionOutcome):
+ * - RATE_LIMITED: a 429, "try again later" (feedback_required) or "please wait"
+ * - FLAGGED: a checkpoint/challenge, or the cookies no longer sign in
+ * - OK: a normal answer; OTHER: anything else (network, 5xx), no verdict
+ */
+export type SessionVerdict = "OK" | "RATE_LIMITED" | "FLAGGED" | "OTHER";
+
+export function sessionVerdict(
+  res: { status: number; text: string; data?: { status?: string; message?: string; error_type?: string } } | null,
+): SessionVerdict {
+  if (!res) return "OTHER";
+  if (res.status === 429) return "RATE_LIMITED";
+  // A normal answer carries user content (captions, bios) that can contain any
+  // phrase, so only error answers are read for Instagram's warning wording.
+  if (res.status === 200 && res.data && res.data.status !== "fail") return "OK";
+  const signal = `${res.data?.message ?? ""} ${res.data?.error_type ?? ""} ${res.text.slice(0, 2000)}`.toLowerCase();
+  if (signal.includes("checkpoint_required") || signal.includes("challenge_required") || signal.includes("login_required") || res.status === 401) {
+    return "FLAGGED";
+  }
+  if (signal.includes("feedback_required") || signal.includes("please wait a few minutes") || signal.includes("try again later")) {
+    return "RATE_LIMITED";
+  }
+  return "OTHER";
+}
+
+export interface LoggedInLookup<T> {
+  verdict: SessionVerdict;
+  status: number;
+  result: T;
+}
+
+/**
+ * One logged-in request for a profile's latest posts (what the app loads when
+ * you open a profile). It returns every post's real video file and every
+ * carousel item in a single request, which a logged-out page never shows.
+ * One attempt and no retry: a warning must stop the burner, not repeat.
+ */
+export async function stealthFetchUserFeed(
+  userPk: string,
+  session: StealthSessionConfig,
+  count = 12,
+): Promise<LoggedInLookup<FeedEntry[]>> {
+  const res = await stealthRequest(`https://i.instagram.com/api/v1/feed/user/${encodeURIComponent(userPk)}/?count=${count}`, {
+    session,
+    isAjax: true,
+  }).catch(() => null);
+  const verdict = sessionVerdict(res);
+  return { verdict, status: res?.status ?? 0, result: verdict === "OK" ? parseFeedItems(res?.data) : [] };
+}
+
+/**
+ * One logged-in request for a single post (by its numeric id), for loading an
+ * older post's video or carousel on demand. Same no-retry rule as above.
+ */
+export async function stealthFetchMediaInfo(
+  mediaPk: string,
+  session: StealthSessionConfig,
+): Promise<LoggedInLookup<FeedEntry | null>> {
+  const res = await stealthRequest(`https://i.instagram.com/api/v1/media/${encodeURIComponent(mediaPk)}/info/`, {
+    session,
+    isAjax: true,
+  }).catch(() => null);
+  const verdict = sessionVerdict(res);
+  return { verdict, status: res?.status ?? 0, result: verdict === "OK" ? (parseFeedItems(res?.data)[0] ?? null) : null };
 }

@@ -1,25 +1,7 @@
-/**
- * Storage facade — the ONLY module app code should import for file storage.
- *
- * Picks a provider from STORAGE_PROVIDER ("appwrite" | "r2"). When unset it
- * uses whichever provider is actually configured, preferring Appwrite. To
- * switch clouds, change the env var; no caller changes.
- *
- * Uploads that pass an `owner` are recorded in the file register
- * (lib/storage/ledger.ts), and every successful delete removes its row.
- */
-import {
-  appwriteDownloadUrl,
-  appwriteFileInfo,
-  appwriteFileUrl,
-  deleteAppwriteFile,
-  downloadAppwriteFile,
-  isAppwriteEnabled,
-  uploadBufferToAppwrite,
-} from "./appwrite";
 import { deleteR2Object, getPresignedDownloadUrl, isR2Enabled, uploadBufferToR2 } from "./r2";
-import { CDN_FETCH_HEADERS, fetchToBuffer, generateThumbnailBuffer, visualDistance, visualHash } from "./common";
 import { contentHash, forgetStoredFile, recordStoredFile, type FileOwner } from "./ledger";
+import { CDN_FETCH_HEADERS, fetchToBuffer, generateThumbnailBuffer, visualDistance, visualHash } from "./common";
+import { appwriteDownloadUrl, appwriteFileInfo, appwriteFileUrl, deleteAppwriteFile, downloadAppwriteFile, isAppwriteEnabled, uploadBufferToAppwrite } from "./appwrite";
 
 export { CDN_FETCH_HEADERS, fetchToBuffer, visualDistance, visualHash };
 export type { FileOwner, StoredFileKind } from "./ledger";
@@ -27,8 +9,6 @@ export type { FileOwner, StoredFileKind } from "./ledger";
 export type StorageProvider = "appwrite" | "r2" | "none";
 
 function r2Configured(): boolean {
-  // isR2Enabled() only checks that vars exist; placeholder values would make
-  // every upload fail at runtime, so treat them as unconfigured.
   const id = process.env.R2_ACCOUNT_ID?.trim() ?? "";
   return isR2Enabled() && !id.startsWith("your_");
 }
@@ -56,7 +36,6 @@ export async function uploadBuffer(params: {
   fileName: string;
   folder: string;
   contentType: string;
-  /** Who the file belongs to, for the file register (Storage page). */
   owner?: FileOwner;
 }): Promise<StoredObject | null> {
   const folder = params.folder.replace(/^\/+|\/+$/g, "");
@@ -93,11 +72,7 @@ export async function uploadBuffer(params: {
   return stored;
 }
 
-/**
- * Deletes a stored object. File IDs are provider-specific, so this only works
- * for objects created by the currently active provider — see brain.md about
- * switching providers with media already stored.
- */
+
 export async function deleteStoredObject(fileId: string): Promise<boolean> {
   let deleted: boolean;
   switch (getStorageProvider()) {
@@ -138,6 +113,18 @@ export async function downloadStoredObject(fileId: string): Promise<Buffer | nul
 /** Public link that downloads the file (null when the provider has no such link). */
 export function publicDownloadUrl(fileId: string): string | null {
   return getStorageProvider() === "appwrite" ? appwriteDownloadUrl(fileId) : null;
+}
+
+/** Provider URL that triggers a browser download without proxying file bytes through a function. */
+export async function storedObjectDownloadUrl(fileId: string, fileName: string): Promise<string | null> {
+  switch (getStorageProvider()) {
+    case "appwrite":
+      return appwriteDownloadUrl(fileId);
+    case "r2":
+      return getPresignedDownloadUrl(fileId, 300, fileName);
+    default:
+      return null;
+  }
 }
 
 /** Renders a compressed thumbnail locally (sharp) and stores it as its own file. */

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUserId, jsonError } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { decryptJson } from "@/lib/crypto";
+import { decryptProxyUrl } from "@/lib/meta/proxy-secret";
 import { stealthTestSession } from "@/lib/meta/stealth-engine-bridge";
 
 export async function POST(req: Request) {
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
 
     const testRes = await stealthTestSession({
       cookies,
-      proxyUrl: session.proxyUrl,
+      proxyUrl: decryptProxyUrl(session),
       userAgent: session.userAgent,
       impersonateTarget: session.impersonateTarget,
     });

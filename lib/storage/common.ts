@@ -1,11 +1,5 @@
 import sharp from "sharp";
 
-/**
- * Provider-neutral storage helpers. Nothing in here knows which cloud the
- * bytes end up in, so switching providers never touches this file.
- */
-
-/** Browser-ish headers; Instagram's CDN refuses plain server requests. */
 export const CDN_FETCH_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -28,35 +22,17 @@ export async function fetchToBuffer(url: string): Promise<Buffer | null> {
   }
 }
 
-/**
- * Renders a super-compressed JPEG thumbnail (320px wide, quality 40) locally.
- *
- * Returns null for video: sharp can't decode video frames, and storing a
- * fake 1x1 image (what the R2 version did) produces a blank tile that looks
- * like a broken upload. With no thumbnail the UI falls back cleanly.
- */
-export async function generateThumbnailBuffer(
-  source: Buffer,
-  isVideo: boolean
-): Promise<Buffer | null> {
+
+export async function generateThumbnailBuffer(source: Buffer, isVideo: boolean): Promise<Buffer | null> {
   if (isVideo) return null;
   try {
-    return await sharp(source)
-      .resize({ width: 320, withoutEnlargement: true })
-      .jpeg({ quality: 40, mozjpeg: true })
-      .toBuffer();
+    return await sharp(source).resize({ width: 320, withoutEnlargement: true }).jpeg({ quality: 40, mozjpeg: true }).toBuffer();
   } catch (err) {
     console.warn("[storage] thumbnail render failed:", err instanceof Error ? err.message : err);
     return null;
   }
 }
 
-/**
- * Perceptual "average hash" of an image: 16x16 grayscale, one bit per pixel
- * (above/below the mean), as 64 hex chars. The same picture at a different
- * size or compression lands within a few bits; a different picture doesn't.
- * Null when the bytes aren't a decodable image.
- */
 export async function visualHash(buffer: Buffer): Promise<string | null> {
   try {
     const px = await sharp(buffer)
@@ -79,7 +55,6 @@ export async function visualHash(buffer: Buffer): Promise<string | null> {
   }
 }
 
-/** Number of differing bits between two visualHash values (256 = nothing alike). */
 export function visualDistance(a: string, b: string): number {
   if (a.length !== b.length) return 256;
   let bits = 0;

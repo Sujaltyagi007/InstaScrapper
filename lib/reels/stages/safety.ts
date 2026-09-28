@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { generateJson, type MediaInput } from "@/lib/ai/gemini";
-import { fetchPublicBytes } from "@/lib/security/fetch-public";
 import { searchPortraitClips } from "@/lib/visuals/pexels";
-import type { ClipPick, ReelScript } from "@/lib/reels/types";
 import type { StageContext, StageResult } from "./context";
+import type { ClipPick, ReelScript } from "@/lib/reels/types";
+import { fetchPublicBytes } from "@/lib/security/fetch-public";
+import { generateJson, type MediaInput } from "@/lib/ai/gemini";
 
-/** Each round is one Gemini request for every clip still unchecked. */
 const MAX_ROUNDS = 3;
 
 async function previewFrames(pick: ClipPick): Promise<MediaInput[]> {
@@ -41,11 +40,7 @@ async function replace(pick: ClipPick, taken: Set<number>, fallbackQuery: string
   return true;
 }
 
-/**
- * Checks every chosen clip with Gemini (two still frames each, all clips in one
- * request) and replaces the ones that fail. Stock libraries still contain
- * logos, watermarks and famous faces that would get a reel claimed or demonetised.
- */
+
 export async function runSafetyStage({ project, idea }: StageContext): Promise<StageResult> {
   const picks = project.clips as unknown as ClipPick[] | null;
   const script = project.script as ReelScript | null;
@@ -125,8 +120,6 @@ export async function runSafetyStage({ project, idea }: StageContext): Promise<S
 
   const unchecked = picks.filter((p) => !p.approved);
   if (unchecked.length) {
-    // Keep what was approved and the swapped-in clips, so the automatic retry
-    // only checks what's left instead of starting over.
     await saveProgress(project.id, picks);
     throw new Error(`Footage for ${unchecked.length} sentence(s) still needs checking. Retrying with other clips.`);
   }

@@ -13,6 +13,7 @@ export interface UserSettings {
   sleepEnabled: boolean;
   sleepStartHour: number;
   sleepEndHour: number;
+  accentColor: string | null;
 }
 
 export function useSettings() {

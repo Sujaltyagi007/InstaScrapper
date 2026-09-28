@@ -14,8 +14,7 @@ import type * as Prisma from "../internal/prismaNamespace"
 
 /**
  * Model PushSubscription
- * One browser/device subscribed to Web Push. Delivered through the user's
- * WEBPUSH NotificationChannel (which holds the event-type preferences).
+ * 
  */
 export type PushSubscriptionModel = runtime.Types.Result.DefaultSelection<Prisma.$PushSubscriptionPayload>
 
@@ -707,9 +706,6 @@ export type $PushSubscriptionPayload<ExtArgs extends runtime.Types.Extensions.In
     endpoint: string
     p256dh: string
     auth: string
-    /**
-     * "Chrome on Windows" etc., derived from the user agent when subscribing.
-     */
     label: string | null
     userAgent: string | null
     createdAt: Date

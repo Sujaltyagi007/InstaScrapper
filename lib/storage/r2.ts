@@ -1,7 +1,7 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { checkBeforeUpload, incrementAClass, addStorageEstimate, checkBeforeRead, incrementBClass } from "./r2-guardrail";
 import sharp from "sharp";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { checkBeforeUpload, incrementAClass, addStorageEstimate, checkBeforeRead, incrementBClass } from "./r2-guardrail";
 
 let r2Client: S3Client | null = null;
 
@@ -62,10 +62,7 @@ export async function fetchToBuffer(url: string): Promise<Buffer | null> {
   }
 }
 
-/**
- * Returns the public URL for an R2 object using the configured custom domain.
- * Requires R2_CUSTOM_DOMAIN in env. Do not use r2.dev domains.
- */
+
 export function getR2ObjectUrl(key: string): string | null {
   const customDomain = process.env.R2_CUSTOM_DOMAIN?.trim();
   if (!customDomain) {
@@ -158,7 +155,7 @@ export async function deleteR2Object(fileId: string): Promise<boolean> {
  * Generates a presigned URL for downloading a file directly from R2 without caching.
  * Useful for the Re-Download feature when the user wants the raw file.
  */
-export async function getPresignedDownloadUrl(fileId: string, expiresInSec = 3600): Promise<string | null> {
+export async function getPresignedDownloadUrl(fileId: string, expiresInSec = 3600, fileName?: string): Promise<string | null> {
   const client = getR2Client();
   const bucket = process.env.R2_BUCKET_NAME?.trim();
   if (!client || !bucket) return null;
@@ -174,6 +171,9 @@ export async function getPresignedDownloadUrl(fileId: string, expiresInSec = 360
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: fileId,
+      ...(fileName
+        ? { ResponseContentDisposition: `attachment; filename="${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}"` }
+        : {}),
     });
     
     const signedUrl = await getSignedUrl(client, command, { expiresIn: expiresInSec });
