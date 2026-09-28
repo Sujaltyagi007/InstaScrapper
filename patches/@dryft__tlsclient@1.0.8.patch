@@ -1,0 +1,38 @@
+diff --git a/lib/helpers/tlspath.js b/lib/helpers/tlspath.js
+index 5ae904a997699e20e78fb4cf8431c0c2e6e87e4c..bba0c6af96bf17dc0e47940c75c7fc27e7eff4bb 100644
+--- a/lib/helpers/tlspath.js
++++ b/lib/helpers/tlspath.js
+@@ -23,18 +23,27 @@ else if (platform === "darwin") {
+ else if (platform === "linux") {
+     filename = "tls-client-linux";
+     extension = "so";
+-    let releaseDetails = (0, fs_1.readFileSync)("/etc/os-release", "utf8");
++    // Patched: blank/comment lines have no '=' (words[1] undefined) and a missing
++    // or unreadable /etc/os-release threw at import, crashing the module on
++    // Vercel's Linux runtime. Callers that pass tlsLibPath never use this result.
++    let releaseDetails = "";
++    try {
++        releaseDetails = (0, fs_1.readFileSync)("/etc/os-release", "utf8");
++    }
++    catch (_a) { }
+     const lines = releaseDetails.split("\n");
+     const release = {};
+     lines.forEach((line, _) => {
+-        // Split the line into an array of words delimited by '='
+-        const words = line.split("=");
+-        release[words[0].trim().toLowerCase()] = words[1].trim();
++        const eq = line.indexOf("=");
++        if (eq <= 0)
++            return;
++        release[line.slice(0, eq).trim().toLowerCase()] = line.slice(eq + 1).trim().replace(/^"|"$/g, "");
+     });
+-    if (release.id.toLowerCase().includes("ubuntu")) {
++    const releaseId = String(release.id || "").toLowerCase();
++    if (releaseId.includes("ubuntu")) {
+         distribution = "ubuntu-amd64";
+     }
+-    else if (release.id.toLowerCase().includes("alpine")) {
++    else if (releaseId.includes("alpine")) {
+         distribution = `alpine-amd64`;
+     }
+     else {

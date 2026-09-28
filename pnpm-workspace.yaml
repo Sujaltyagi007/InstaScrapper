@@ -5,3 +5,5 @@ allowBuilds:
   prisma: false
   sharp: false
   unrs-resolver: false
+patchedDependencies:
+  '@dryft/tlsclient@1.0.8': patches/@dryft__tlsclient@1.0.8.patch
