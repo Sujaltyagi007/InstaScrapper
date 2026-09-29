@@ -1,18 +1,4 @@
 name: Cron trigger (external, bypasses Vercel Hobby daily-only cron)
-
-# Vercel Hobby's own Cron only allows once-daily schedules (see vercel.json,
-# which stays as a once-a-day fallback). GitHub Actions has no such limit, so
-# this workflow pings the deployed cron endpoints on a real schedule instead:
-#   - /api/cron/monitor  every 5 minutes (matches MIN_INTERVAL_SECONDS in
-#     lib/services/target.service.ts — pinging more often than that would
-#     just be a no-op, since runDueTargetChecks only processes targets whose
-#     nextRunAt has actually passed)
-#   - /api/cron/notify and /api/cron/cleanup once a day, same as before
-#
-# Requires two repo secrets (Settings > Secrets and variables > Actions):
-#   APP_URL      the deployed app's base URL, e.g. https://your-app.vercel.app
-#   CRON_SECRET  same value as the CRON_SECRET env var set in Vercel
-
 on:
   schedule:
     - cron: "*/5 * * * *"   # monitor

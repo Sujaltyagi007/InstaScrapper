@@ -8,6 +8,7 @@ import { TargetQuotaBanner } from "@/features/account/components/target-quota-ba
 import { useNiche } from "@/features/studio/hooks/use-niche";
 import { NicheSetupCard } from "@/features/studio/components/niche-setup-card";
 import { NicheAccountsCard } from "@/features/studio/components/niche-accounts-card";
+import { ManualMetricsCard } from "@/features/studio/components/manual-metrics-card";
 import { IdeasCard } from "@/features/studio/components/ideas-card";
 import { ReelsCard } from "@/features/studio/components/reels-card";
 import { SoundBankCard } from "@/features/studio/components/sound-bank-card";
@@ -46,6 +47,7 @@ export default function StudioPage() {
             <>
               <TargetQuotaBanner quota={quota} />
               <NicheAccountsCard data={data} onChanged={changed} />
+              <ManualMetricsCard posts={data.posts} onSaved={refresh} />
               <IdeasCard onApproved={() => setReelsKey((k) => k + 1)} />
               <ReelsCard refreshKey={reelsKey} />
               <SoundBankCard />

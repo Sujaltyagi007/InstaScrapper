@@ -610,11 +610,11 @@ async function handleSuccessfulFetch(
     const hasTimeToResolveVideo = () => !deadlineAt || deadlineAt - Date.now() > 20_000;
 
     // A logged-out check never sees a reel's video file or a carousel's other
-    // items. When this check found such posts, one logged-in feed request (the
+    // items. When this check found such posts, one logged-in feed query (the
     // burner, through the pool's daily cap and cooldown) fills them all in.
     // Trend accounts store no media, so they never spend a burner use on this.
     if (!trendOnly && hasTimeToResolveVideo()) {
-      const enrichment = await enrichWithLoggedInFeed(target.userId, target.externalId, newItems).catch((err) => {
+      const enrichment = await enrichWithLoggedInFeed(target.userId, target.externalId, target.normalizedUsername, newItems).catch((err) => {
         console.warn("[monitoring] logged-in media lookup failed:", err instanceof Error ? err.message : err);
         return null;
       });

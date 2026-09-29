@@ -315,7 +315,7 @@ function CarouselGallery({ assets, alt }: { assets: PostAsset[]; alt: string }) 
   return (
     <div className="relative w-full">
       <div
-        className="flex w-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex w-full snap-x snap-mandatory overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden"
         onScroll={(e) => {
           const el = e.currentTarget;
           setIndex(Math.round(el.scrollLeft / Math.max(el.clientWidth, 1)));

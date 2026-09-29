@@ -4,9 +4,9 @@ import type { NormalizedMediaItem } from "@/lib/meta/types";
 
 /**
  * Fills in what a logged-out check can't see (a reel's real video file, every
- * item of a carousel) with ONE logged-in request, and only when the check found
- * posts that need it. The burner is claimed through the pool, so its daily cap,
- * cooldown and fixed proxy all apply; a warning from Instagram pauses it.
+ * item of a carousel) with one logged-in feed query, only when needed. A cold
+ * session may also need a page-token bootstrap. The burner is claimed through
+ * the pool, so its daily cap, cooldown and fixed proxy all apply.
  */
 
 export function needsLoggedInMedia(item: NormalizedMediaItem): boolean {
@@ -32,6 +32,7 @@ export type EnrichmentOutcome =
 export async function enrichWithLoggedInFeed(
   userId: string,
   profileId: string | null,
+  username: string,
   items: NormalizedMediaItem[],
 ): Promise<EnrichmentOutcome> {
   const pending = items.filter(needsLoggedInMedia);
@@ -41,7 +42,7 @@ export async function enrichWithLoggedInFeed(
   const picked = await pickSession(userId);
   if (!picked) return { used: false, reason: "no_burner" };
 
-  const lookup = await stealthFetchUserFeed(profileId, picked.config);
+  const lookup = await stealthFetchUserFeed(username, picked.config);
   await reportVerdict(picked.id, lookup.verdict, lookup.status);
 
   const byId = new Map(lookup.result.map((entry) => [entry.item.externalMediaId, entry.item]));

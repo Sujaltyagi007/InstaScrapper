@@ -23,22 +23,12 @@ function pickChromeDesktopIdentity(): ChromeIdentity {
   return chromeIdentityFor(CHROME_DESKTOP_VERSIONS[Math.floor(Math.random() * CHROME_DESKTOP_VERSIONS.length)]);
 }
 
-/**
- * A logged-in burner must look like one browser for its whole life. A random
- * pick per server start would change its Chrome version on every cold start.
- */
 function sessionChromeIdentity(session: StealthSessionConfig): ChromeIdentity {
   const seed = session.sessionId || session.cookies?.ds_user_id || session.username || "";
   const index = createHash("md5").update(seed).digest().readUInt32BE(0) % CHROME_DESKTOP_VERSIONS.length;
   return chromeIdentityFor(CHROME_DESKTOP_VERSIONS[index]);
 }
 
-/**
- * Burner cookies come from a desktop browser, so a logged-in request must not
- * go to the iPhone-app host with iPhone headers: that shows Instagram one login
- * on two devices at once. www.instagram.com serves the same /api/v1/ routes to
- * the web app, so logged-in calls are sent there as the same desktop browser.
- */
 function toWebApiUrl(url: string): string {
   return url.replace(/^https:\/\/i\.instagram\.com\/api\/v1\//, "https://www.instagram.com/api/v1/");
 }
@@ -216,6 +206,7 @@ async function htmlPageFetch(
   url: string,
   session?: StealthSessionConfig | null,
   dest: "document" | "iframe" = "document",
+  deadlineAt?: number,
 ): Promise<{ status: number; text: string } | null> {
   const proxyUrl = session?.proxyUrl || process.env.DEFAULT_PROXY_URL || undefined;
   const cookieStr = session?.cookies ? Object.entries(session.cookies).map(([k, v]) => `${k}=${v}`).join("; ") : "";
@@ -245,6 +236,19 @@ async function htmlPageFetch(
   if (cookieStr) headers["Cookie"] = cookieStr;
 
   try {
+    if (session?.transport === "HOME_WORKER") {
+      if (!session.homeWorkerDeviceId || !session.sessionId) {
+        throw new Error("Session is set to Home worker but has no paired device.");
+      }
+      const response = await executeViaHomeWorker(
+        session.homeWorkerDeviceId,
+        session.sessionId,
+        { method: "GET", url, headers },
+        deadlineAt ?? Date.now() + 12_000,
+      );
+      return { status: response.status, text: response.text };
+    }
+
     const client = getTlsClient(identity.tlsIdentifier, proxyUrl);
     // 10s cap per request (the adapter defaults to 30s). A time-budgeted run
     // plans retries around this bound, so one hung request can't push the
@@ -343,6 +347,7 @@ async function stealthRequest(
     postBody?: string;  // if set, sends a POST with this URL-encoded body
     extraHeaders?: Record<string, string>;
     deadlineAt?: number;
+    timeoutMs?: number;
   } = {}
 ): Promise<{ status: number; text: string; data?: any; deviceId?: string }> {
   if (options.jitter) {
@@ -424,11 +429,13 @@ async function stealthRequest(
             "Content-Type": "application/x-www-form-urlencoded",
           },
           validateStatus: () => true,
+          timeout: options.timeoutMs ?? 30_000,
         });
       } else {
         res = await client.get(url, {
           headers,
           validateStatus: () => true,
+          timeout: options.timeoutMs ?? 30_000,
         });
       }
 
@@ -472,6 +479,140 @@ type BlockKind =
   | "not_blocked";
 
 const RETRY_DELAYS_MS = [2000, 5000, 12000];
+
+interface GraphqlFeedTokens {
+  actorId: string;
+  dtsg: string;
+  lsd: string;
+  revision: string;
+  hsi: string;
+}
+
+interface GraphqlFeedResponse {
+  status: number;
+  text: string;
+  data?: { status?: string; message?: string; error_type?: string; items?: unknown[] };
+}
+
+interface GraphqlFeedBody {
+  data?: {
+    xdt_api__v1__feed__user_timeline_graphql_connection?: {
+      edges?: { node?: unknown }[];
+    };
+  };
+  errors?: { message?: string }[];
+}
+
+const GRAPHQL_FEED_DOC_ID = "28570182382647478";
+const GRAPHQL_FEED_TOKEN_TTL_MS = 10 * 60 * 1000;
+const graphqlFeedTokenCache = new Map<string, { tokens: GraphqlFeedTokens; expiresAt: number }>();
+
+function parseGraphqlFeedTokens(html: string, session: StealthSessionConfig): GraphqlFeedTokens | null {
+  const actorId = html.match(/"actorID":"(\d+)"/)?.[1] ?? session.cookies.ds_user_id ?? "";
+  const dtsg = html.match(/"DTSGInitialData",\[\],\{"token":"([^"]+)"/)?.[1] ?? "";
+  const lsd = html.match(/"LSD",\[\],\{"token":"([^"]+)"/)?.[1] ?? "";
+  const revision = html.match(/"__spin_r":(\d+)/)?.[1] ?? "";
+  const hsi = html.match(/"hsi":"(\d+)"/)?.[1] ?? "";
+  return actorId && dtsg && lsd && revision && hsi ? { actorId, dtsg, lsd, revision, hsi } : null;
+}
+
+async function graphqlUserFeedRequest(
+  username: string,
+  session: StealthSessionConfig,
+  count: number,
+  deadlineAt?: number,
+): Promise<GraphqlFeedResponse | null> {
+  const cookieKey = createHash("sha256").update(session.cookies.sessionid ?? "").digest("hex");
+  const cacheKey = `${session.sessionId ?? ""}:${cookieKey}`;
+  let tokens = graphqlFeedTokenCache.get(cacheKey);
+  if (!tokens || tokens.expiresAt <= Date.now()) {
+    const page = await htmlPageFetch(
+      `https://www.instagram.com/${encodeURIComponent(username)}/`,
+      session,
+      "document",
+      deadlineAt,
+    );
+    if (!page || page.status !== 200) return page;
+    const parsedTokens = parseGraphqlFeedTokens(page.text, session);
+    if (!parsedTokens) {
+      return { status: 200, text: "Instagram web page did not include GraphQL feed tokens.", data: { status: "fail" } };
+    }
+    tokens = { tokens: parsedTokens, expiresAt: Date.now() + GRAPHQL_FEED_TOKEN_TTL_MS };
+    graphqlFeedTokenCache.set(cacheKey, tokens);
+  }
+
+  const sum = [...tokens.tokens.dtsg].reduce((total, character) => total + character.charCodeAt(0), 0);
+  const postBody = new URLSearchParams({
+    av: tokens.tokens.actorId,
+    __d: "www",
+    __user: "0",
+    __a: "1",
+    __req: "b",
+    __hs: "",
+    dpr: "1",
+    __ccg: "EXCELLENT",
+    __rev: tokens.tokens.revision,
+    __s: "",
+    __hsi: tokens.tokens.hsi,
+    __comet_req: "7",
+    fb_dtsg: tokens.tokens.dtsg,
+    jazoest: `2${sum}`,
+    lsd: tokens.tokens.lsd,
+    __spin_r: tokens.tokens.revision,
+    __spin_b: "trunk",
+    __spin_t: String(Math.floor(Date.now() / 1000)),
+    fb_api_caller_class: "RelayModern",
+    fb_api_req_friendly_name: "PolarisProfilePostsQuery",
+    variables: JSON.stringify({
+      data: {
+        count,
+        include_reel_media_seen_timestamp: true,
+        include_relationship_info: true,
+        latest_besties_reel_media: true,
+        latest_reel_media: true,
+      },
+      username,
+      __relay_internal__pv__PolarisMultiCaptionCarouselEnabledrelayprovider: false,
+      __relay_internal__pv__PolarisShortDramaEnabledrelayprovider: false,
+      __relay_internal__pv__PolarisReelsRecoDebugOverlayEnabledrelayprovider: false,
+    }),
+    server_timestamps: "true",
+    doc_id: GRAPHQL_FEED_DOC_ID,
+  }).toString();
+
+  const referer = `https://www.instagram.com/${encodeURIComponent(username)}/`;
+  const response = await stealthRequest("https://www.instagram.com/graphql/query", {
+    session,
+    isAjax: true,
+    referer,
+    postBody,
+    deadlineAt,
+    timeoutMs: 10_000,
+    extraHeaders: {
+      "X-Fb-Lsd": tokens.tokens.lsd,
+      "X-Fb-Friendly-Name": "PolarisProfilePostsQuery",
+      "X-Asbd-Id": "359341",
+      "X-Root-Field-Name": "xdt_api__v1__feed__user_timeline_graphql_connection",
+      Origin: "https://www.instagram.com",
+    },
+  });
+
+  let body: GraphqlFeedBody | null;
+  try {
+    body = JSON.parse(response.text.replace(/^\s*for\s*\(\s*;;\s*\);/, "")) as GraphqlFeedBody;
+  } catch {
+    return { status: response.status, text: response.text, data: { status: "fail", message: "Invalid GraphQL response." } };
+  }
+
+  const edges = body?.data?.xdt_api__v1__feed__user_timeline_graphql_connection?.edges;
+  if (!Array.isArray(edges)) {
+    const message = Array.isArray(body?.errors)
+      ? body.errors.map((error: { message?: string }) => error.message ?? "").filter(Boolean).join(" ")
+      : "GraphQL response did not include a timeline.";
+    return { status: response.status, text: response.text, data: { status: "fail", message } };
+  }
+  return { status: response.status, text: response.text, data: { items: edges.flatMap(({ node }) => node == null ? [] : [node]) } };
+}
 
 async function stealthRequestWithRetry(
   url: string,
@@ -1129,15 +1270,12 @@ export async function stealthFetchTargetData(params: {
       }
     }
 
-    // Play counts and audio only exist on the logged-in feed. One extra request;
-    // a failure just means this check has no metrics.
+    // Play counts and audio only exist on the logged-in feed. A cold token cache
+    // needs a page request before the GraphQL request; failures only omit metrics.
     let finalMedia = media;
-    if (isAuthenticated && !sessionWarning && options?.collectMetrics && fetchedExternalId && hasTimeForExtras) {
-      // count=12 is what the web app itself asks for when you open a profile.
-      const feedRes = await stealthRequest(
-        `https://i.instagram.com/api/v1/feed/user/${fetchedExternalId}/?count=12`,
-        { session, isAjax: true, referer: `https://www.instagram.com/${cleanUser}/` },
-      ).catch(() => null);
+    const hasTimeForMetrics = !options?.deadlineAt || options.deadlineAt - Date.now() > 22_000;
+    if (isAuthenticated && !sessionWarning && options?.collectMetrics && fetchedExternalId && hasTimeForMetrics) {
+      const feedRes = await graphqlUserFeedRequest(cleanUser, session!, 12, options?.deadlineAt).catch(() => null);
       sessionWarning = warningFrom(sessionVerdict(feedRes), feedRes?.status ?? 0, "feed");
       if (feedRes && feedRes.status === 200) {
         const feed = parseFeedItems(feedRes.data);
@@ -1356,20 +1494,16 @@ export interface LoggedInLookup<T> {
 }
 
 /**
- * One logged-in request for a profile's latest posts (what the app loads when
- * you open a profile). It returns every post's real video file and every
- * carousel item in a single request, which a logged-out page never shows.
- * One attempt and no retry: a warning must stop the burner, not repeat.
+ * Fetches a profile's latest posts via the logged-in web GraphQL query. The
+ * page tokens are cached per session; a cold cache needs one bootstrap request.
+ * The query itself is attempted once so a warning stops the burner, not repeats.
  */
 export async function stealthFetchUserFeed(
-  userPk: string,
+  username: string,
   session: StealthSessionConfig,
   count = 12,
 ): Promise<LoggedInLookup<FeedEntry[]>> {
-  const res = await stealthRequest(`https://i.instagram.com/api/v1/feed/user/${encodeURIComponent(userPk)}/?count=${count}`, {
-    session,
-    isAjax: true,
-  }).catch(() => null);
+  const res = await graphqlUserFeedRequest(username, session, count).catch(() => null);
   const verdict = sessionVerdict(res);
   return { verdict, status: res?.status ?? 0, result: verdict === "OK" ? parseFeedItems(res?.data) : [] };
 }

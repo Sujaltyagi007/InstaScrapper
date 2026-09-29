@@ -1,9 +1,8 @@
 import type { MediaChild, MediaMetrics, NormalizedMediaItem } from "./types";
 
 /**
- * Parses the logged-in mobile feed (`i.instagram.com/api/v1/feed/user/<id>/`),
- * the one place Instagram exposes reel play counts and audio info. The web
- * profile JSON and the logged-out HTML page don't carry them.
+ * Parses feed items from Instagram's logged-in mobile or web GraphQL response.
+ * The web profile JSON and logged-out HTML page don't carry engagement counts.
  *
  * Field names come from the private API and can change without notice, so
  * every read is defensive and a missing field just leaves that metric null.
@@ -18,7 +17,9 @@ interface FeedCandidate {
 interface FeedItem {
   id?: string;
   code?: string;
-  taken_at?: number;
+  taken_at?: number | string;
+  taken_at_timestamp?: number | string;
+  timestamp?: number | string;
   media_type?: number;
   product_type?: string;
   caption?: { text?: string } | null;
@@ -44,6 +45,17 @@ export interface FeedEntry {
 
 function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
+}
+
+function isoTimestamp(value: unknown): string | null {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  const numeric = typeof value === "number" ? value : Number(value);
+  const milliseconds = Number.isFinite(numeric)
+    ? numeric > 1_000_000_000_000 ? numeric : numeric * 1000
+    : NaN;
+  const date = Number.isFinite(milliseconds) ? new Date(milliseconds) : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function largest(candidates: FeedCandidate[] | undefined): string | null {
@@ -95,7 +107,7 @@ export function parseFeedItems(body: unknown): FeedEntry[] {
         externalMediaId: pk,
         mediaType: isReel ? "REEL" : isCarousel ? "CAROUSEL_ALBUM" : isVideo ? "VIDEO" : "IMAGE",
         permalink: `https://www.instagram.com/${isReel ? "reel" : "p"}/${raw.code}/`,
-        timestamp: typeof raw.taken_at === "number" ? new Date(raw.taken_at * 1000).toISOString() : null,
+        timestamp: isoTimestamp(raw.taken_at_timestamp) ?? isoTimestamp(raw.taken_at) ?? isoTimestamp(raw.timestamp),
         caption: raw.caption?.text ?? null,
         mediaUrl: largest(cover?.image_versions2?.candidates),
         videoUrl: largest(raw.video_versions),

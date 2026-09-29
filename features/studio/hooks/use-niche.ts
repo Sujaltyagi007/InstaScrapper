@@ -19,6 +19,19 @@ export interface NicheAccountRow {
   };
 }
 
+export interface NichePostRow {
+  id: string;
+  permalink: string | null;
+  mediaType: string;
+  caption: string | null;
+  timestamp: string | null;
+  playCount: number | null;
+  likeCount: number | null;
+  commentCount: number | null;
+  metricsUpdatedAt: string | null;
+  target: { username: string };
+}
+
 export interface NicheData {
   niche: {
     id: string;
@@ -28,6 +41,7 @@ export interface NicheData {
     accounts: NicheAccountRow[];
   } | null;
   hasActiveSession: boolean;
+  posts: NichePostRow[];
 }
 
 export function useNiche() {

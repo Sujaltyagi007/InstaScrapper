@@ -1,18 +1,17 @@
 "use client";
-import { friendlyError } from "@/lib/friendly-error";
-
-import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
-import { AlertTriangle, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
 import type { NicheData } from "../hooks/use-niche";
+import { friendlyError } from "@/lib/friendly-error";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Suggestion {
   username: string;
@@ -80,11 +79,12 @@ export function NicheAccountsCard({ data, onChanged }: { data: NicheData; onChan
           <Alert>
             <AlertTriangle />
             <AlertDescription>
-              View counts are only visible to logged-in accounts, so trend data needs an active burner session.{" "}
+              Automatic metrics need an active Instagram session. You can still enter views, likes, comments and dates
+              manually in the post metrics card below. {" "}
               <Link href="/settings" className="underline">
-                Add one in Settings
+                Add a session for automatic collection
               </Link>
-              . Never use your real account for this.
+              .
             </AlertDescription>
           </Alert>
         )}

@@ -38,7 +38,9 @@ export interface ScoringOptions {
 }
 
 const DEFAULTS = {
-  windowDays: 14,
+  // Many niche accounts post only a few times a week; the recency decay below
+  // still ranks newer posts higher.
+  windowDays: 30,
   halfLifeHours: 5 * 24,
   minRatio: 1.5,
   baselineSize: 20,

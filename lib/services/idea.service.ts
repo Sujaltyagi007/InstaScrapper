@@ -38,13 +38,13 @@ async function noTrendsError(userId: string): Promise<ApiError> {
   if (withMetrics === 0) {
     const sessions = await prisma.instagramSession.count({ where: { userId, status: "ACTIVE" } });
     return new ApiError(409, sessions === 0
-      ? "No view counts yet: they need a logged-in burner session. Add one in Settings."
-      : "No view counts yet. They arrive with the next checks of your niche accounts (every ~12h).",
+      ? "No metrics yet. Enter views, likes, comments and post dates in Studio, or add an active session for automatic collection."
+      : "No metrics yet. Enter them in Studio, or try again after the next check of a niche account.",
       "NO_TREND_DATA",
     );
   }
   return new ApiError(409,
-    "Nothing is beating its usual numbers right now, or every current trend already has an idea. Try again after the next checks.",
+    "No recent posts are beating their usual numbers yet. Trends need at least three comparable metric samples and one post at 1.5× its baseline within 30 days. Add metrics to more niche posts or try again after a high-performing post.",
     "NO_TRENDS",
   );
 }
@@ -59,8 +59,18 @@ export async function generateIdeas(userId: string) {
     select: { sourceMediaIds: true },
   });
   const used = new Set(recentIdeas.flatMap((i) => i.sourceMediaIds));
-  const candidates = (await getTrendCandidates(userId)).filter((c) => !used.has(c.id)).slice(0, CANDIDATES_PER_RUN);
-  if (candidates.length === 0) throw await noTrendsError(userId);
+  const rankedCandidates = await getTrendCandidates(userId);
+  const candidates = rankedCandidates.filter((candidate) => !used.has(candidate.id)).slice(0, CANDIDATES_PER_RUN);
+  if (candidates.length === 0) {
+    if (rankedCandidates.length > 0) {
+      throw new ApiError(
+        409,
+        `All ${rankedCandidates.length} posts currently beating their usual numbers were already used in ideas within the last ${SOURCE_REUSE_DAYS} days.`,
+        "TRENDS_ALREADY_USED",
+      );
+    }
+    throw await noTrendsError(userId);
+  }
 
   const result = await generateJson<{
     ideas: { title: string; angle: string; hook: string; whyTrending: string; sources: number[] }[];

@@ -38,8 +38,29 @@ export async function getNiche(userId: string) {
       },
     },
   });
-  const sessions = await prisma.instagramSession.count({ where: { userId, status: "ACTIVE" } });
-  return { niche, hasActiveSession: sessions > 0 };
+  const [sessions, posts] = await Promise.all([
+    prisma.instagramSession.count({ where: { userId, status: "ACTIVE" } }),
+    niche
+      ? prisma.media.findMany({
+        where: { isStory: false, target: { nicheAccounts: { some: { nicheId: niche.id } } } },
+        orderBy: { firstSeenAt: "desc" },
+        take: 15,
+        select: {
+          id: true,
+          permalink: true,
+          mediaType: true,
+          caption: true,
+          timestamp: true,
+          playCount: true,
+          likeCount: true,
+          commentCount: true,
+          metricsUpdatedAt: true,
+          target: { select: { username: true } },
+        },
+      })
+      : Promise.resolve([]),
+  ]);
+  return { niche, hasActiveSession: sessions > 0, posts };
 }
 
 export async function saveNiche(
