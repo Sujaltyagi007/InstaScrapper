@@ -138,6 +138,7 @@ export function mergeFeedMetrics(media: NormalizedMediaItem[], feed: FeedEntry[]
     const existing = byId.get(item.externalMediaId);
     if (existing) {
       existing.metrics = metrics;
+      if (!existing.timestamp && item.timestamp) existing.timestamp = item.timestamp;
       if (!existing.videoUrl && item.videoUrl) existing.videoUrl = item.videoUrl;
       if (!existing.children && item.children) existing.children = item.children;
       if (item.mediaType === "REEL") existing.mediaType = "REEL";

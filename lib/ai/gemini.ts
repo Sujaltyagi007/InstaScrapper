@@ -146,12 +146,18 @@ async function withModelFallback<T>(models: string[], call: (model: string) => P
   const now = Date.now();
   const available = models.filter((m) => (exhaustedUntil.get(m) ?? 0) <= now);
   let lastError: unknown = null;
+  let timedOutFallbackUsed = false;
   for (const model of available.length ? available : models) {
     try {
       return await call(model);
     } catch (err) {
       const limited = err instanceof GeminiError && (err.quotaExceeded || err.retryAfterMs !== undefined);
-      if (!limited && !(err instanceof GeminiError && err.status === 404)) throw err;
+      // 504 = our own request timeout: a slow model shouldn't stop the chain.
+      const transientServerError = err instanceof GeminiError && err.status >= 500 && err.status <= 504;
+      const timedOut = err instanceof GeminiError && err.status === 504;
+      if (!limited && !transientServerError && !timedOut && !(err instanceof GeminiError && err.status === 404)) throw err;
+      if (timedOut && timedOutFallbackUsed) throw err;
+      if (timedOut) timedOutFallbackUsed = true;
       if (err instanceof GeminiError && err.quotaExceeded) exhaustedUntil.set(model, now + EXHAUSTED_SKIP_MS);
       console.warn(`[gemini] ${model} unavailable, trying the next model:`, (err as Error).message.slice(0, 160));
       lastError = err;
@@ -201,6 +207,42 @@ export async function speak(params: {
     }),
   );
 
+  return audioFromResponse(res);
+}
+
+export interface DialogueTurn {
+  speaker: string;
+  /** May contain inline performance tags such as <short pause> or <sigh>. */
+  text: string;
+  style?: string;
+}
+
+/**
+ * Two speakers performed in one call ("conversational" mode), so the voices
+ * react to each other with natural timing instead of being stitched together.
+ */
+export async function speakDialogue(params: {
+  turns: DialogueTurn[];
+  speakers: { speaker: string; voice: string }[];
+  model?: string;
+}): Promise<{ wav: Buffer; mimeType: string }> {
+  const content = params.turns.map((t) => ({
+    type: "text",
+    text: t.text,
+    annotations: [{ type: "speech_metadata", speaker: t.speaker, ...(t.style ? { style: t.style } : {}) }],
+  }));
+  const res = await withModelFallback(params.model ? [params.model] : GEMINI_TTS_MODELS, (model) =>
+    interact({
+      model,
+      input: [{ type: "user_input", content }],
+      response_format: { type: "audio" },
+      generation_config: { speech_config: { mode: "conversational", speakers: params.speakers } },
+    }),
+  );
+  return audioFromResponse(res);
+}
+
+function audioFromResponse(res: unknown): { wav: Buffer; mimeType: string } {
   const audio = outputBlocks(res).filter((b) => b.type === "audio" && b.data).pop();
   if (!audio?.data) throw new GeminiError(`Gemini returned no audio: ${JSON.stringify(res).slice(0, 300)}`, 200, false);
   const bytes = Buffer.from(audio.data, "base64");

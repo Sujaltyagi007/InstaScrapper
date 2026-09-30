@@ -5,6 +5,8 @@ import { buildAssSubtitles } from "@/lib/render/captions";
 import type { StageContext, StageResult } from "./context";
 import { runFfmpeg, stageFonts } from "@/lib/render/ffmpeg";
 import { fetchPublicToFile } from "@/lib/security/fetch-public";
+import { START_FRACTION, downloadHeaders } from "@/lib/visuals/types";
+import { parseDurationSec } from "@/lib/render/mix";
 import { downloadStoredObject, uploadBuffer } from "@/lib/storage";
 import { buildReelRenderArgs, segmentsForSentences } from "@/lib/render/reel";
 import type { AudioBlueprint, ClipPick, ReelScript, VoiceTiming } from "@/lib/reels/types";
@@ -38,8 +40,24 @@ export async function runRenderStage({ project, idea, workDir }: StageContext): 
     await fetchPublicToFile(pick.chosen.url, path.join(workDir, `clip${i}.mp4`), {
       maxBytes: CLIP_MAX_BYTES,
       timeoutMs: 60_000,
+      headers: downloadHeaders(pick.chosen.source ?? "pexels"),
     });
   });
+
+  // NASA, Wikimedia and Europeana don't report a length, so read each clip's real one.
+  const lengths = await Promise.all(
+    ordered.map(async (pick, i) => {
+      try {
+        const { stderr } = await runFfmpeg(["-i", `clip${i}.mp4`, "-t", "0.1", "-f", "null", "-"], {
+          cwd: workDir,
+          timeoutMs: 20_000,
+        });
+        return parseDurationSec(stderr) ?? pick.chosen.durationSec;
+      } catch {
+        return pick.chosen.durationSec;
+      }
+    }),
+  );
 
   const bpm = blueprint.music?.bpm;
   const segments = segmentsForSentences(timing.spans, blueprint.durationSec, bpm ? 60 / bpm : null);
@@ -49,7 +67,14 @@ export async function runRenderStage({ project, idea, workDir }: StageContext): 
 
   await runFfmpeg(
     buildReelRenderArgs({
-      clips: ordered.map((p, i) => ({ file: `clip${i}.mp4`, durationSec: p.chosen.durationSec })),
+      clips: ordered.map((p, i) => {
+        const fraction = START_FRACTION[p.chosen.source ?? "pexels"];
+        return {
+          file: `clip${i}.mp4`,
+          durationSec: lengths[i],
+          startSec: fraction === undefined ? undefined : fraction * lengths[i],
+        };
+      }),
       segments,
       audioFile: "mix.m4a",
       assFile: "captions.ass",

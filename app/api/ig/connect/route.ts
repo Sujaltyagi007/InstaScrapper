@@ -11,6 +11,7 @@ export async function GET(req: Request) {
   const settings = (params: Record<string, string>) => {
     const url = new URL("/settings", req.url);
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+    url.searchParams.set("tab", "connections");
     return NextResponse.redirect(url);
   };
 

@@ -27,6 +27,7 @@ export interface Reel {
   postedAt: string | null;
   postedUrl: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export const PIPELINE_STEPS: { stage: string; label: string }[] = [

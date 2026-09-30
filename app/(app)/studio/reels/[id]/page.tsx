@@ -2,7 +2,7 @@
 import { friendlyError } from "@/lib/friendly-error";
 
 import useSWR from "swr";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import {
   ArrowLeft,
   Check,
+  Circle,
   Clock,
   Copy,
   Download,
@@ -29,8 +30,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ACTIVE_STAGES, STAGE_LABELS, fullCaption, type Reel } from "@/features/studio/lib/reel";
+import { SOURCE_LABELS } from "@/lib/visuals/types";
 import { useReelAutorun } from "@/features/studio/hooks/use-reel-autorun";
-import { ReelStageBadge, ReelSteps } from "@/features/studio/components/reel-status";
+import { ReelElapsedTimer, ReelStageBadge, ReelSteps } from "@/features/studio/components/reel-status";
+import { RetryReelDialog } from "@/features/studio/components/retry-reel-dialog";
 
 const POLL_MS = 6_000;
 
@@ -39,10 +42,26 @@ export default function ReelPage() {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [postedUrl, setPostedUrl] = useState("");
+  const [retryDialogOpen, setRetryDialogOpen] = useState(false);
+  const [retryQueued, setRetryQueued] = useState(false);
+  const retryBaseline = useRef<{ stage: string; attempts: number; error: string | null } | null>(null);
 
   // Polls while the reel is still being made; SWR pauses it while the tab is hidden.
   const { data, error, mutate } = useSWR<{ reel: Reel }>(`/api/reels/${id}`, {
-    refreshInterval: (latest) => (latest && ACTIVE_STAGES.has(latest.reel.stage) ? POLL_MS : 0),
+    refreshInterval: (latest) => (
+      retryQueued ? 1500 : latest?.reel && ACTIVE_STAGES.has(latest.reel.stage) ? POLL_MS : 0
+    ),
+    onSuccess: (latest) => {
+      const baseline = retryBaseline.current;
+      const current = latest?.reel;
+      if (
+        baseline && current &&
+        (current.running || current.stage !== baseline.stage || current.attempts !== baseline.attempts || current.error !== baseline.error)
+      ) {
+        retryBaseline.current = null;
+        setRetryQueued(false);
+      }
+    },
   });
   const reel = data?.reel ?? null;
   const missing = error instanceof FetchError && error.status === 404;
@@ -62,6 +81,10 @@ export default function ReelPage() {
       if (message) toast.success(message);
       await refresh();
     } catch (err) {
+      if (label === "retry") {
+        retryBaseline.current = null;
+        setRetryQueued(false);
+      }
       toast.error(friendlyError(err, "Something went wrong."));
     } finally {
       setBusy(null);
@@ -70,6 +93,19 @@ export default function ReelPage() {
 
   const post = (path: string, body?: unknown) =>
     apiFetch(`/api/reels/${id}${path}`, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+
+  function confirmRetry() {
+    if (!reel) return;
+    const stage = reel.stage === "FAILED" ? reel.failedStage ?? "SCRIPT" : reel.stage;
+    retryBaseline.current = {
+      stage,
+      attempts: reel.stage === "FAILED" ? 0 : reel.attempts,
+      error: reel.stage === "FAILED" ? null : reel.error,
+    };
+    setRetryQueued(true);
+    setRetryDialogOpen(false);
+    void run("retry", () => post("/retry").then(() => `Retry accepted. Starting ${STAGE_LABELS[stage] ?? stage}.`));
+  }
 
   async function copyCaption() {
     if (!reel) return;
@@ -116,15 +152,16 @@ export default function ReelPage() {
   const locked = reel.running || busy !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 pt-0 pb-4 ">
       <div className="flex flex-col gap-2">
         <Link href="/studio" className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline">
           <ArrowLeft className="size-4" /> Studio
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">{reel.idea.title}</h1>
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <ReelStageBadge reel={reel} />
-          {reel.voiceTiming && <span>{reel.voiceTiming.durationSec.toFixed(0)}s</span>}
+          <ReelStageBadge reel={reel} retryQueued={retryQueued} />
+          <ReelElapsedTimer reel={reel} retryQueued={retryQueued} />
+          {reel.voiceTiming && <span className="rounded-full border bg-muted/40 px-2 py-0.5 text-[11px] tabular-nums">Voice · {reel.voiceTiming.durationSec.toFixed(0)}s</span>}
           {reel.sentAt && <span>sent {format(new Date(reel.sentAt), "EEE d MMM, HH:mm")}</span>}
           {reel.postedAt && <span>posted {format(new Date(reel.postedAt), "EEE d MMM")}</span>}
         </div>
@@ -133,8 +170,13 @@ export default function ReelPage() {
       {!finished && (
         <Card>
           <CardContent className="flex flex-col gap-3 pt-6">
-            <ReelSteps reel={reel} />
-            {reel.error && (
+            <ReelSteps reel={reel} retryQueued={retryQueued} />
+            {retryQueued ? (
+              <p className="flex items-center gap-2 text-sm text-primary" role="status">
+                <Circle className="size-2 animate-pulse fill-primary text-primary" aria-hidden="true" />
+                Retry accepted. Starting the next stage run…
+              </p>
+            ) : reel.error && (
               <p className="text-sm text-destructive">
                 {reel.stage === "FAILED"
                   ? `Stopped at "${STAGE_LABELS[reel.failedStage ?? ""] ?? reel.failedStage}": `
@@ -142,24 +184,31 @@ export default function ReelPage() {
                 {reel.error}
               </p>
             )}
-            {(reel.stage === "FAILED" || reel.error) && (
+            {!retryQueued && (reel.stage === "FAILED" || reel.error) && (
               <Button
                 variant="outline"
                 className="w-fit"
                 disabled={locked}
-                onClick={() => run("retry", () => post("/retry").then(() => "Retrying."))}
+                onClick={() => setRetryDialogOpen(true)}
               >
                 <RotateCcw /> Retry
               </Button>
             )}
-            {active && !reel.error && (
+            {active && !reel.error && !retryQueued && (
               <p className="text-sm text-muted-foreground">
-                Working on it. This page updates by itself; the whole reel usually takes a few minutes.
+                The video is being created now.
               </p>
             )}
           </CardContent>
         </Card>
       )}
+
+      <RetryReelDialog
+        reel={reel}
+        open={retryDialogOpen}
+        onOpenChange={setRetryDialogOpen}
+        onConfirm={confirmRetry}
+      />
 
       {finished && (
         <div className="grid gap-6 md:grid-cols-[minmax(0,320px)_1fr]">
@@ -353,19 +402,23 @@ export default function ReelPage() {
               {reel.script.sentences.map((s, i) => {
                 const clip = reel.clips?.find((c) => c.sentence === i)?.chosen;
                 return (
-                  <li key={i}>
-                    {s.text}{" "}
-                    <span className="text-xs text-muted-foreground">
-                      [{s.visual}]
+                  <li key={i} className="flex flex-col gap-1">
+                    <div>
+                      {s.text}{" "}
+                      <span className="text-xs text-muted-foreground">
+                        [{[s.beat, s.energy, s.visual].filter(Boolean).join(" · ")}]
                       {clip && (
                         <>
                           {" · "}
                           <a href={clip.pageUrl} target="_blank" rel="noreferrer" className="hover:underline">
-                            Pexels{clip.author ? `: ${clip.author}` : ""}
+                            {SOURCE_LABELS[clip.source ?? "pexels"]}
+                            {clip.author ? `: ${clip.author}` : ""}
                           </a>
                         </>
                       )}
-                    </span>
+                      </span>
+                    </div>
+                    {s.shot && <p className="text-xs text-muted-foreground">Shot: {s.shot}</p>}
                   </li>
                 );
               })}

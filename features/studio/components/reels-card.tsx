@@ -1,26 +1,42 @@
 "use client";
-import { friendlyError } from "@/lib/friendly-error";
-
 import useSWR from "swr";
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
-import { Film, Loader2, RotateCcw, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/fetcher";
+import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ACTIVE_STAGES, STAGE_LABELS, type Reel } from "../lib/reel";
+import { friendlyError } from "@/lib/friendly-error";
+import { RetryReelDialog } from "./retry-reel-dialog";
 import { useReelAutorun } from "../hooks/use-reel-autorun";
-import { ReelStageBadge, ReelSteps } from "./reel-status";
+import { Film, Loader2, RotateCcw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ACTIVE_STAGES, STAGE_LABELS, type Reel } from "../lib/reel";
+import { ReelElapsedTimer, ReelStageBadge, ReelSteps } from "./reel-status";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const POLL_MS = 8_000;
 
 export function ReelsCard({ refreshKey }: { refreshKey: number }) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [retryTarget, setRetryTarget] = useState<Reel | null>(null);
+  const [retryQueuedId, setRetryQueuedId] = useState<string | null>(null);
+  const retryBaseline = useRef<{ stage: string; attempts: number; error: string | null } | null>(null);
   // Keep polling while anything is still being worked on (SWR pauses it while the tab is hidden).
   const { data, mutate } = useSWR<{ reels: Reel[] }>("/api/reels", {
-    refreshInterval: (latest) => (latest?.reels.some((r) => ACTIVE_STAGES.has(r.stage)) ? POLL_MS : 0),
+    refreshInterval: (latest: { reels: Reel[] } | undefined) => retryQueuedId
+      ? 1500
+      : latest?.reels?.some((r) => ACTIVE_STAGES.has(r.stage)) ? POLL_MS : 0,
+    onSuccess: (latest) => {
+      const baseline = retryBaseline.current;
+      const current = latest.reels.find((reel) => reel.id === retryQueuedId);
+      if (
+        baseline && current &&
+        (current.running || current.stage !== baseline.stage || current.attempts !== baseline.attempts || current.error !== baseline.error)
+      ) {
+        retryBaseline.current = null;
+        setRetryQueuedId(null);
+      }
+    },
   });
   const reels = data?.reels ?? null;
   const refresh = useCallback(() => mutate(), [mutate]);
@@ -41,10 +57,19 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
       mutate((cur) => cur && { reels: cur.reels.filter((r) => r.id !== reel.id) }, { revalidate: false });
     }
     try {
-      if (action === "retry") await apiFetch(`/api/reels/${reel.id}/retry`, { method: "POST" });
+      if (action === "retry") {
+        await apiFetch(`/api/reels/${reel.id}/retry`, { method: "POST" });
+        const stage = reel.stage === "FAILED" ? reel.failedStage ?? "SCRIPT" : reel.stage;
+        toast.success(`Retry accepted. Starting ${STAGE_LABELS[stage] ?? stage}.`);
+        setRetryTarget(null);
+      }
       else await apiFetch(`/api/reels/${reel.id}`, { method: "DELETE" });
       if (action === "delete") toast.success("Reel deleted. Its idea is back in the list.");
     } catch (err) {
+      if (action === "retry") {
+        retryBaseline.current = null;
+        setRetryQueuedId(null);
+      }
       toast.error(friendlyError(err, "Couldn't do that. Please try again."));
     } finally {
       await refresh();
@@ -52,9 +77,22 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
     }
   }
 
+  function confirmRetry() {
+    if (!retryTarget) return;
+    const stage = retryTarget.stage === "FAILED" ? retryTarget.failedStage ?? "SCRIPT" : retryTarget.stage;
+    retryBaseline.current = {
+      stage,
+      attempts: retryTarget.stage === "FAILED" ? 0 : retryTarget.attempts,
+      error: retryTarget.stage === "FAILED" ? null : retryTarget.error,
+    };
+    setRetryQueuedId(retryTarget.id);
+    void act(retryTarget, "retry");
+  }
+
   if (reels === null || reels.length === 0) return null;
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Reels</CardTitle>
@@ -85,9 +123,10 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
                       {reel.idea.title}
                     </Link>
                     <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <ReelStageBadge reel={reel} />
+                      <ReelStageBadge reel={reel} retryQueued={retryQueuedId === reel.id} />
+                      <ReelElapsedTimer reel={reel} retryQueued={retryQueuedId === reel.id} />
                       {formatDistanceToNow(new Date(reel.createdAt), { addSuffix: true })}
-                      {reel.voiceTiming ? ` · ${reel.voiceTiming.durationSec.toFixed(0)}s` : ""}
+                      {reel.voiceTiming ? ` · Voice ${reel.voiceTiming.durationSec.toFixed(0)}s` : ""}
                     </span>
                   </div>
                   <div className="flex gap-1">
@@ -95,10 +134,13 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={busyId === reel.id || reel.running}
-                        onClick={() => act(reel, "retry")}
+                        disabled={busyId === reel.id || reel.running || retryQueuedId === reel.id}
+                        onClick={() => setRetryTarget(reel)}
                       >
-                        <RotateCcw /> Retry
+                        {busyId === reel.id || retryQueuedId === reel.id
+                          ? <Loader2 className="animate-spin" />
+                          : <RotateCcw />}
+                        {retryQueuedId === reel.id ? "Starting…" : "Retry"}
                       </Button>
                     )}
                     <Button size="sm" variant="outline" asChild>
@@ -115,7 +157,14 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
                     </Button>
                   </div>
                 </div>
-                {ACTIVE_STAGES.has(reel.stage) && <ReelSteps reel={reel} />}
+                {(ACTIVE_STAGES.has(reel.stage) || retryQueuedId === reel.id) && (
+                  <ReelSteps reel={reel} retryQueued={retryQueuedId === reel.id} />
+                )}
+                {retryQueuedId === reel.id && (
+                  <p className="flex items-center gap-2 text-xs text-primary" role="status">
+                    <Loader2 className="size-3 animate-spin" /> Retry accepted. Waiting for the stage to start…
+                  </p>
+                )}
                 {reel.error && (
                   <p className="text-xs text-destructive">
                     {reel.stage === "FAILED"
@@ -130,5 +179,12 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
         </ul>
       </CardContent>
     </Card>
+    <RetryReelDialog
+      reel={retryTarget}
+      open={Boolean(retryTarget)}
+      onOpenChange={(open) => !open && setRetryTarget(null)}
+      onConfirm={confirmRetry}
+    />
+    </>
   );
 }

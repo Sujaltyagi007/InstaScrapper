@@ -213,3 +213,23 @@
     box-shadow: 0 0 8px rgba(6, 182, 212, 0.8);
   }
 }
+
+.reel-progress-sweep {
+  animation: reelProgressSweep 1.35s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes reelProgressSweep {
+  from {
+    transform: translateX(-125%);
+  }
+  to {
+    transform: translateX(375%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-progress-sweep {
+    animation: none;
+    transform: translateX(150%);
+  }
+}

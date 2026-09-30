@@ -65,10 +65,10 @@ export function CheckScheduleCard({ settings, onSaved }: { settings: UserSetting
   return (
     <Card size="sm">
       <CardHeader>
-        <CardTitle>Human-like check schedule</CardTitle>
+        <CardTitle>Timezone &amp; quiet hours</CardTitle>
         <CardDescription className="text-xs">
-          Checks run one at a time with random gaps, like a person browsing. During sleep hours no
-          scheduled checks run. &quot;Run check now&quot; always works.
+          The app checks accounts a little at random, like a person would, and pauses during your sleep
+          hours. &quot;Run check now&quot; always works.
         </CardDescription>
       </CardHeader>
       <form onSubmit={save}>

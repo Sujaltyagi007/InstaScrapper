@@ -68,7 +68,7 @@ export interface NormalizedMediaItem {
   isStory?: boolean;
   isCollab?: boolean;
   collaborators?: string[];
-  /** Engagement, present only when the logged-in feed was fetched. */
+  /** Engagement fields supplied by an authorized provider (official Graph or an explicitly authenticated feed). */
   metrics?: MediaMetrics;
   /**
    * Every item of a carousel in order (index 0 is the cover). Only a logged-in

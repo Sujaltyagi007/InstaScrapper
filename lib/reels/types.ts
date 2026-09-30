@@ -1,5 +1,5 @@
 import type { Span } from "@/lib/render/timing";
-import type { StockClip } from "@/lib/visuals/pexels";
+import type { ClipSource, StockClip } from "@/lib/visuals/types";
 
 /** Stages in order. The pipeline only runs stages that have a handler; the rest wait. */
 export const REEL_STAGES = [
@@ -20,10 +20,17 @@ export function nextStage(stage: ReelStage): ReelStage {
   return i >= 0 && i < REEL_STAGES.length - 1 ? REEL_STAGES[i + 1] : stage;
 }
 
+export type ScriptStoryBeat = "hook" | "setup" | "build" | "escalation" | "turn" | "payoff";
+export type ScriptEnergy = "quiet" | "curious" | "playful" | "tense" | "surprised" | "energized" | "relieved" | "warm";
+
 export interface ScriptSentence {
   text: string;
   /** Stock-footage search query for what's on screen during this sentence. */
   visual: string;
+  /** Optional so saved scripts created before story metadata remain readable. */
+  shot?: string;
+  beat?: ScriptStoryBeat;
+  energy?: ScriptEnergy;
 }
 
 export interface ReelScript {
@@ -76,10 +83,15 @@ export const NARRATOR_VOICES: Record<string, string> = {
 export interface ClipPick {
   sentence: number;
   query: string;
+  /** Concrete action/composition this clip should support. */
+  direction?: string;
   chosen: StockClip;
   /** Next-best search results, used when the chosen clip fails the safety check. */
   alternates: StockClip[];
   /** Passed the visual safety check. */
   approved: boolean;
-  rejected: { id: number; reason: string }[];
+  /** A clip that passed safety but only loosely fits; used if nothing better turns up. */
+  fallback?: StockClip | null;
+  /** `source` is missing on rejections saved before there were several libraries (Pexels). */
+  rejected: { id: number | string; source?: ClipSource; reason: string }[];
 }

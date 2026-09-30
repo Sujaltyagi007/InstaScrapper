@@ -1,17 +1,6 @@
-const API = "https://api.pexels.com/videos/search";
+import { isConfigured, pickReelFile, type StockClip } from "./types";
 
-export interface StockClip {
-  source: "pexels";
-  id: number;
-  url: string;
-  width: number;
-  height: number;
-  durationSec: number;
-  pageUrl: string;
-  author: string;
-  /** Still frames from across the clip (small JPEGs), for the visual safety check. */
-  previewImages: string[];
-}
+const API = "https://api.pexels.com/videos/search";
 
 interface PexelsVideoFile {
   link: string;
@@ -50,47 +39,83 @@ function previewImages(video: PexelsVideo): string[] {
 }
 
 export function isPexelsConfigured(): boolean {
-  const key = process.env.PEXELS_API_KEY?.trim() ?? "";
-  return key.length > 0 && !key.startsWith("your_");
+  return isConfigured(process.env.PEXELS_API_KEY);
 }
 
-/**
- * Picks the portrait MP4 closest to 1080x1920. Anything much bigger (4K) costs
- * decode time on a 1-vCPU function for no visible gain after Instagram's re-encode.
- */
-function pickFile(files: PexelsVideoFile[]): PexelsVideoFile | null {
-  const portrait = files.filter(
-    (f) => f.file_type === "video/mp4" && f.width && f.height && f.height > f.width && f.height >= 1280,
-  );
-  if (portrait.length === 0) return null;
-  return portrait.sort((a, b) => Math.abs(a.height! - 1920) - Math.abs(b.height! - 1920))[0];
+/** Pexels page URLs carry a readable title: /video/woman-running-on-a-beach-1234567/. */
+function titleFromUrl(pageUrl: string): string {
+  const slug = pageUrl.split("/").filter(Boolean).pop() ?? "";
+  return slug.replace(/-?\d+$/, "").replace(/-/g, " ");
 }
 
-export async function searchPortraitClips(query: string, limit = 5): Promise<StockClip[]> {
+export async function searchPexelsClips(
+  query: string,
+  limit = 5,
+  orientation: "portrait" | "landscape" = "portrait",
+): Promise<StockClip[]> {
   const key = process.env.PEXELS_API_KEY?.trim();
   if (!key) throw new Error("PEXELS_API_KEY is not set.");
 
-  const url = `${API}?query=${encodeURIComponent(query)}&orientation=portrait&size=large&per_page=${Math.min(limit * 2, 40)}`;
-  const res = await fetch(url, { headers: { Authorization: key } });
+  const size = orientation === "portrait" ? "large" : "medium";
+  const url = `${API}?query=${encodeURIComponent(query)}&orientation=${orientation}&size=${size}&per_page=${Math.min(limit * 2, 40)}`;
+  const res = await fetch(url, { headers: { Authorization: key }, signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error(`Pexels ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const body = (await res.json()) as { videos?: PexelsVideo[] };
 
   const clips: StockClip[] = [];
   for (const video of body.videos ?? []) {
-    const file = pickFile(video.video_files);
+    const file = pickReelFile(
+      video.video_files
+        .filter((f) => f.file_type === "video/mp4" && f.width && f.height)
+        .map((f) => ({ url: f.link, width: f.width!, height: f.height! })),
+    );
     if (!file) continue;
     clips.push({
       source: "pexels",
       id: video.id,
-      url: file.link,
-      width: file.width!,
-      height: file.height!,
+      url: file.url,
+      width: file.width,
+      height: file.height,
       durationSec: video.duration,
       pageUrl: video.url,
       author: video.user?.name ?? "",
       previewImages: previewImages(video),
+      title: titleFromUrl(video.url),
+      license: "Pexels License",
     });
     if (clips.length >= limit) break;
   }
   return clips;
+}
+
+export function searchPortraitClips(query: string, limit = 5): Promise<StockClip[]> {
+  return searchPexelsClips(query, limit, "portrait");
+}
+
+export interface StockPhoto {
+  source: "pexels";
+  id: number;
+  /** Large portrait rendition (about 1200px tall or more). */
+  url: string;
+  pageUrl: string;
+  author: string;
+}
+
+/** Portrait stock photos, e.g. a backdrop for an animated scene. */
+export async function searchPortraitPhotos(query: string, limit = 5): Promise<StockPhoto[]> {
+  const key = process.env.PEXELS_API_KEY?.trim();
+  if (!key) throw new Error("PEXELS_API_KEY is not set.");
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&orientation=portrait&per_page=${Math.min(limit, 40)}`;
+  const res = await fetch(url, { headers: { Authorization: key } });
+  if (!res.ok) throw new Error(`Pexels ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const body = (await res.json()) as {
+    photos?: { id: number; url: string; photographer?: string; src: { large2x?: string; portrait?: string; original: string } }[];
+  };
+  return (body.photos ?? []).map((p) => ({
+    source: "pexels",
+    id: p.id,
+    url: p.src.large2x ?? p.src.portrait ?? p.src.original,
+    pageUrl: p.url,
+    author: p.photographer ?? "",
+  }));
 }

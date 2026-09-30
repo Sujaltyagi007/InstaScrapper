@@ -39,7 +39,8 @@ export function segmentsForSentences(spans: Span[], totalSec: number, beatSec?: 
 }
 
 export interface RenderPlan {
-  clips: { file: string; durationSec: number }[];
+  /** `startSec`: where to start inside the clip (archival clips often open on a title slate). */
+  clips: { file: string; durationSec: number; startSec?: number }[];
   segments: Segment[];
   audioFile: string;
   assFile: string;
@@ -59,7 +60,12 @@ export function buildReelRenderArgs(plan: RenderPlan): string[] {
     const length = seg.end - seg.start;
     const clip = plan.clips[i];
     // Skip the first half second when there's room: stock clips often open on a slow fade.
-    const offset = clip.durationSec >= length + 1.5 ? 0.5 : 0;
+    const offset =
+      clip.startSec === undefined
+        ? clip.durationSec >= length + 1.5
+          ? 0.5
+          : 0
+        : Math.max(0, Math.min(clip.startSec, clip.durationSec - length - 0.3));
     // Loop short clips so a long sentence never runs out of picture.
     inputs.push("-ss", num(offset), "-stream_loop", "-1", "-t", num(length + 0.5), "-i", clip.file);
     filters.push(

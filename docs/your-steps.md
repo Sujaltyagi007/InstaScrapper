@@ -25,6 +25,9 @@ No Meta app needed. You'll get a push notification with the video + caption and 
 ## 3. Vercel → Settings → Environment Variables
 - [ ] `GEMINI_API_KEY`
 - [ ] `PEXELS_API_KEY`
+- [ ] `PIXABAY_API_KEY` (optional, free at pixabay.com/api/docs: a second footage library searched for every niche)
+- [ ] `EUROPEANA_API_KEY` (optional, free at pro.europeana.eu: European archive footage, used only for history niches)
+- [ ] `FREESOUND_API_KEY` (optional, free at freesound.org/apiv2/apply: CC0 sound effects and ambience for skits)
 - [ ] `APP_URL` = your Vercel address, e.g. `https://your-app.vercel.app` (the phone notification links to it)
 - [ ] Push notifications: copy **`NEXT_PUBLIC_VAPID_PUBLIC_KEY`** and **`VAPID_PRIVATE_KEY`** from your local `.env` (already generated) into Vercel, and add **`VAPID_SUBJECT`** = your Vercel address (e.g. `https://your-app.vercel.app`). Use the **same** key pair everywhere: changing it later invalidates every device's subscription. Keep the private key secret.
 

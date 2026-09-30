@@ -1,11 +1,15 @@
 import { prisma } from "@/lib/prisma";
-import { searchPortraitClips } from "@/lib/visuals/pexels";
+import { searchClips } from "@/lib/visuals/search";
+import { clipKey } from "@/lib/visuals/types";
+import type { Niche } from "@prisma/client";
+import { queriesFor } from "./visuals";
 import type { StageContext, StageResult } from "./context";
 import type { ClipPick, ReelScript } from "@/lib/reels/types";
 import { fetchPublicBytes } from "@/lib/security/fetch-public";
 import { generateJson, type MediaInput } from "@/lib/ai/gemini";
 
 const MAX_ROUNDS = 3;
+const BATCH_SIZE = 3;
 
 async function previewFrames(pick: ClipPick): Promise<MediaInput[]> {
   const frames = await Promise.all(
@@ -24,79 +28,113 @@ async function saveProgress(projectId: string, picks: ClipPick[]) {
   await prisma.reelProject.update({ where: { id: projectId }, data: { clips: picks as unknown as object } });
 }
 
-/** Swaps in the next alternate (or a fresh search) after a rejection. False when nothing is left. */
-async function replace(pick: ClipPick, taken: Set<number>, fallbackQuery: string): Promise<boolean> {
-  const tried = new Set([...pick.rejected.map((r) => r.id), ...taken]);
-  let next = pick.alternates.find((c) => !tried.has(c.id));
-  if (!next) {
-    const fresh = await searchPortraitClips(fallbackQuery, 8);
-    next = fresh.find((c) => !tried.has(c.id));
+/**
+ * Swaps in the next alternate after a rejection, else searches every library
+ * that suits the niche again with broader queries (the original query would
+ * mostly return clips already tried). False when nothing is left.
+ */
+async function replace(pick: ClipPick, taken: Set<string>, niche: Niche): Promise<boolean> {
+  // Rejections saved before there were several libraries have no source: they were Pexels.
+  const tried = new Set([...pick.rejected.map((r) => clipKey({ source: r.source, id: r.id })), ...taken]);
+  let next = pick.alternates.find((c) => !tried.has(clipKey(c)));
+  for (const q of next ? [] : queriesFor(pick.query, niche.name)) {
+    [next] = await searchClips(q, { niche, direction: pick.direction, needSec: 3, exclude: tried, limit: 6 });
+    if (next) break;
   }
   if (!next) return false;
-  taken.delete(pick.chosen.id);
-  taken.add(next.id);
-  pick.alternates = pick.alternates.filter((c) => c.id !== next!.id);
+  // A safe backup stays reserved so another sentence can't take it.
+  if (!pick.fallback || clipKey(pick.fallback) !== clipKey(pick.chosen)) taken.delete(clipKey(pick.chosen));
+  taken.add(clipKey(next));
+  const chosenNext = next;
+  pick.alternates = pick.alternates.filter((c) => clipKey(c) !== clipKey(chosenNext));
   pick.chosen = next;
   return true;
 }
 
+/** Settles on the safe backup clip, if there is one. */
+function settleOnFallback(pick: ClipPick): boolean {
+  if (!pick.fallback) return false;
+  if (clipKey(pick.chosen) !== clipKey(pick.fallback)) {
+    pick.alternates = [pick.chosen, ...pick.alternates.filter((c) => clipKey(c) !== clipKey(pick.chosen))];
+    pick.chosen = pick.fallback;
+  }
+  pick.approved = true;
+  return true;
+}
+
+/** One Gemini request judging a few clips from their preview frames. */
+function checkBatch(lines: string[], media: MediaInput[], niche: string) {
+  return generateJson<{ verdicts: { clip: number; safe: boolean; fits: boolean; reason: string }[] }>({
+    prompt: [
+      `You check stock-footage clips before they go into an original Instagram reel that will be monetised.`,
+      `The attached images are still frames, numbered in order. They belong to these clips:`,
+      ...lines,
+      ``,
+      `For each clip decide:`,
+      `- "safe": false if any frame shows a watermark or stock-agency mark, a TV channel logo or on-screen graphics, a sports broadcast, a scene from a movie/TV show/game, a readable brand logo or product advertising, another creator's captions or text overlay, a recognisable celebrity or famous person, nudity, gore or violence. Ordinary unnamed people, nature, space imagery, cities and objects are safe.`,
+      `- "fits": false if the picture does not support its exact narration and shot direction or the reel's topic ("${niche}"). Prefer footage that visibly matches the requested action over generic footage that only matches the topic.`,
+      `- "reason": a few words.`,
+    ].join("\n"),
+    media,
+    schema: {
+      type: "object",
+      properties: {
+        verdicts: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              clip: { type: "integer" },
+              safe: { type: "boolean" },
+              fits: { type: "boolean" },
+              reason: { type: "string" },
+            },
+            required: ["clip", "safe", "fits", "reason"],
+          },
+        },
+      },
+      required: ["verdicts"],
+    },
+  });
+}
 
 export async function runSafetyStage({ project, idea }: StageContext): Promise<StageResult> {
   const picks = project.clips as unknown as ClipPick[] | null;
   const script = project.script as ReelScript | null;
   if (!picks?.length || !script) throw new Error("The project has no footage picked yet.");
-  const taken = new Set(picks.map((p) => p.chosen.id));
+  const taken = new Set(picks.map((p) => clipKey(p.chosen)));
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const pending = picks.filter((p) => !p.approved);
     if (pending.length === 0) break;
 
     const frames = await Promise.all(pending.map(previewFrames));
-    const media: MediaInput[] = [];
-    const lines: string[] = [];
-    pending.forEach((pick, k) => {
-      if (frames[k].length === 0) return;
-      const first = media.length + 1;
-      media.push(...frames[k]);
-      lines.push(
-        `Clip ${k}: images ${first}-${media.length}. Narration over it: "${script.sentences[pick.sentence]?.text ?? ""}"`,
-      );
-    });
-
     const verdicts = new Map<number, { safe: boolean; fits: boolean; reason: string }>();
-    if (media.length > 0) {
-      const result = await generateJson<{ verdicts: { clip: number; safe: boolean; fits: boolean; reason: string }[] }>({
-        prompt: [
-          `You check stock-footage clips before they go into an original Instagram reel that will be monetised.`,
-          `The attached images are still frames, numbered in order. They belong to these clips:`,
-          ...lines,
-          ``,
-          `For each clip decide:`,
-          `- "safe": false if any frame shows a watermark or stock-agency mark, a TV channel logo or on-screen graphics, a sports broadcast, a scene from a movie/TV show/game, a readable brand logo or product advertising, another creator's captions or text overlay, a recognisable celebrity or famous person, nudity, gore or violence. Ordinary unnamed people, nature, space imagery, cities and objects are safe.`,
-          `- "fits": false if the picture fits neither its narration nor the reel's topic ("${idea.niche.name}"), e.g. sports or fashion footage under a space fact. A loosely related scene with the right mood is fine.`,
-          `- "reason": a few words.`,
-        ].join("\n"),
-        media,
-        schema: {
-          type: "object",
-          properties: {
-            verdicts: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  clip: { type: "integer" },
-                  safe: { type: "boolean" },
-                  fits: { type: "boolean" },
-                  reason: { type: "string" },
-                },
-                required: ["clip", "safe", "fits", "reason"],
-              },
-            },
-          },
-          required: ["verdicts"],
-        },
-      });
+    // Small batches: one request with every clip's frames regularly ran past Gemini's timeout.
+    for (let start = 0; start < pending.length; start += BATCH_SIZE) {
+      const media: MediaInput[] = [];
+      const lines: string[] = [];
+      for (let k = start; k < Math.min(start + BATCH_SIZE, pending.length); k++) {
+        if (frames[k].length === 0) continue;
+        const first = media.length + 1;
+        media.push(...frames[k]);
+        lines.push(
+          `Clip ${k}: images ${first}-${media.length}. Beat: ${script.sentences[pending[k].sentence]?.beat ?? "scene"}. Shot direction: "${pending[k].direction ?? pending[k].query}". Narration: "${script.sentences[pending[k].sentence]?.text ?? ""}"`,
+        );
+      }
+      if (media.length === 0) continue;
+      let result: { verdicts: { clip: number; safe: boolean; fits: boolean; reason: string }[] };
+      try {
+        result = await checkBatch(lines, media, idea.niche.name);
+      } catch (err) {
+        // Keep clips approved so far, so the retry only checks what's left.
+        for (const [k, pick] of pending.entries()) {
+          const v = verdicts.get(k);
+          if (v?.safe && v.fits) pick.approved = true;
+        }
+        await saveProgress(project.id, picks);
+        throw err;
+      }
       for (const v of result.verdicts ?? []) verdicts.set(v.clip, v);
     }
 
@@ -106,10 +144,13 @@ export async function runSafetyStage({ project, idea }: StageContext): Promise<S
         pick.approved = true;
         continue;
       }
+      // Safe but off-script: keep it as a backup and keep looking for a better match.
+      if (verdict?.safe && !pick.fallback) pick.fallback = pick.chosen;
       // No preview frames or no verdict counts as a rejection: unchecked footage never goes out.
       const reason = !frames[k].length ? "no preview frames" : (verdict?.reason ?? "not checked");
-      pick.rejected.push({ id: pick.chosen.id, reason });
-      if (!(await replace(pick, taken, idea.niche.name))) {
+      pick.rejected.push({ id: pick.chosen.id, source: pick.chosen.source, reason });
+      if (!(await replace(pick, taken, idea.niche))) {
+        if (settleOnFallback(pick)) continue;
         await saveProgress(project.id, picks);
         throw new Error(
           `No safe footage left for sentence ${pick.sentence + 1} ("${pick.query}"). Last rejection: ${reason}. Use "New footage" to search again.`,
@@ -118,6 +159,8 @@ export async function runSafetyStage({ project, idea }: StageContext): Promise<S
     }
   }
 
+  // Out of rounds: a safe clip that loosely fits beats failing the whole reel.
+  for (const pick of picks) if (!pick.approved) settleOnFallback(pick);
   const unchecked = picks.filter((p) => !p.approved);
   if (unchecked.length) {
     await saveProgress(project.id, picks);

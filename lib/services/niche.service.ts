@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api-helpers";
+import { getProviderMode } from "@/lib/meta/provider-mode";
 import { generateJson, isGeminiConfigured } from "@/lib/ai/gemini";
 import { assertCanAddTarget } from "@/lib/services/quota.service";
 import { eligibilityMessage, isMonitorable } from "@/lib/meta/capability.service";
@@ -38,8 +39,9 @@ export async function getNiche(userId: string) {
       },
     },
   });
-  const [sessions, posts] = await Promise.all([
+  const [sessions, graphConnections, posts] = await Promise.all([
     prisma.instagramSession.count({ where: { userId, status: "ACTIVE" } }),
+    prisma.metaConnection.count({ where: { userId, status: "ACTIVE" } }),
     niche
       ? prisma.media.findMany({
         where: { isStory: false, target: { nicheAccounts: { some: { nicheId: niche.id } } } },
@@ -60,7 +62,12 @@ export async function getNiche(userId: string) {
       })
       : Promise.resolve([]),
   ]);
-  return { niche, hasActiveSession: sessions > 0, posts };
+  return {
+    niche,
+    hasActiveSession: sessions > 0,
+    automaticMetricsAvailable: getProviderMode() === "GRAPH" && graphConnections > 0,
+    posts,
+  };
 }
 
 export async function saveNiche(

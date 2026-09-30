@@ -12,6 +12,7 @@ What this costs you in capability, up front and honestly:
 | --- | --- |
 | Targets must be **public Business/Creator** accounts | required — personal/private accounts cannot be read at all |
 | Target posts, reels, captions, media URLs, timestamps | ✅ |
+| Per-post **likes, comments, and views** | ✅ for supported public media via Business Discovery; `view_count` includes paid and organic views |
 | Target follower count, media count, bio, website | ✅ |
 | New-post detection | ✅ by polling + diffing (no webhooks for accounts you don't own) |
 | Target **stories** | ❌ never available for accounts you don't own |

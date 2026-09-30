@@ -7,7 +7,7 @@ const SNAPSHOT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 export async function saveMediaMetrics(
   targetId: string,
   items: Pick<NormalizedMediaItem, "externalMediaId" | "timestamp" | "metrics">[],
-  options: { overrideTimestamp?: boolean; preserveAudio?: boolean; skipSnapshot?: boolean } = {},
+  options: { overrideTimestamp?: boolean; preserveAudio?: boolean; skipSnapshot?: boolean; preserveMissingCounts?: boolean } = {},
 ): Promise<number> {
   const withMetrics = items.filter((item) => item.metrics);
   if (withMetrics.length === 0) return 0;
@@ -32,9 +32,9 @@ export async function saveMediaMetrics(
       prisma.media.update({
         where: { id: row.id },
         data: {
-          playCount: m.playCount,
-          likeCount: m.likeCount,
-          commentCount: m.commentCount,
+          ...(!options.preserveMissingCounts || m.playCount !== null ? { playCount: m.playCount } : {}),
+          ...(!options.preserveMissingCounts || m.likeCount !== null ? { likeCount: m.likeCount } : {}),
+          ...(!options.preserveMissingCounts || m.commentCount !== null ? { commentCount: m.commentCount } : {}),
           metricsUpdatedAt: now,
           ...(!options.preserveAudio && {
             audioTitle: m.audioTitle,

@@ -32,6 +32,7 @@ const MEDIA_FIELDS = [
   "timestamp",
   "like_count",
   "comments_count",
+  "view_count",
 ].join(",");
 
 const PROFILE_FIELDS = [
@@ -58,6 +59,7 @@ interface BusinessDiscoveryMedia {
   timestamp?: string;
   like_count?: number;
   comments_count?: number;
+  view_count?: number;
 }
 
 interface BusinessDiscoveryNode {
@@ -152,6 +154,14 @@ function normalizeMedia(items: BusinessDiscoveryMedia[]): NormalizedMediaItem[] 
       mediaUrl: isVideo ? (item.thumbnail_url ?? item.media_url ?? null) : (item.media_url ?? null),
       videoUrl: isVideo ? (item.media_url ?? null) : null,
       isStory: false,
+      metrics: {
+        playCount: typeof item.view_count === "number" ? item.view_count : null,
+        likeCount: typeof item.like_count === "number" ? item.like_count : null,
+        commentCount: typeof item.comments_count === "number" ? item.comments_count : null,
+        audioTitle: null,
+        audioArtist: null,
+        audioIsOriginal: null,
+      },
     };
   });
 }
@@ -164,30 +174,20 @@ function normalizeProfile(node: BusinessDiscoveryNode, fallbackUsername: string)
     website: node.website ?? null,
     profilePictureUrl: node.profile_picture_url ?? null,
     followersCount: typeof node.followers_count === "number" ? node.followers_count : null,
-    // Business Discovery does not expose the target's following count.
     followsCount: null,
     mediaCount: typeof node.media_count === "number" ? node.media_count : null,
     isPrivate: false,
   };
 }
 
-/** What this API can and cannot do for a target, surfaced to the UI verbatim. */
 function capabilitiesForBusinessDiscovery(): CapabilityCheck[] {
   return [
     { capability: Capability.TARGET_LOOKUP_BY_USERNAME, result: "AVAILABLE" },
     { capability: Capability.TARGET_PUBLIC_PROFILE_FIELDS, result: "AVAILABLE" },
     { capability: Capability.TARGET_PUBLIC_MEDIA, result: "AVAILABLE" },
     { capability: Capability.TARGET_FOLLOWER_COUNT, result: "AVAILABLE" },
-    {
-      capability: Capability.TARGET_FOLLOWING_COUNT,
-      result: "UNAVAILABLE",
-      reason: "Business Discovery doesn't return the target's following count.",
-    },
-    {
-      capability: Capability.TARGET_STORY_DATA,
-      result: "UNAVAILABLE",
-      reason: "Instagram never exposes stories for accounts you don't own.",
-    },
+    { capability: Capability.TARGET_FOLLOWING_COUNT, result: "UNAVAILABLE", reason: "Business Discovery doesn't return the target's following count." },
+    { capability: Capability.TARGET_STORY_DATA, result: "UNAVAILABLE", reason: "Instagram never exposes stories for accounts you don't own." },
     {
       capability: Capability.TARGET_FOLLOWER_IDENTITY_LIST,
       result: "UNAVAILABLE",
@@ -206,7 +206,7 @@ export class GraphMetaProvider implements MetaProvider {
     if (!process.env.META_APP_ID || !process.env.META_APP_SECRET) {
       throw new Error(
         "META_APP_ID and META_APP_SECRET are required for INSTAGRAM_PROVIDER_MODE=GRAPH. " +
-          "Create a Business-type Meta app and add them to your environment.",
+        "Create a Business-type Meta app and add them to your environment.",
       );
     }
   }

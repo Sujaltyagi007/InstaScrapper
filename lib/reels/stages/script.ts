@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { GEMINI_DEFAULT_VOICE, generateJson } from "@/lib/ai/gemini";
 import { NARRATOR_VOICES, type ReelScript } from "@/lib/reels/types";
+import { repairScriptDraft, validateScriptDraft, type ScriptDraftSentence } from "@/lib/reels/script-quality";
 import type { StageContext, StageResult } from "./context";
 
-const MIN_WORDS = 35;
-const MAX_WORDS = 140;
+const MIN_WORDS = 55;
+const MAX_WORDS = 105;
 
 function clean(text: string): string {
   return text
@@ -32,9 +33,8 @@ export async function runScriptStage({ project, idea }: StageContext): Promise<S
   const avoidVoices = await recentVoices(project.userId, project.id);
   const niche = idea.niche;
 
-  const result = await generateJson<{ sentences: { text: string; visual: string }[]; voice: string; voiceStyle: string }>({
-    prompt: [
-      `You write voiceover scripts for original Instagram reels in the niche "${niche.name}"${niche.description ? ` (${niche.description})` : ""}. Write in language code "${niche.language}".`,
+  const basePrompt = [
+      `You are a sharp short-form storyteller, not a teacher reading slides. Write an original voiceover reel in "${niche.name}"${niche.description ? ` (${niche.description})` : ""}, language "${niche.language}".`,
       ``,
       `Idea: ${idea.title}`,
       `Angle: ${idea.angle}`,
@@ -43,51 +43,87 @@ export async function runScriptStage({ project, idea }: StageContext): Promise<S
       sources.length ? `\nCaptions of the trending reels it's based on, for context only. Never reuse their wording, jokes or structure:` : "",
       ...sources.map((s) => `- ${(s.caption ?? "").replace(/\s+/g, " ").slice(0, 300)}`),
       ``,
-      `Write a 20-40 second voiceover, ${MIN_WORDS + 25}-${MAX_WORDS - 40} words in total, as 5-9 sentences.`,
-      `Rules:`,
-      `- Sentence 1 is the hook: use or sharpen the suggested hook, under 12 words.`,
-      `- Each sentence under 18 words, one idea per sentence, natural spoken language.`,
-      `- No emojis, hashtags, stage directions or pause markers.`,
-      `- Be factually careful. Don't invent statistics, dates or quotes; if unsure, say it more generally.`,
-      `- End on a satisfying payoff line. A short follow prompt is fine only if it sounds natural.`,
-      `- "visual" for each sentence: a broad 2-3 word stock-footage search query for a scene that fits the mood, using common words stock libraries actually have (e.g. "moon surface", "astronaut helmet", "night sky stars", "city traffic night"). Prefer scenes over specific objects: "gold olive branch" finds nothing useful, "moon surface" does. No celebrities, brands, logos or specific real events.`,
+      `Write a 20-40 second voiceover: 6-9 beats and ${MIN_WORDS}-${MAX_WORDS} spoken words.`,
+      `Build one small, coherent story: a relatable protagonist wants something, meets a specific obstacle, reacts in a revealing way, then gets a turn and payoff. Give the protagonist a recognizable attitude through choices and natural dialogue, not labels. This is one narrator: any quoted dialogue must be short and performable by that voice. For abstract topics, make the viewer the protagonist.`,
+      `A second character is optional; if used, give them a contrasting want, attitude and reaction style that comes through in brief, distinct word choices. Never add a character just to deliver facts.`,
+      `Use this ordered beat arc: hook, setup, build, escalation, turn, payoff. Include each once in order; extra beats must be builds. Every beat must change the situation, reveal character, add useful information, or create the next question. Cause and effect must be clear; the ending should resolve or call back to the opening.`,
+      `Start inside the interesting moment. Make the first spoken line a concrete surprise, contradiction, vivid situation, pointed question, or conflict. No warm-up or generic intro. Do not use "today we're going to", "in this video", "welcome back", or "let's talk about".`,
+      `Sound spoken, not written: contractions, varied sentence lengths, specific reactions, occasional natural hesitation or quoted line. Use humor only when it grows from the situation or personality. No lecture cadence, corporate phrasing, generic motivational language, filler, repeated facts, emojis, hashtags, stage directions, or pause markup.`,
+      `Keep facts honest. Do not invent statistics, studies, dates, quotes, or claim a fictional scenario really happened. Clearly frame an illustrative scenario as illustrative. Use source captions only as topic context; do not copy them.`,
+      `For every beat return:`,
+      `- "text": spoken words only, one concise sentence, usually 7-17 words and never over 20. The hook is at most 12 words.`,
+      `- "visual": 2-5 concrete stock-search words naming an observable subject/action/environment; avoid generic terms like "person walking", "office", "talking head", "motivation" or "b-roll".`,
+      `- "shot": one specific, filmable moment that supports this exact line: subject, visible action/reaction, and useful composition or environmental detail. Make adjacent shots feel like progression, not unrelated footage. Each shot must work as one stock clip; no impossible continuity or multiple cuts.`,
+      `- "beat": one of hook, setup, build, escalation, turn, payoff, matching the story role.`,
+      `- "energy": one of quiet, curious, playful, tense, surprised, energized, relieved, warm. Vary the emotional temperature; use at least three across the script.`,
+      `Before returning JSON, privately check cause-and-effect, what the protagonist wants, whether each line follows the last, factual claims, repeated information, shootable visuals, emotional variation, and whether the payoff earns the hook. Rewrite weak or illogical beats; return only the final script.`,
       `- "voice": the narrator voice that best fits the niche and tone, from: ${Object.entries(NARRATOR_VOICES)
         .map(([name, desc]) => `${name} (${desc})`)
         .join(", ")}.${avoidVoices.length ? ` Recently used: ${avoidVoices.join(", ")}; prefer a different one.` : ""}`,
-      `- "voiceStyle": a short delivery direction for the narrator, e.g. "curious and warm, medium pace, a hint of wonder".`,
-    ]
-      .filter((line) => line !== "")
-      .join("\n"),
-    schema: {
+      `- "voiceStyle": 8-24 words directing a performance arc: how to land the hook, where energy rises or relaxes, and the payoff's emotional tone. Never just say "engaging narrator".`,
+  ].filter((line) => line !== "");
+
+  const schema = {
       type: "object",
       properties: {
         sentences: {
           type: "array",
           items: {
             type: "object",
-            properties: { text: { type: "string" }, visual: { type: "string" } },
-            required: ["text", "visual"],
+            properties: {
+              text: { type: "string" },
+              visual: { type: "string" },
+              shot: { type: "string" },
+              beat: { type: "string", enum: ["hook", "setup", "build", "escalation", "turn", "payoff"] },
+              energy: { type: "string", enum: ["quiet", "curious", "playful", "tense", "surprised", "energized", "relieved", "warm"] },
+            },
+            required: ["text", "visual", "shot", "beat", "energy"],
           },
         },
         voice: { type: "string" },
         voiceStyle: { type: "string" },
       },
       required: ["sentences", "voice", "voiceStyle"],
-    },
-  });
+  };
 
-  const sentences = (result.sentences ?? [])
-    .map((s) => ({ text: clean(s.text ?? ""), visual: clean(s.visual ?? "") }))
-    .filter((s) => s.text.length > 0);
-  const words = sentences.reduce((n, s) => n + s.text.split(" ").length, 0);
-  if (sentences.length < 3 || sentences.length > 12 || words < MIN_WORDS || words > MAX_WORDS) {
-    throw new Error(`Script came back the wrong length (${sentences.length} sentences, ${words} words).`);
+  const writeDraft = async (feedback: string[]) => {
+    const result = await generateJson<{ sentences: ScriptDraftSentence[]; voice: string; voiceStyle: string }>({
+      prompt: [
+        ...basePrompt,
+        ...(feedback.length
+          ? ["", `Your previous draft failed these checks; rewrite the whole script so it passes all of them: ${feedback.join("; ")}.`]
+          : []),
+      ].join("\n"),
+      schema,
+    });
+    const sentences = (result.sentences ?? [])
+      .map((s) => ({
+        text: clean(s.text ?? ""),
+        visual: clean(s.visual ?? ""),
+        shot: clean(s.shot ?? ""),
+        beat: s.beat,
+        energy: s.energy,
+      }))
+      .filter((s) => s.text.length > 0);
+    const draft = repairScriptDraft({ sentences, voiceStyle: clean(result.voiceStyle ?? "") }, niche.name);
+    return { draft, voice: result.voice, issues: validateScriptDraft(draft) };
+  };
+
+  // One rewrite with the exact problems listed, inside this run, instead of
+  // failing the stage and waiting minutes for a blind retry.
+  let attempt = await writeDraft([]);
+  if (attempt.issues.length > 0) attempt = await writeDraft(attempt.issues);
+  const { sentences, voiceStyle } = attempt.draft;
+  if (attempt.issues.length > 0) {
+    const words = sentences.reduce((n, s) => n + s.text.split(" ").length, 0);
+    throw new Error(`Script failed the story-quality check (${sentences.length} beats, ${words} words): ${attempt.issues.join("; ")}.`);
   }
+  const result = { voice: attempt.voice };
 
   const script: ReelScript = {
     sentences,
-    voice: result.voice in NARRATOR_VOICES ? result.voice : GEMINI_DEFAULT_VOICE,
-    voiceStyle: clean(result.voiceStyle ?? "") || "clear, engaging narrator",
+    voice: typeof result.voice === "string" && result.voice in NARRATOR_VOICES ? result.voice : GEMINI_DEFAULT_VOICE,
+    voiceStyle,
   };
   return { script: script as object };
 }

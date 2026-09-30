@@ -41,6 +41,7 @@ export interface NicheData {
     accounts: NicheAccountRow[];
   } | null;
   hasActiveSession: boolean;
+  automaticMetricsAvailable: boolean;
   posts: NichePostRow[];
 }
 

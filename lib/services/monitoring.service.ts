@@ -245,10 +245,9 @@ export interface ProcessTargetOptions {
 const SAME_PICTURE_MAX_BITS = 24;
 
 /**
- * Whether a check has to be logged in. Only then is a burner used: trend
- * (niche) accounts need view counts, a pinned session is the user's explicit
- * choice, and stories / follower lists are login-only. Plain new-post
- * monitoring stays logged out, so the burner makes as few requests as possible.
+ * Whether a check has to be logged in. Trend-only checks stay logged out; a
+ * pinned session or login-only stories / follower lists are explicit reasons
+ * to use one. Plain monitoring otherwise stays logged out.
  */
 export async function checkNeedsSession(target: {
   id: string;
@@ -262,9 +261,8 @@ export async function checkNeedsSession(target: {
 }): Promise<boolean> {
   const monitor = target.monitor;
   if (!monitor) return false;
+  if (monitor.purpose === "TREND") return false;
   if (monitor.instagramSessionId) return true;
-  if (monitor.purpose === "TREND") return true;
-  if ((await prisma.nicheAccount.count({ where: { targetId: target.id } })) > 0) return true;
   const full = (monitor.triggerMode ?? "NEW_POSTS_ONLY") === "FULL";
   return full && (monitor.watchStories || monitor.watchFollowerChurn);
 }
@@ -753,7 +751,7 @@ async function handleSuccessfulFetch(
     }
 
     try {
-      await saveMediaMetrics(target.id, media);
+      await saveMediaMetrics(target.id, media, { preserveMissingCounts: true });
     } catch (error) {
       // Metrics are a bonus on top of the check; never fail the check over them.
       console.warn(

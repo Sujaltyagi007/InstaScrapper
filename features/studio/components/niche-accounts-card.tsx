@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { toast } from "sonner";
 import { useState } from "react";
 import { apiFetch } from "@/lib/fetcher";
@@ -75,19 +74,14 @@ export function NicheAccountsCard({ data, onChanged }: { data: NicheData; onChan
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {!data.hasActiveSession && (
-          <Alert>
-            <AlertTriangle />
-            <AlertDescription>
-              Automatic metrics need an active Instagram session. You can still enter views, likes, comments and dates
-              manually in the post metrics card below. {" "}
-              <Link href="/settings" className="underline">
-                Add a session for automatic collection
-              </Link>
-              .
-            </AlertDescription>
-          </Alert>
-        )}
+        <Alert>
+          <AlertTriangle />
+          <AlertDescription>
+            Automatic engagement counts use Meta&apos;s official Business Discovery API and require an authorized Meta
+            connection plus public Business/Creator targets. Otherwise, enter views, likes, comments and post dates
+            manually below. Trend checks never borrow an Instagram login session.
+          </AlertDescription>
+        </Alert>
 
         {accounts.length === 0 ? (
           <p className="text-sm text-muted-foreground">No accounts yet. Add a few you know, or ask for suggestions.</p>

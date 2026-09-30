@@ -5,6 +5,7 @@ import { completeIgConnection } from "@/lib/services/ig-account.service";
 function settings(req: Request, params: Record<string, string>): NextResponse {
   const url = new URL("/settings", req.url);
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+  url.searchParams.set("tab", "connections");
   return NextResponse.redirect(url);
 }
 

@@ -36,10 +36,8 @@ async function noTrendsError(userId: string): Promise<ApiError> {
     where: { target: { nicheAccounts: { some: { niche: { userId } } } }, metricsUpdatedAt: { not: null } },
   });
   if (withMetrics === 0) {
-    const sessions = await prisma.instagramSession.count({ where: { userId, status: "ACTIVE" } });
-    return new ApiError(409, sessions === 0
-      ? "No metrics yet. Enter views, likes, comments and post dates in Studio, or add an active session for automatic collection."
-      : "No metrics yet. Enter them in Studio, or try again after the next check of a niche account.",
+    return new ApiError(409,
+      "No metrics yet. Automatic counts require an authorized Meta Graph connection and public Business/Creator target accounts. Otherwise, enter views, likes, comments and post dates in Studio.",
       "NO_TREND_DATA",
     );
   }

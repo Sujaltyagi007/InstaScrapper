@@ -5,6 +5,7 @@ import { verifyOAuthState } from "@/lib/security/oauth-state";
 function settingsRedirect(req: Request, params: Record<string, string>): NextResponse {
   const url = new URL("/settings", req.url);
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+  url.searchParams.set("tab", "advanced");
   return NextResponse.redirect(url);
 }
 

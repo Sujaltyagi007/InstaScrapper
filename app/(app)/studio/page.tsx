@@ -47,7 +47,11 @@ export default function StudioPage() {
             <>
               <TargetQuotaBanner quota={quota} />
               <NicheAccountsCard data={data} onChanged={changed} />
-              <ManualMetricsCard posts={data.posts} onSaved={refresh} />
+              <ManualMetricsCard
+                posts={data.posts}
+                onSaved={refresh}
+                automaticMetricsAvailable={data.automaticMetricsAvailable}
+              />
               <IdeasCard onApproved={() => setReelsKey((k) => k + 1)} />
               <ReelsCard refreshKey={reelsKey} />
               <SoundBankCard />

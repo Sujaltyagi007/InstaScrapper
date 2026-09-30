@@ -99,7 +99,7 @@ export function IdeasCard({ onApproved }: { onApproved?: () => void }) {
         <CardTitle>Trending ideas</CardTitle>
         <CardDescription>
           Reels in your niche that are beating their account&apos;s usual numbers, turned into original ideas for you.
-          Approve the ones you want made.
+          Approve the ones you want made. Finding ideas uses saved metrics only and does not contact Instagram.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

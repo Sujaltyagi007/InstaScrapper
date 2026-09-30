@@ -2,7 +2,10 @@
 import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SetupChecklist } from "@/features/account/components/setup-checklist";
+import { SETTINGS_TABS, type SettingsTab } from "@/features/account/lib/settings-tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -34,8 +37,32 @@ const JOB_STATUS_VARIANT: Record<string, "secondary" | "success" | "destructive"
   FAILED: "destructive",
 };
 
+const noopSubscribe = () => () => {};
+
+/** The tab named in the URL (the connect flows return to /settings?tab=...), else General. */
+function readUrlTab(): SettingsTab {
+  const params = new URLSearchParams(window.location.search);
+  const named = params.get("tab");
+  if (SETTINGS_TABS.includes(named as SettingsTab)) return named as SettingsTab;
+  if (params.has("meta_connected") || params.has("meta_error")) return "advanced";
+  if (params.has("ig_connected") || params.has("ig_error")) return "connections";
+  return "general";
+}
+
 export default function SettingsPage() {
   const { settings, error: settingsError, refresh } = useSettings();
+  // Read from the URL without an effect; the server render (and first hydration) is General.
+  const urlTab = useSyncExternalStore(noopSubscribe, readUrlTab, () => "general" as SettingsTab);
+  const [pickedTab, setPickedTab] = useState<SettingsTab | null>(null);
+  const tab = pickedTab ?? urlTab;
+
+  function changeTab(next: SettingsTab) {
+    setPickedTab(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", next);
+    window.history.replaceState(window.history.state, "", url);
+  }
+
   const { jobs, loading: jobsLoading, error: jobsError, refresh: refreshJobs } = useJobs();
   const {
     sessions,
@@ -61,7 +88,11 @@ export default function SettingsPage() {
     if (!connected && !error) return;
     if (connected) toast.success(connected === "1" ? "Instagram account connected." : `Connected @${connected}.`);
     if (error) toast.error(error);
-    window.history.replaceState({}, "", window.location.pathname);
+    // Drop only the outcome params; the tab stays, or the page would jump back to General.
+    params.delete("meta_connected");
+    params.delete("meta_error");
+    params.set("tab", "advanced");
+    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
     refreshMetaStatus();
   }, [refreshMetaStatus]);
 
@@ -104,316 +135,340 @@ export default function SettingsPage() {
     <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage your account, integrations, and data retention.</p>
+        <p className="text-sm text-muted-foreground">Your profile, how checks run, and the accounts you connect.</p>
       </div>
 
-      <AppearanceCard settings={settings} onSaved={refresh} />
+      <SetupChecklist onOpenTab={changeTab} />
 
-      <Card size="sm">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <CardTitle>Instagram sessions & stealth engine</CardTitle>
-              <CardDescription className="text-xs">
-                Browser TLS impersonation, session reuse, and automatic checkpoint health probing.
-              </CardDescription>
-            </div>
-            <Button onClick={() => setAddSessionOpen(true)} size="sm" className="w-fit">
-              <Plus className="size-3.5 mr-1" /> Connect session
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          {sessionsLoading && !sessions ? (
-            <LoadingState rows={2} />
-          ) : sessionsError && !sessions ? (
-            <ErrorState title="Couldn't load your sessions" message={sessionsError} onRetry={refreshSessions} />
-          ) : !sessions || sessions.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-5 text-center">
-              <p className="text-sm text-muted-foreground">
-                No Instagram sessions yet. Connect one to enable stories, reels, private account detection, and follower churn.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => setAddSessionOpen(true)}
-              >
-                <Plus className="size-3.5 mr-1" /> Connect session
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {poolHealth && poolHealth.total > 0 && (
-                <div className="text-xs text-muted-foreground font-medium pb-1.5 border-b">
-                  Pool: {poolHealth.active} active &middot; {poolHealth.cooling} cooling &middot; {poolHealth.flagged} flagged
+      <Tabs value={tab} onValueChange={(value) => changeTab(value as SettingsTab)} className="gap-4">
+        <TabsList className="h-auto w-full justify-start overflow-x-auto sm:w-fit">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+          <TabsTrigger value="connections">Connections</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">Your name, how the app looks, and how long history is kept.</p>
+          <AppearanceCard settings={settings} onSaved={refresh} />
+
+          <Card size="sm">
+            <CardHeader>
+              <CardTitle>Your account</CardTitle>
+            </CardHeader>
+            {!settings ? (
+              <CardContent>
+                {settingsError ? (
+                  <ErrorState title="Couldn't load your account" message={settingsError} onRetry={refresh} />
+                ) : (
+                  <LoadingState rows={2} />
+                )}
+              </CardContent>
+            ) : (
+              <AccountForm key={settings.id} settings={settings} onSaved={refresh} />
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="monitoring" className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">When checks run and how many accounts you can watch.</p>
+          {settings && (
+            <CheckScheduleCard
+              key={`${settings.timezone}-${settings.sleepEnabled}-${settings.sleepStartHour}-${settings.sleepEndHour}`}
+              settings={settings}
+              onSaved={refresh}
+            />
+          )}
+
+          <TargetLimitCard />
+        </TabsContent>
+
+        <TabsContent value="connections" className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">Connect Instagram so reels can be posted, and optionally add extra logins for stories and follower lists.</p>
+          <InstagramPostingCard />
+
+          <Card size="sm">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <CardTitle>Extra Instagram logins</CardTitle>
+                  <CardDescription className="text-xs">
+                    Optional. Lets the app see stories, follower lists and reel videos. Use a spare account, never
+                    your main one.
+                  </CardDescription>
+                </div>
+                <Button onClick={() => setAddSessionOpen(true)} size="sm" className="w-fit">
+                  <Plus className="size-3.5 mr-1" /> Add login
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              {sessionsLoading && !sessions ? (
+                <LoadingState rows={2} />
+              ) : sessionsError && !sessions ? (
+                <ErrorState title="Couldn't load your sessions" message={sessionsError} onRetry={refreshSessions} />
+              ) : !sessions || sessions.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-5 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No extra logins yet. You can skip this: new posts and profile changes work without one. Add a
+                    spare account only if you want stories, follower lists or reel videos.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => setAddSessionOpen(true)}
+                  >
+                    <Plus className="size-3.5 mr-1" /> Add login
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {poolHealth && poolHealth.total > 0 && (
+                    <div className="text-xs text-muted-foreground font-medium pb-1.5 border-b">
+                      Logins: {poolHealth.active} working &middot; {poolHealth.cooling} resting &middot; {poolHealth.flagged} need attention
+                    </div>
+                  )}
+                  {sessions.map((sess) => {
+                    // ACTIVE alone hides a burner that is resting after a warning.
+                    const resting = sess.status === "ACTIVE" && !!sess.cooldownUntil && new Date(sess.cooldownUntil) > new Date();
+                    return (
+                    <div
+                      key={sess.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-3"
+                    >
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-semibold text-sm">@{sess.username}</span>
+                          <Badge
+                            variant={
+                              resting ? "outline"
+                                : sess.status === "ACTIVE" ? "success"
+                                : sess.status === "FLAGGED" ? "destructive" : "outline"
+                            }
+                            className="text-[11px] px-1.5 py-0"
+                          >
+                            {resting ? "RESTING" : sess.status}
+                          </Badge>
+                          <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
+                            {sess.authMethod}
+                          </Badge>
+                          {sess.transport === "HOME_WORKER" ? (
+                            <Badge variant="outline" className="text-[11px] px-1.5 py-0">
+                              Home worker
+                            </Badge>
+                          ) : sess.hasProxy ? (
+                            <Badge variant="outline" className="text-[11px] px-1.5 py-0">
+                              Proxy
+                            </Badge>
+                          ) : null}
+                        </div>
+                        {sess.lastErrorMessage && (
+                          <p className="text-xs text-destructive text-wrap ">{sess.lastErrorMessage}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {sess.lastTestedAt
+                            ? `Tested ${formatDistanceToNow(new Date(sess.lastTestedAt), { addSuffix: true })}`
+                            : "Not tested yet"}
+                          {" · "}
+                          {sess.status === "ACTIVE" && !resting && "In rotation"}
+                          {resting && `Resting until ${new Date(sess.cooldownUntil!).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })} (about ${formatDistanceToNow(new Date(sess.cooldownUntil!))})`}
+                          {sess.status === "PAUSED" && "Paused"}
+                          {sess.status === "FLAGGED" && "Needs manual reset"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap justify-end">
+                        <Select
+                          value={sess.transport === "HOME_WORKER" ? sess.homeWorkerDeviceId ?? "" : "PROXY"}
+                          onValueChange={(value) => {
+                            const next = value === "PROXY"
+                              ? setSessionTransport(sess.id, "PROXY")
+                              : setSessionTransport(sess.id, "HOME_WORKER", value);
+                            next.catch((err) => toast.error(friendlyError(err, "Couldn't change transport.")));
+                          }}
+                        >
+                          <SelectTrigger className="h-7 w-38 text-xs">
+                            <SelectValue placeholder="Transport" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PROXY">Webshare proxy</SelectItem>
+                            {homeWorkerDevices?.filter((d) => d.status === "ACTIVE").map((d) => (
+                              <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {sess.status === "FLAGGED" && (
+                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => resetSession(sess.id).catch((err) => toast.error(friendlyError(err, "Couldn't reset that session.")))}>
+                            Reset
+                          </Button>
+                        )}
+                        {sess.status !== "FLAGGED" && (
+                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() =>
+                              setSessionStatus(sess.id, sess.status === "ACTIVE" ? "PAUSED" : "ACTIVE").catch((err) =>
+                                toast.error(friendlyError(err, "Couldn't update that session.")),
+                              )
+                            }>
+                            {sess.status === "ACTIVE" ? "Pause" : "Resume"}
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={testingSessionId === sess.id}
+                          onClick={() => handleTestSession(sess.id)}
+                        >
+                          {testingSessionId === sess.id ? (
+                            <Loader2 className="size-3 animate-spin mr-1" />
+                          ) : (
+                            <Activity className="size-3 mr-1" />
+                          )}
+                          Test
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteSession(sess.id)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    );
+                  })}
                 </div>
               )}
-              {sessions.map((sess) => {
-                // ACTIVE alone hides a burner that is resting after a warning.
-                const resting = sess.status === "ACTIVE" && !!sess.cooldownUntil && new Date(sess.cooldownUntil) > new Date();
-                return (
-                <div
-                  key={sess.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-3"
-                >
-                  <div className="flex flex-col gap-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="font-semibold text-sm">@{sess.username}</span>
-                      <Badge
-                        variant={
-                          resting ? "outline"
-                            : sess.status === "ACTIVE" ? "success"
-                            : sess.status === "FLAGGED" ? "destructive" : "outline"
-                        }
-                        className="text-[11px] px-1.5 py-0"
-                      >
-                        {resting ? "RESTING" : sess.status}
-                      </Badge>
-                      <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
-                        {sess.authMethod}
-                      </Badge>
-                      {sess.transport === "HOME_WORKER" ? (
-                        <Badge variant="outline" className="text-[11px] px-1.5 py-0">
-                          Home worker
-                        </Badge>
-                      ) : sess.hasProxy ? (
-                        <Badge variant="outline" className="text-[11px] px-1.5 py-0">
-                          Proxy
-                        </Badge>
-                      ) : null}
-                    </div>
-                    {sess.lastErrorMessage && (
-                      <p className="text-xs text-destructive text-wrap ">{sess.lastErrorMessage}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      {sess.lastTestedAt
-                        ? `Tested ${formatDistanceToNow(new Date(sess.lastTestedAt), { addSuffix: true })}`
-                        : "Not tested yet"}
-                      {" · "}
-                      {sess.status === "ACTIVE" && !resting && "In rotation"}
-                      {resting && `Resting until ${new Date(sess.cooldownUntil!).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })} (about ${formatDistanceToNow(new Date(sess.cooldownUntil!))})`}
-                      {sess.status === "PAUSED" && "Paused"}
-                      {sess.status === "FLAGGED" && "Needs manual reset"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap justify-end">
-                    <Select
-                      value={sess.transport === "HOME_WORKER" ? sess.homeWorkerDeviceId ?? "" : "PROXY"}
-                      onValueChange={(value) => {
-                        const next = value === "PROXY"
-                          ? setSessionTransport(sess.id, "PROXY")
-                          : setSessionTransport(sess.id, "HOME_WORKER", value);
-                        next.catch((err) => toast.error(friendlyError(err, "Couldn't change transport.")));
-                      }}
-                    >
-                      <SelectTrigger className="h-7 w-38 text-xs">
-                        <SelectValue placeholder="Transport" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PROXY">Webshare proxy</SelectItem>
-                        {homeWorkerDevices?.filter((d) => d.status === "ACTIVE").map((d) => (
-                          <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {sess.status === "FLAGGED" && (
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => resetSession(sess.id).catch((err) => toast.error(friendlyError(err, "Couldn't reset that session.")))}>
-                        Reset
-                      </Button>
-                    )}
-                    {sess.status !== "FLAGGED" && (
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() =>
-                          setSessionStatus(sess.id, sess.status === "ACTIVE" ? "PAUSED" : "ACTIVE").catch((err) =>
-                            toast.error(friendlyError(err, "Couldn't update that session.")),
-                          )
-                        }>
-                        {sess.status === "ACTIVE" ? "Pause" : "Resume"}
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs"
-                      disabled={testingSessionId === sess.id}
-                      onClick={() => handleTestSession(sess.id)}
-                    >
-                      {testingSessionId === sess.id ? (
-                        <Loader2 className="size-3 animate-spin mr-1" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="advanced" className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">Most people never need these. Open this tab only if you know you need one of them.</p>
+          <Card size="sm">
+            <CardHeader>
+              <CardTitle>Facebook-linked Instagram (official API)</CardTitle>
+              <CardDescription className="text-xs">
+                For Instagram Business or Creator accounts linked to a Facebook Page. Most people can skip this.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              {metaStatus && !metaStatus.configured && (
+                <Alert>
+                  <AlertTriangle />
+                  <AlertDescription>
+                    The server has no Meta app configured. Set <code>META_APP_ID</code> and{" "}
+                    <code>META_APP_SECRET</code> before connecting.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {metaStatus?.mode === "STEALTH" && (
+                <Alert>
+                  <AlertTriangle />
+                  <AlertDescription>
+                    Still running the legacy scraper (<code>INSTAGRAM_PROVIDER_MODE=STEALTH</code>). Remove
+                    that override to use the official API.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {metaStatus?.connection ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+                  <div className="flex flex-col gap-1 text-sm">
+                    <span className="flex items-center gap-2">
+                      {metaStatus.connection.status === "ACTIVE" ? (
+                        <CheckCircle2 className="size-4 text-success" />
                       ) : (
-                        <Activity className="size-3 mr-1" />
+                        <AlertTriangle className="size-4 text-destructive" />
                       )}
-                      Test
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDeleteSession(sess.id)}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
+                      {metaStatus.connection.igUsername
+                        ? `@${metaStatus.connection.igUsername}`
+                        : metaStatus.connection.externalUserId}
+                      <Badge variant="outline" className="text-[11px] px-1.5 py-0">{metaStatus.connection.status}</Badge>
+                    </span>
+                    {metaStatus.connection.expiresAt && (
+                      <span className="text-xs text-muted-foreground">
+                        Token renews automatically · expires{" "}
+                        {formatDistanceToNow(new Date(metaStatus.connection.expiresAt), { addSuffix: true })}
+                      </span>
+                    )}
                   </div>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => disconnectMeta(metaStatus.connection!.id)}>
+                    <Trash2 className="size-3.5" /> Disconnect
+                  </Button>
                 </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No account connected yet. Your Instagram account must be Business or Creator and linked
+                  to a Facebook Page you manage.
+                </p>
+              )}
+              <Button asChild variant="outline" size="sm" className="w-fit" disabled={!metaStatus?.configured}>
+                <a href="/api/meta/connect">
+                  <Link2 className="size-3.5" /> {metaStatus?.connection ? "Reconnect" : "Connect Instagram account"}
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <HomeWorkerCard />
+
+          <Card size="sm" className="mb-4!">
+            <CardHeader>
+              <CardTitle>System health</CardTitle>
+              <CardDescription className="text-xs">What the app has been doing in the background lately.</CardDescription>
+            </CardHeader>
+            <CardContent className="px-0 sm:px-5">
+              {jobsLoading && !jobs ? (
+                <LoadingState rows={4} className="px-4 sm:px-0" />
+              ) : jobsError && !jobs ? (
+                <ErrorState title="Couldn't load recent jobs" message={jobsError} onRetry={refreshJobs} className="mx-4 sm:mx-0" />
+              ) : !jobs || jobs.length === 0 ? (
+                <p className="p-5 text-sm text-muted-foreground">No job runs recorded yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="h-8 text-xs">Type</TableHead>
+                        <TableHead className="h-8 text-xs">Target</TableHead>
+                        <TableHead className="h-8 text-xs">Status</TableHead>
+                        <TableHead className="h-8 text-xs">Ran</TableHead>
+                        <TableHead className="h-8 text-xs">Summary</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {jobs.map((job) => (
+                        <TableRow key={job.id}>
+                          <TableCell className="py-1.5 text-xs">{job.type.replace(/_/g, " ")}</TableCell>
+                          <TableCell className="py-1.5 text-xs">{job.target ? `@${job.target.username}` : "—"}</TableCell>
+                          <TableCell className="py-1.5">
+                            <Badge variant={JOB_STATUS_VARIANT[job.status]} className="text-[11px] px-1.5 py-0">{job.status}</Badge>
+                          </TableCell>
+                          <TableCell className="py-1.5 text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(job.runAt), { addSuffix: true })}
+                          </TableCell>
+                          <TableCell className="py-1.5 text-xs text-muted-foreground">{job.resultSummary ?? job.lastError ?? "—"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" size="sm" onClick={refreshJobs}>
+                Refresh
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <AddSessionDialog
         open={addSessionOpen}
         onOpenChange={setAddSessionOpen}
         onCreated={refreshSessions}
       />
-
-      <HomeWorkerCard />
-
-      <InstagramPostingCard />
-
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle>Instagram account (official API)</CardTitle>
-          <CardDescription className="text-xs">
-            Reads the accounts you monitor (Business Discovery) and posts on your behalf — no proxy,
-            no burner, no ban risk from the mechanism itself.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          {metaStatus && !metaStatus.configured && (
-            <Alert>
-              <AlertTriangle />
-              <AlertDescription>
-                The server has no Meta app configured. Set <code>META_APP_ID</code> and{" "}
-                <code>META_APP_SECRET</code> before connecting.
-              </AlertDescription>
-            </Alert>
-          )}
-          {metaStatus?.mode === "STEALTH" && (
-            <Alert>
-              <AlertTriangle />
-              <AlertDescription>
-                Still running the legacy scraper (<code>INSTAGRAM_PROVIDER_MODE=STEALTH</code>). Remove
-                that override to use the official API.
-              </AlertDescription>
-            </Alert>
-          )}
-          {metaStatus?.connection ? (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
-              <div className="flex flex-col gap-1 text-sm">
-                <span className="flex items-center gap-2">
-                  {metaStatus.connection.status === "ACTIVE" ? (
-                    <CheckCircle2 className="size-4 text-success" />
-                  ) : (
-                    <AlertTriangle className="size-4 text-destructive" />
-                  )}
-                  {metaStatus.connection.igUsername
-                    ? `@${metaStatus.connection.igUsername}`
-                    : metaStatus.connection.externalUserId}
-                  <Badge variant="outline" className="text-[11px] px-1.5 py-0">{metaStatus.connection.status}</Badge>
-                </span>
-                {metaStatus.connection.expiresAt && (
-                  <span className="text-xs text-muted-foreground">
-                    Token renews automatically · expires{" "}
-                    {formatDistanceToNow(new Date(metaStatus.connection.expiresAt), { addSuffix: true })}
-                  </span>
-                )}
-              </div>
-              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => disconnectMeta(metaStatus.connection!.id)}>
-                <Trash2 className="size-3.5" /> Disconnect
-              </Button>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No account connected yet. Your Instagram account must be Business or Creator and linked
-              to a Facebook Page you manage.
-            </p>
-          )}
-          <Button asChild variant="outline" size="sm" className="w-fit" disabled={!metaStatus?.configured}>
-            <a href="/api/meta/connect">
-              <Link2 className="size-3.5" /> {metaStatus?.connection ? "Reconnect" : "Connect Instagram account"}
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <TargetLimitCard />
-
-      {settings && (
-        <CheckScheduleCard
-          key={`${settings.timezone}-${settings.sleepEnabled}-${settings.sleepStartHour}-${settings.sleepEndHour}`}
-          settings={settings}
-          onSaved={refresh}
-        />
-      )}
-
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle>Account</CardTitle>
-        </CardHeader>
-        {!settings ? (
-          <CardContent>
-            {settingsError ? (
-              <ErrorState title="Couldn't load your account" message={settingsError} onRetry={refresh} />
-            ) : (
-              <LoadingState rows={2} />
-            )}
-          </CardContent>
-        ) : (
-          <AccountForm key={settings.id} settings={settings} onSaved={refresh} />
-        )}
-      </Card>
-
-      <Card size="sm" className="mb-4!">
-        <CardHeader>
-          <CardTitle>System health</CardTitle>
-          <CardDescription className="text-xs">Recent background job runs (target checks, notifications, cleanup).</CardDescription>
-        </CardHeader>
-        <CardContent className="px-0 sm:px-5">
-          {jobsLoading && !jobs ? (
-            <LoadingState rows={4} className="px-4 sm:px-0" />
-          ) : jobsError && !jobs ? (
-            <ErrorState title="Couldn't load recent jobs" message={jobsError} onRetry={refreshJobs} className="mx-4 sm:mx-0" />
-          ) : !jobs || jobs.length === 0 ? (
-            <p className="p-5 text-sm text-muted-foreground">No job runs recorded yet.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="h-8 text-xs">Type</TableHead>
-                    <TableHead className="h-8 text-xs">Target</TableHead>
-                    <TableHead className="h-8 text-xs">Status</TableHead>
-                    <TableHead className="h-8 text-xs">Ran</TableHead>
-                    <TableHead className="h-8 text-xs">Summary</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {jobs.map((job) => (
-                    <TableRow key={job.id}>
-                      <TableCell className="py-1.5 text-xs">{job.type.replace(/_/g, " ")}</TableCell>
-                      <TableCell className="py-1.5 text-xs">{job.target ? `@${job.target.username}` : "—"}</TableCell>
-                      <TableCell className="py-1.5">
-                        <Badge variant={JOB_STATUS_VARIANT[job.status]} className="text-[11px] px-1.5 py-0">{job.status}</Badge>
-                      </TableCell>
-                      <TableCell className="py-1.5 text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(job.runAt), { addSuffix: true })}
-                      </TableCell>
-                      <TableCell className="py-1.5 text-xs text-muted-foreground">{job.resultSummary ?? job.lastError ?? "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-        <CardFooter>
-          <Button variant="outline" size="sm" onClick={refreshJobs}>
-            Refresh
-          </Button>
-        </CardFooter>
-      </Card>
     </div>
   );
 }
@@ -449,7 +504,7 @@ function AccountForm({ settings, onSaved }: { settings: UserSettings; onSaved: (
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="h-9" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="retention" className="text-xs">Data retention (days)</Label>
+          <Label htmlFor="retention" className="text-xs">Keep history for (days)</Label>
           <Input
             id="retention"
             type="number"
@@ -460,7 +515,7 @@ function AccountForm({ settings, onSaved }: { settings: UserSettings; onSaved: (
             className="h-9 max-w-32"
           />
           <p className="text-xs text-muted-foreground">
-            Event and snapshot history older than this is deleted automatically. Default is 90 days.
+            Older activity is deleted automatically. The default is 90 days.
           </p>
         </div>
       </CardContent>
