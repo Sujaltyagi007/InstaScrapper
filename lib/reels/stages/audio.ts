@@ -5,7 +5,8 @@ import { runFfmpeg } from "@/lib/render/ffmpeg";
 import { readFile, writeFile } from "node:fs/promises";
 import type { StageContext, StageResult } from "./context";
 import { fetchPublicBytes } from "@/lib/security/fetch-public";
-import { generateJson, type MediaInput } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
+import type { MediaInput } from "@/lib/ai/gemini";
 import type { AudioBlueprint, ReelScript, VoiceTiming } from "@/lib/reels/types";
 import { CDN_FETCH_HEADERS, downloadStoredObject, uploadBuffer } from "@/lib/storage";
 
@@ -94,7 +95,7 @@ export async function runAudioStage({ project, idea, workDir }: StageContext): P
       `${s.audioIsOriginal ? " (creator's original audio)" : ""}; caption: ${(s.caption ?? "").replace(/\s+/g, " ").slice(0, 200)}`,
     ).join("\n");
 
-  const result = await generateJson<{
+  const result = await ai.generateJson<{
     reference: { genre: string; mood: string[]; bpm: number; energy: "low" | "medium" | "high"; notes: string };
     musicId: string;
     sfx: { soundId: string; sentence: number; at: "start" | "end" }[];

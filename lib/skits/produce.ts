@@ -1,23 +1,18 @@
-/**
- * Makes one finished skit video from a premise: scene -> two-voice
- * performance -> line timing -> lip sync -> backdrop -> ambience and sound
- * effects -> mix -> render. All free: Gemini free tier, Pexels, Freesound CC0.
- */
-import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { speakDialogue } from "@/lib/ai/gemini";
-import { isFreesoundConfigured, searchCc0Sounds } from "@/lib/audio/freesound";
-import { buildAssSubtitles } from "@/lib/render/captions";
-import { runFfmpeg, stageFonts } from "@/lib/render/ffmpeg";
-import { buildMixArgs } from "@/lib/render/mix";
-import { captionCues, parseSilences, sentenceSpans, wavDurationSec, type Span } from "@/lib/render/timing";
-import { fetchPublicToFile } from "@/lib/security/fetch-public";
-import { isPexelsConfigured, searchPortraitPhotos } from "@/lib/visuals/pexels";
-import { estimateLineTimes, retimeDialogue, snapToSilences } from "./align";
+import { ai } from "@/lib/ai/router";
+import { writeSkit } from "./writer";
 import { mouthCues } from "./lipsync";
 import { renderSkitVideo } from "./render";
+import { buildMixArgs } from "@/lib/render/mix";
 import { spokenText, type Skit } from "./types";
-import { writeSkit } from "./writer";
+import { readFile, writeFile } from "node:fs/promises";
+import { buildAssSubtitles } from "@/lib/render/captions";
+import { runFfmpeg, stageFonts } from "@/lib/render/ffmpeg";
+import { fetchPublicToFile } from "@/lib/security/fetch-public";
+import { estimateLineTimes, retimeDialogue, snapToSilences } from "./align";
+import { isFreesoundConfigured, searchCc0Sounds } from "@/lib/audio/freesound";
+import { isPexelsConfigured, searchPortraitPhotos } from "@/lib/visuals/pexels";
+import { captionCues, parseSilences, sentenceSpans, wavDurationSec, type Span } from "@/lib/render/timing";
 
 export interface SkitResult {
   skit: Skit;
@@ -25,7 +20,6 @@ export interface SkitResult {
   durationSec: number;
   spans: Span[];
   lipSync: "rhubarb" | "amplitude";
-  /** "gemini" = lines timed by ear and snapped to pauses; "pauses" = fallback. */
   timingSource: "gemini" | "pauses";
   credits: string[];
   timings: Record<string, number>;
@@ -49,7 +43,6 @@ export async function produceSkit(params: {
   skit?: Skit;
   niche?: string;
   outName?: string;
-  /** Re-use an existing performance (re-renders) instead of a new TTS call. */
   voiceWav?: Buffer;
 }): Promise<SkitResult> {
   const { workDir } = params;
@@ -60,18 +53,12 @@ export async function produceSkit(params: {
     params.skit ??
     (await timed(timings, "script", () => writeSkit({ premise: params.premise ?? "a funny everyday situation", niche: params.niche })));
 
-  // The raw take is saved so a re-render can re-use the performance without
-  // another TTS request.
-  const take = params.voiceWav
-    ? params.voiceWav
-    : (
-        await timed(timings, "voice", () =>
-          speakDialogue({
-            turns: skit.lines.map((l) => ({ speaker: l.speaker, text: l.text, style: l.style })),
-            speakers: skit.characters.map((c) => ({ speaker: c.name, voice: c.voice })),
-          }),
-        )
-      ).wav;
+  const take = params.voiceWav ? params.voiceWav : (
+    await timed(timings, "voice", () => ai.speakDialogue({
+      turns: skit.lines.map((l) => ({ speaker: l.speaker, text: l.text, style: l.style })),
+      speakers: skit.characters.map((c) => ({ speaker: c.name, voice: c.voice })),
+    }),)
+  ).wav;
   await writeFile(path.join(workDir, "take.wav"), take);
 
   const voiceFile = "dialogue.wav";
@@ -84,7 +71,6 @@ export async function produceSkit(params: {
     const silences = parseSilences(stderr);
     let found: Span[];
     try {
-      // A small mono copy keeps the request light.
       await runFfmpeg(["-i", "take.wav", "-ac", "1", "-ar", "16000", "-b:a", "32k", "take.mp3"], { cwd: workDir });
       const estimate = await estimateLineTimes(await readFile(path.join(workDir, "take.mp3")), "audio/mpeg", skit.lines);
       if (!estimate) throw new Error("Gemini didn't time every line.");

@@ -1,3 +1,5 @@
+import type { QualityReport } from "@/lib/reels/quality/score";
+import type { ClaimsReport } from "@/lib/reels/quality/claims";
 import type { AudioBlueprint, ClipPick, ReelScript, VoiceTiming } from "@/lib/reels/types";
 
 /** A reel project as returned by /api/reels. */
@@ -20,6 +22,9 @@ export interface Reel {
   renderUrl: string | null;
   downloadUrl: string | null;
   coverUrl: string | null;
+  qualityScore: number | null;
+  qualityReport: QualityReport | null;
+  claimsReport: ClaimsReport | null;
   caption: string | null;
   hashtags: string[];
   scheduledFor: string | null;

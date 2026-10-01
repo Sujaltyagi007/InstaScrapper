@@ -1,35 +1,38 @@
-import { SWRConfig } from "swr";
 import { auth } from "@/auth";
+import { SWRConfig } from "swr";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { AppShell } from "@/features/shell/app-shell";
 import { listTargets } from "@/lib/services/target.service";
 import { listEventsPage } from "@/lib/services/event.service";
-import { TARGETS_KEY, EVENTS_KEY } from "@/lib/swr-keys";
-import { DashboardPageClient } from "@/features/monitoring/components/dashboard-page-client";
+import { getTargetQuota } from "@/lib/services/quota.service";
+import { TARGETS_KEY, EVENTS_KEY, TARGET_QUOTA_KEY } from "@/lib/swr-keys";
+import { SCREEN_COOKIE, parseScreenPath, type FlashParams, type Screen } from "@/lib/spa/screens";
 
-/**
- * Server Component: fetches targets + the first page of events directly (no
- * HTTP round trip to our own API) and hands them to SWR as `fallback`. The
- * "mock mode" banner still fetches its own status client-side — that check
- * pulls in the whole scraping-engine mode logic, which isn't worth carrying
- * into every dashboard page-load's server render for one boolean banner.
- */
-export default async function DashboardPage() {
+export default async function AppPage() {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) redirect("/login");
 
-  const [targets, eventsPage] = await Promise.all([listTargets(userId), listEventsPage(userId)]);
+  const stored = (await cookies()).get(SCREEN_COOKIE)?.value;
+  const parsed = stored ? parseScreenPath(stored) : null;
+  const screen: Screen = parsed?.screen ?? { tab: "dashboard" };
+  const flash: FlashParams = parsed?.flash ?? {};
+
+  const fallback: Record<string, unknown> = {};
+  if (screen.tab === "dashboard") {
+    const [targets, eventsPage] = await Promise.all([listTargets(userId), listEventsPage(userId)]);
+    fallback[TARGETS_KEY] = { targets };
+    fallback[EVENTS_KEY] = eventsPage;
+  } else if (screen.tab === "targets" && !screen.view) {
+    const [targets, quota] = await Promise.all([listTargets(userId), getTargetQuota(userId)]);
+    fallback[TARGETS_KEY] = { targets };
+    fallback[TARGET_QUOTA_KEY] = { quota };
+  }
 
   return (
-    <SWRConfig
-      value={{
-        fallback: {
-          [TARGETS_KEY]: { targets },
-          [EVENTS_KEY]: eventsPage,
-        },
-      }}
-    >
-      <DashboardPageClient />
+    <SWRConfig value={{ fallback }}>
+      <AppShell initialScreen={screen} initialFlash={flash} />
     </SWRConfig>
   );
 }

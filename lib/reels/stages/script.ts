@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { GEMINI_DEFAULT_VOICE, generateJson } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
+import { GEMINI_DEFAULT_VOICE } from "@/lib/ai/gemini";
 import { NARRATOR_VOICES, type ReelScript } from "@/lib/reels/types";
 import { repairScriptDraft, validateScriptDraft, type ScriptDraftSentence } from "@/lib/reels/script-quality";
 import type { StageContext, StageResult } from "./context";
@@ -87,7 +88,7 @@ export async function runScriptStage({ project, idea }: StageContext): Promise<S
   };
 
   const writeDraft = async (feedback: string[]) => {
-    const result = await generateJson<{ sentences: ScriptDraftSentence[]; voice: string; voiceStyle: string }>({
+    const result = await ai.generateJson<{ sentences: ScriptDraftSentence[]; voice: string; voiceStyle: string }>({
       prompt: [
         ...basePrompt,
         ...(feedback.length

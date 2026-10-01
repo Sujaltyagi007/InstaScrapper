@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AppLink } from "@/features/shell/navigation";
 import { Loader2, Send, CheckCircle2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, FetchError } from "@/lib/fetcher";
@@ -77,9 +78,9 @@ export function RepostControl({ media }: { media: Media }) {
             Connect your Instagram Business/Creator account to post through the official Instagram API.
           </p>
           <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
-            <a href="/settings">
+            <AppLink to={{ tab: "settings", section: "connections" }}>
               <Link2 className="size-3.5" /> Connect in Settings
-            </a>
+            </AppLink>
           </Button>
         </div>
       ) : (

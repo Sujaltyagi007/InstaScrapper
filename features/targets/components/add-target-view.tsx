@@ -2,8 +2,9 @@
 import { friendlyError } from "@/lib/friendly-error";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { mutate } from "swr";
+import { AppLink, BackLink, navigate } from "@/features/shell/navigation";
+import { TARGETS_KEY } from "@/lib/swr-keys";
 import { ArrowLeft, Loader2, Search, CheckCircle2, XCircle, AlertCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,8 +33,7 @@ const RESULT_ICON: Record<string, React.ReactNode> = {
 /** Stable code from quota.service; matched on code, never on message text. */
 const TARGET_LIMIT_REACHED = "TARGET_LIMIT_REACHED";
 
-export default function NewTargetPage() {
-  const router = useRouter();
+export function AddTargetView() {
   const { quota, refresh: refreshQuota } = useTargetQuota();
   const atLimit = quota?.level === "FULL";
   const { sessions } = useSessions();
@@ -126,7 +126,9 @@ export default function NewTargetPage() {
         }),
       });
       toast.success(`Now monitoring @${resolution.username}.`);
-      router.push(`/targets/${data.target.id}`);
+      mutate(TARGETS_KEY);
+      // Replace, so Back from the new target returns to the list, not this form.
+      navigate({ tab: "targets", view: { kind: "target", id: data.target.id } }, { replace: true });
     } catch (err) {
       if (err instanceof FetchError && err.code === TARGET_LIMIT_REACHED) {
         // Someone may have hit the limit from another tab since this page
@@ -134,7 +136,7 @@ export default function NewTargetPage() {
         refreshQuota();
         toast.error(err.message, {
           action: err.details?.canRaise
-            ? { label: "Raise limit", onClick: () => router.push("/settings#account-limit") }
+            ? { label: "Raise limit", onClick: () => navigate({ tab: "settings", section: "monitoring", anchor: "account-limit" }) }
             : undefined,
         });
         return;
@@ -149,9 +151,9 @@ export default function NewTargetPage() {
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-          <Link href="/targets">
+          <BackLink to={{ tab: "targets" }}>
             <ArrowLeft /> Back to targets
-          </Link>
+          </BackLink>
         </Button>
         <h1 className="text-2xl font-semibold tracking-tight">Add a target</h1>
         <p className="text-sm text-muted-foreground">Enter an Instagram username to start monitoring it.</p>
@@ -301,9 +303,9 @@ export default function NewTargetPage() {
             {locked && (
               <p className="text-xs text-muted-foreground -mt-2">
                 Add an Instagram session in{" "}
-                <Link href="/settings" className="underline">
+                <AppLink to={{ tab: "settings", section: "connections" }} className="underline">
                   Settings
-                </Link>{" "}
+                </AppLink>{" "}
                 to unlock these.
               </p>
             )}

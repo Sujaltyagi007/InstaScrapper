@@ -16,8 +16,8 @@ export const DEFAULT_CAPTION_STYLE: CaptionStyle = {
   height: 1920,
   fontName: CAPTION_FONT_NAME,
   fontSize: 104,
-  // Keeps captions clear of Instagram's own caption/username overlay at the bottom.
-  marginBottom: 620,
+  // Keeps captions clear of Instagram's own caption/username overlay (bottom 35% = 672 px).
+  marginBottom: 700,
   outline: 7,
 };
 

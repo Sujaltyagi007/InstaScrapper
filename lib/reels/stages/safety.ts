@@ -6,7 +6,8 @@ import { queriesFor } from "./visuals";
 import type { StageContext, StageResult } from "./context";
 import type { ClipPick, ReelScript } from "@/lib/reels/types";
 import { fetchPublicBytes } from "@/lib/security/fetch-public";
-import { generateJson, type MediaInput } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
+import type { MediaInput } from "@/lib/ai/gemini";
 
 const MAX_ROUNDS = 3;
 const BATCH_SIZE = 3;
@@ -33,12 +34,12 @@ async function saveProgress(projectId: string, picks: ClipPick[]) {
  * that suits the niche again with broader queries (the original query would
  * mostly return clips already tried). False when nothing is left.
  */
-async function replace(pick: ClipPick, taken: Set<string>, niche: Niche): Promise<boolean> {
+async function replace(pick: ClipPick, taken: Set<string>, niche: Niche, userId: string): Promise<boolean> {
   // Rejections saved before there were several libraries have no source: they were Pexels.
   const tried = new Set([...pick.rejected.map((r) => clipKey({ source: r.source, id: r.id })), ...taken]);
   let next = pick.alternates.find((c) => !tried.has(clipKey(c)));
   for (const q of next ? [] : queriesFor(pick.query, niche.name)) {
-    [next] = await searchClips(q, { niche, direction: pick.direction, needSec: 3, exclude: tried, limit: 6 });
+    [next] = await searchClips(q, { niche, direction: pick.direction, needSec: 3, exclude: tried, limit: 6, userId });
     if (next) break;
   }
   if (!next) return false;
@@ -64,7 +65,7 @@ function settleOnFallback(pick: ClipPick): boolean {
 
 /** One Gemini request judging a few clips from their preview frames. */
 function checkBatch(lines: string[], media: MediaInput[], niche: string) {
-  return generateJson<{ verdicts: { clip: number; safe: boolean; fits: boolean; reason: string }[] }>({
+  return ai.generateJson<{ verdicts: { clip: number; safe: boolean; fits: boolean; reason: string }[] }>({
     prompt: [
       `You check stock-footage clips before they go into an original Instagram reel that will be monetised.`,
       `The attached images are still frames, numbered in order. They belong to these clips:`,
@@ -149,7 +150,7 @@ export async function runSafetyStage({ project, idea }: StageContext): Promise<S
       // No preview frames or no verdict counts as a rejection: unchecked footage never goes out.
       const reason = !frames[k].length ? "no preview frames" : (verdict?.reason ?? "not checked");
       pick.rejected.push({ id: pick.chosen.id, source: pick.chosen.source, reason });
-      if (!(await replace(pick, taken, idea.niche))) {
+      if (!(await replace(pick, taken, idea.niche, project.userId))) {
         if (settleOnFallback(pick)) continue;
         await saveProgress(project.id, picks);
         throw new Error(

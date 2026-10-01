@@ -108,6 +108,7 @@ model User {
   notificationChannels  NotificationChannel[]
   authRateLimits        AuthRateLimit[]
   pushSubscriptions     PushSubscription[]
+  aiKeys                AIKey[]
 
   @@map("users")
 }
@@ -241,6 +242,9 @@ model ReelProject {
   renderFileId   String?
   coverUrl       String?
   coverFileId    String?
+  qualityScore   Int?
+  qualityReport  Json?
+  claimsReport   Json?
   caption        String?
   hashtags       String[]  @default([])
   scheduledFor   DateTime?
@@ -351,43 +355,33 @@ model Target {
 }
 
 model InstagramSession {
-  id                 String    @id @default(cuid())
+  id                 String            @id @default(cuid())
   userId             String
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   username           String
-  authMethod         String    @default("COOKIE_IMPORT")
+  authMethod         String            @default("COOKIE_IMPORT")
   encryptedCookies   String
   encryptedCookiesIv String
   userAgent          String?
   deviceId           String?
-  impersonateTarget  String    @default("auto")
-  // Ciphertext, not a URL — embeds the proxy's own username/password, so it's
-  // encrypted at rest like encryptedCookies (lib/crypto.ts::encryptOptional).
-  // Read/written only via lib/meta/proxy-secret.ts, never directly.
+  impersonateTarget  String            @default("auto")
   proxyUrl           String?
   proxyUrlIv         String?
-  status             String    @default("ACTIVE")
+  status             String            @default("ACTIVE")
   lastTestedAt       DateTime?
   lastSuccessAt      DateTime?
   lastErrorMessage   String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
   lastUsedAt         DateTime?
   cooldownUntil      DateTime?
-  // Daily cap on logged-in uses (lib/meta/session-pool.ts, SESSION_DAILY_LIMIT).
-  // usesDay is the UTC date usesToday counts for; a new day resets it.
-  usesToday          Int       @default(0)
+  usesToday          Int               @default(0)
   usesDay            String?
-
-  monitors Monitor[]
-
-  // Home worker routing (lib/meta/home-worker.ts): "PROXY" (default, today's
-  // Webshare-pinned-IP path) or "HOME_WORKER" (requests are executed by a
-  // script on the user's own PC instead, see homeWorkerDeviceId).
-  transport          String             @default("PROXY")
-  homeWorkerDeviceId  String?
-  homeWorkerDevice    HomeWorkerDevice?  @relation(fields: [homeWorkerDeviceId], references: [id], onDelete: SetNull)
-  homeWorkerJobs      HomeWorkerJob[]
+  monitors           Monitor[]
+  transport          String            @default("PROXY")
+  homeWorkerDeviceId String?
+  homeWorkerDevice   HomeWorkerDevice? @relation(fields: [homeWorkerDeviceId], references: [id], onDelete: SetNull)
+  homeWorkerJobs     HomeWorkerJob[]
 
   @@index([userId])
   @@index([userId, status, lastUsedAt])
@@ -411,19 +405,18 @@ model HomeWorkerDevice {
   @@map("home_worker_devices")
 }
 
-
 model HomeWorkerJob {
-  id               String    @id @default(cuid())
-  deviceId         String
-  device           HomeWorkerDevice  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  sessionId        String
-  session          InstagramSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  status           String    @default("PENDING") // PENDING | CLAIMED | DONE | FAILED | EXPIRED
-  requestPayload   Json
-  responsePayload  Json?
-  createdAt        DateTime  @default(now())
-  claimedAt        DateTime?
-  expiresAt        DateTime
+  id              String           @id @default(cuid())
+  deviceId        String
+  device          HomeWorkerDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  sessionId       String
+  session         InstagramSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  status          String           @default("PENDING") // PENDING | CLAIMED | DONE | FAILED | EXPIRED
+  requestPayload  Json
+  responsePayload Json?
+  createdAt       DateTime         @default(now())
+  claimedAt       DateTime?
+  expiresAt       DateTime
 
   @@index([deviceId, status, createdAt])
   @@map("home_worker_jobs")
@@ -518,7 +511,6 @@ model Media {
   isCollab         Boolean               @default(false)
   collaborators    String[]              @default([])
   firstSeenAt      DateTime              @default(now())
-  // Engagement, only collected for niche accounts on logged-in checks.
   playCount        Int?
   likeCount        Int?
   commentCount     Int?
@@ -700,4 +692,37 @@ model Repost {
   @@index([userId, createdAt])
   @@index([sourceMediaId, sessionId])
   @@map("reposts")
+}
+
+/// A user's API key for an AI or media provider (see lib/ai/keys.ts).
+/// The key itself is encrypted: `key` holds ciphertext, `keyIv` its IV. Only
+/// lib/ai/keys.ts may read or write it; the browser only ever sees `last4`.
+model AIKey {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String
+  /// Ciphertext (AES-256-GCM, lib/crypto.ts). Plain text only on rows from
+  /// before encryption, which have no keyIv and are migrated on read.
+  key            String
+  keyIv          String?
+  /// sha256 of the key, so a duplicate paste is caught without decrypting
+  /// (checked in addUserKey; not a DB unique constraint, so pushing this
+  /// schema never needs --accept-data-loss).
+  fingerprint    String?
+  last4          String    @default("")
+  /// ACTIVE | INVALID (the provider rejected the key; skipped until re-checked).
+  status         String    @default("ACTIVE")
+  /// Out of quota until then; skipped by rotation, on every server instance.
+  exhaustedUntil DateTime?
+  /// Quota that runs out per model (Gemini): { "<model>": "<ISO time it resets>" }.
+  /// The key keeps working for other models meanwhile.
+  exhaustedScopes Json?
+  lastError      String?
+  lastUsedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId, provider])
+  @@index([userId, fingerprint])
+  @@map("ai_keys")
 }

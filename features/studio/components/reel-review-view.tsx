@@ -3,8 +3,7 @@ import { friendlyError } from "@/lib/friendly-error";
 
 import useSWR from "swr";
 import { useCallback, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { BackLink, goBackTo } from "@/features/shell/navigation";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -33,13 +32,13 @@ import { ACTIVE_STAGES, STAGE_LABELS, fullCaption, type Reel } from "@/features/
 import { SOURCE_LABELS } from "@/lib/visuals/types";
 import { useReelAutorun } from "@/features/studio/hooks/use-reel-autorun";
 import { ReelElapsedTimer, ReelStageBadge, ReelSteps } from "@/features/studio/components/reel-status";
+import { QualityCard } from "@/features/studio/components/quality-card";
+import { ClaimsCard } from "@/features/studio/components/claims-card";
 import { RetryReelDialog } from "@/features/studio/components/retry-reel-dialog";
 
 const POLL_MS = 6_000;
 
-export default function ReelPage() {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
+export function ReelReviewView({ id }: { id: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [postedUrl, setPostedUrl] = useState("");
   const [retryDialogOpen, setRetryDialogOpen] = useState(false);
@@ -120,9 +119,9 @@ export default function ReelPage() {
   if (missing || (!reel && loadError)) {
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-        <Link href="/studio" className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline">
+        <BackLink to={{ tab: "studio" }} className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline">
           <ArrowLeft className="size-4" /> Studio
-        </Link>
+        </BackLink>
         {missing ? (
           <ErrorState title="This reel isn't here anymore" message="It may have been deleted. Your other reels are in Studio." />
         ) : (
@@ -154,9 +153,9 @@ export default function ReelPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 pt-0 pb-4 ">
       <div className="flex flex-col gap-2">
-        <Link href="/studio" className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline">
+        <BackLink to={{ tab: "studio" }} className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline">
           <ArrowLeft className="size-4" /> Studio
-        </Link>
+        </BackLink>
         <h1 className="text-2xl font-semibold tracking-tight">{reel.idea.title}</h1>
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <ReelStageBadge reel={reel} retryQueued={retryQueued} />
@@ -235,6 +234,28 @@ export default function ReelPage() {
           </div>
 
           <div className="flex flex-col gap-4">
+            {reel.qualityReport && <QualityCard report={reel.qualityReport} />}
+            {reel.claimsReport && (
+              <ClaimsCard
+                reelId={id}
+                report={reel.claimsReport}
+                onUpdate={(claimsReport, qualityReport) => {
+                  mutate(
+                    (prev) =>
+                      prev
+                        ? {
+                            reel: {
+                              ...prev.reel,
+                              claimsReport,
+                              ...(qualityReport ? { qualityReport } : {}),
+                            },
+                          }
+                        : prev,
+                    { revalidate: false },
+                  );
+                }}
+              />
+            )}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Caption</CardTitle>
@@ -381,7 +402,7 @@ export default function ReelPage() {
                 if (!confirm("Delete this reel and its files? The idea goes back to your suggestions.")) return;
                 run("delete", async () => {
                   await apiFetch(`/api/reels/${id}`, { method: "DELETE" });
-                  router.push("/studio");
+                  goBackTo({ tab: "studio" });
                   return "Reel deleted.";
                 });
               }}

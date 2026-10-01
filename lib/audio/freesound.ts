@@ -1,15 +1,9 @@
-/**
- * Sound effects and ambience from Freesound, restricted to CC0 (public
- * domain) so they're safe in monetised reels with no credit needed.
- * Needs a free API key: FREESOUND_API_KEY.
- */
 const API = "https://freesound.org/apiv2/search/text/";
 
 export interface FreeSound {
   id: number;
   name: string;
   durationSec: number;
-  /** High-quality MP3 preview; downloadable without OAuth. */
   previewUrl: string;
   pageUrl: string;
   author: string;

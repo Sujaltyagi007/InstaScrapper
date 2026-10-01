@@ -1,9 +1,3 @@
-
-/**
- * "facebook" = Facebook Login tokens (graph.facebook.com).
- * "instagram" = Instagram Login tokens (graph.instagram.com). A token only works
- * on the host that issued it.
- */
 export type GraphHost = "facebook" | "instagram";
 
 export interface GraphRequestOptions {
@@ -36,7 +30,6 @@ export class GraphApiError extends Error {
   }
 }
 
-/** GET a Graph API path with query params. Throws GraphApiError on failure. */
 export async function graphGet<T>(
   path: string,
   params: Record<string, string | number | undefined>,
@@ -55,7 +48,6 @@ export async function graphGet<T>(
   return body as T;
 }
 
-/** POST to a Graph API path with a form body. Throws GraphApiError on failure. */
 export async function graphPost<T>(
   path: string,
   params: Record<string, string | number | undefined>,

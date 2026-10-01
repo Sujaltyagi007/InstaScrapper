@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 
-/** Web app manifest (served at /manifest.webmanifest): makes the app installable. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
@@ -39,7 +38,7 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "Studio",
         url: "/studio",
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
-      },
+      }
     ],
   };
 }

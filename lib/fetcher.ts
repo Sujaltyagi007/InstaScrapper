@@ -19,6 +19,11 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
         ? { ...(init?.headers ?? {}) }
         : { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
+  // An expired login is answered by the auth proxy with a redirect to the login page,
+  // which fetch follows silently; treat it as the 401 it is, not as empty data.
+  if (res.redirected && new URL(res.url).pathname === "/login") {
+    throw new FetchError("Your login has expired. Please sign in again.", 401);
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new FetchError(

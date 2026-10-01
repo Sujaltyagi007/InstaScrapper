@@ -1,8 +1,8 @@
 "use client";
 import { friendlyError } from "@/lib/friendly-error";
 
-import { use, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
+import { BackLink, goBackTo } from "@/features/shell/navigation";
 import { ArrowLeft, Trash2, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,16 +26,13 @@ import { apiFetch } from "@/lib/fetcher";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Bell } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import { MediaGallery } from "@/features/targets/components/media-gallery";
 import { DeleteTargetDialog } from "@/features/targets/components/delete-target-dialog";
 import { HardDrive } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export default function TargetDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const router = useRouter();
+export function TargetDetailView({ id }: { id: string }) {
   const { target, loading, error, notFound, refresh, mutate } = useTargetDetail(id);
   const { sessions } = useSessions();
   const [saving, setSaving] = useState(false);
@@ -78,9 +75,9 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
     return (
       <div className="flex flex-col gap-4">
         <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
-          <Link href="/targets">
+          <BackLink to={{ tab: "targets" }}>
             <ArrowLeft /> Back to targets
-          </Link>
+          </BackLink>
         </Button>
         {notFound ? (
           <ErrorState
@@ -105,9 +102,9 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4 shrink-0">
             <div>
               <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-                <Link href="/targets">
+                <BackLink to={{ tab: "targets" }}>
                   <ArrowLeft className="size-4 mr-1" /> Back to targets
-                </Link>
+                </BackLink>
               </Button>
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">@{target.username}</h1>
@@ -122,7 +119,7 @@ export default function TargetDetailPage({ params }: { params: Promise<{ id: str
               open={deleteOpen}
               onOpenChange={setDeleteOpen}
               targets={[{ id: target.id, username: target.username }]}
-              onDeleted={() => router.push("/targets")}
+              onDeleted={() => goBackTo({ tab: "targets" })}
             />
           </div>
 

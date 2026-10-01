@@ -1,17 +1,7 @@
-/**
- * Line timing for a two-voice dialogue. The audio alone doesn't say where a
- * line ends: lines hold pauses as long as the gaps between turns, the two
- * voices can share a pitch range, and the TTS ignores pause tags used as turn
- * markers in conversational mode (all measured). So Gemini listens to the take
- * and estimates when each line starts and ends, and every boundary is snapped
- * to the nearest real silence, which keeps cuts exact even when the estimate
- * is a little off. Each turn gap is then cut to the length the script asked
- * for, so comic timing is directed, not accidental.
- */
-import { generateJson } from "@/lib/ai/gemini";
-import { sentenceSpans, type Silence, type Span } from "@/lib/render/timing";
+import { ai } from "@/lib/ai/router";
 import { wavSamples } from "./lipsync";
 import { spokenText, type PauseBefore } from "./types";
+import { sentenceSpans, type Silence, type Span } from "@/lib/render/timing";
 
 export const PAUSE_SEC: Record<PauseBefore, number> = {
   overlap: 0.06,
@@ -94,7 +84,7 @@ export async function estimateLineTimes(
   mimeType: string,
   lines: { speaker: string; text: string }[],
 ): Promise<Span[] | null> {
-  const result = await generateJson<{ lines: { index: number; start: number; end: number }[] }>({
+  const result = await ai.generateJson<{ lines: { index: number; start: number; end: number }[] }>({
     prompt: [
       `This recording is two people performing the dialogue below, in order. For each line, give the time in seconds (decimals) when its first word starts and its last word ends.`,
       ...lines.map((l, i) => `${i}. ${l.speaker}: ${spokenText(l.text)}`),

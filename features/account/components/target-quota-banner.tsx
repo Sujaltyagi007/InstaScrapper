@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { AppLink } from "@/features/shell/navigation";
 import { AlertTriangle, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TargetQuota } from "../hooks/use-target-quota";
@@ -39,7 +39,7 @@ export function TargetQuotaBanner({ quota }: { quota: TargetQuota | null }) {
         </span>
         {canRaise && (
           <Button asChild size="sm" variant="outline" className="mt-2 w-fit">
-            <Link href="/settings#account-limit">Raise limit in Settings</Link>
+            <AppLink to={{ tab: "settings", section: "monitoring", anchor: "account-limit" }}>Raise limit in Settings</AppLink>
           </Button>
         )}
       </AlertDescription>

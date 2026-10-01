@@ -2,10 +2,11 @@
 import { friendlyError } from "@/lib/friendly-error";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
+import { navigate, takeFlash } from "@/features/shell/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SetupChecklist } from "@/features/account/components/setup-checklist";
-import { SETTINGS_TABS, type SettingsTab } from "@/features/account/lib/settings-tabs";
+import type { SettingsTab } from "@/features/account/lib/settings-tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { useSettings, type UserSettings } from "@/hooks/use-settings";
 import { TargetLimitCard } from "@/features/account/components/target-limit-card";
 import { AppearanceCard } from "@/features/account/components/appearance-card";
+import { AIKeysCard } from "@/features/account/components/ai-keys-card";
 import { useMetaStatus } from "@/features/account/hooks/use-meta-status";
 import { AddSessionDialog } from "@/features/sessions/components/add-session-dialog";
 import { CheckScheduleCard } from "@/features/account/components/check-schedule-card";
@@ -37,31 +39,43 @@ const JOB_STATUS_VARIANT: Record<string, "secondary" | "success" | "destructive"
   FAILED: "destructive",
 };
 
-const noopSubscribe = () => () => {};
-
-/** The tab named in the URL (the connect flows return to /settings?tab=...), else General. */
-function readUrlTab(): SettingsTab {
-  const params = new URLSearchParams(window.location.search);
-  const named = params.get("tab");
-  if (SETTINGS_TABS.includes(named as SettingsTab)) return named as SettingsTab;
-  if (params.has("meta_connected") || params.has("meta_error")) return "advanced";
-  if (params.has("ig_connected") || params.has("ig_error")) return "connections";
-  return "general";
-}
-
-export default function SettingsPage() {
+export function SettingsView({ section, anchor }: { section?: SettingsTab; anchor?: string }) {
   const { settings, error: settingsError, refresh } = useSettings();
-  // Read from the URL without an effect; the server render (and first hydration) is General.
-  const urlTab = useSyncExternalStore(noopSubscribe, readUrlTab, () => "general" as SettingsTab);
-  const [pickedTab, setPickedTab] = useState<SettingsTab | null>(null);
-  const tab = pickedTab ?? urlTab;
+  // The sub-tab is part of the app's screen, so Back, refresh and links all agree on it.
+  const tab = section ?? "general";
 
   function changeTab(next: SettingsTab) {
-    setPickedTab(next);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", next);
-    window.history.replaceState(window.history.state, "", url);
+    navigate({ tab: "settings", section: next }, { replace: true });
   }
+
+  // "Raise limit" and similar links point at one card: bring it into view. The card
+  // may only appear once its data has loaded, and cards above it (the setup checklist)
+  // can appear after that and push it down, so align again while the page settles,
+  // unless the user has started scrolling themselves.
+  useEffect(() => {
+    if (!anchor) return;
+    let frame = 0;
+    let tries = 0;
+    const timers: number[] = [];
+    const align = () => document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const stop = () => timers.forEach(clearTimeout);
+    const look = () => {
+      const el = document.getElementById(anchor);
+      if (el?.offsetParent) {
+        align();
+        timers.push(window.setTimeout(align, 600), window.setTimeout(align, 1500));
+      } else if (++tries < 180) frame = requestAnimationFrame(look);
+    };
+    look();
+    window.addEventListener("wheel", stop, { once: true, passive: true });
+    window.addEventListener("touchstart", stop, { once: true, passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      stop();
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+    };
+  }, [anchor, tab]);
 
   const { jobs, loading: jobsLoading, error: jobsError, refresh: refreshJobs } = useJobs();
   const {
@@ -79,20 +93,13 @@ export default function SettingsPage() {
   const [addSessionOpen, setAddSessionOpen] = useState(false);
   const [testingSessionId, setTestingSessionId] = useState<string | null>(null);
 
-  // The OAuth callback redirects back here with the outcome in the query string,
-  // then we strip it so a refresh doesn't replay the same toast.
+  // The OAuth callback lands back on the app with its outcome; show it once.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const connected = params.get("meta_connected");
-    const error = params.get("meta_error");
+    const connected = takeFlash("meta_connected");
+    const error = takeFlash("meta_error");
     if (!connected && !error) return;
     if (connected) toast.success(connected === "1" ? "Instagram account connected." : `Connected @${connected}.`);
     if (error) toast.error(error);
-    // Drop only the outcome params; the tab stays, or the page would jump back to General.
-    params.delete("meta_connected");
-    params.delete("meta_error");
-    params.set("tab", "advanced");
-    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
     refreshMetaStatus();
   }, [refreshMetaStatus]);
 
@@ -233,114 +240,107 @@ export default function SettingsPage() {
                     // ACTIVE alone hides a burner that is resting after a warning.
                     const resting = sess.status === "ACTIVE" && !!sess.cooldownUntil && new Date(sess.cooldownUntil) > new Date();
                     return (
-                    <div
-                      key={sess.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-3"
-                    >
-                      <div className="flex flex-col gap-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="font-semibold text-sm">@{sess.username}</span>
-                          <Badge
-                            variant={
-                              resting ? "outline"
-                                : sess.status === "ACTIVE" ? "success"
-                                : sess.status === "FLAGGED" ? "destructive" : "outline"
-                            }
-                            className="text-[11px] px-1.5 py-0"
-                          >
-                            {resting ? "RESTING" : sess.status}
-                          </Badge>
-                          <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
-                            {sess.authMethod}
-                          </Badge>
-                          {sess.transport === "HOME_WORKER" ? (
-                            <Badge variant="outline" className="text-[11px] px-1.5 py-0">
-                              Home worker
+                      <div key={sess.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border p-3">
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-semibold text-sm">@{sess.username}</span>
+                            <Badge variant={resting ? "outline" : sess.status === "ACTIVE" ? "success" : sess.status === "FLAGGED" ? "destructive" : "outline"}
+                              className="text-[11px] px-1.5 py-0" >
+                              {resting ? "RESTING" : sess.status}
                             </Badge>
-                          ) : sess.hasProxy ? (
-                            <Badge variant="outline" className="text-[11px] px-1.5 py-0">
-                              Proxy
+                            <Badge variant="secondary" className="text-[11px] px-1.5 py-0">
+                              {sess.authMethod}
                             </Badge>
-                          ) : null}
+                            {sess.transport === "HOME_WORKER" ? (
+                              <Badge variant="outline" className="text-[11px] px-1.5 py-0">
+                                Home worker
+                              </Badge>
+                            ) : sess.hasProxy ? (
+                              <Badge variant="outline" className="text-[11px] px-1.5 py-0">
+                                Proxy
+                              </Badge>
+                            ) : null}
+                          </div>
+                          {sess.lastErrorMessage && (
+                            <p className="text-xs text-destructive text-wrap ">{sess.lastErrorMessage}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {sess.lastTestedAt
+                              ? `Tested ${formatDistanceToNow(new Date(sess.lastTestedAt), { addSuffix: true })}`
+                              : "Not tested yet"}
+                            {" · "}
+                            {sess.status === "ACTIVE" && !resting && "In rotation"}
+                            {resting && `Resting until ${new Date(sess.cooldownUntil!).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })} (about ${formatDistanceToNow(new Date(sess.cooldownUntil!))})`}
+                            {sess.status === "PAUSED" && "Paused"}
+                            {sess.status === "FLAGGED" && "Needs manual reset"}
+                          </p>
                         </div>
-                        {sess.lastErrorMessage && (
-                          <p className="text-xs text-destructive text-wrap ">{sess.lastErrorMessage}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {sess.lastTestedAt
-                            ? `Tested ${formatDistanceToNow(new Date(sess.lastTestedAt), { addSuffix: true })}`
-                            : "Not tested yet"}
-                          {" · "}
-                          {sess.status === "ACTIVE" && !resting && "In rotation"}
-                          {resting && `Resting until ${new Date(sess.cooldownUntil!).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })} (about ${formatDistanceToNow(new Date(sess.cooldownUntil!))})`}
-                          {sess.status === "PAUSED" && "Paused"}
-                          {sess.status === "FLAGGED" && "Needs manual reset"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap justify-end">
-                        <Select
-                          value={sess.transport === "HOME_WORKER" ? sess.homeWorkerDeviceId ?? "" : "PROXY"}
-                          onValueChange={(value) => {
-                            const next = value === "PROXY"
-                              ? setSessionTransport(sess.id, "PROXY")
-                              : setSessionTransport(sess.id, "HOME_WORKER", value);
-                            next.catch((err) => toast.error(friendlyError(err, "Couldn't change transport.")));
-                          }}
-                        >
-                          <SelectTrigger className="h-7 w-38 text-xs">
-                            <SelectValue placeholder="Transport" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="PROXY">Webshare proxy</SelectItem>
-                            {homeWorkerDevices?.filter((d) => d.status === "ACTIVE").map((d) => (
-                              <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {sess.status === "FLAGGED" && (
-                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => resetSession(sess.id).catch((err) => toast.error(friendlyError(err, "Couldn't reset that session.")))}>
-                            Reset
-                          </Button>
-                        )}
-                        {sess.status !== "FLAGGED" && (
-                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() =>
+                        <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap justify-end">
+                          <Select
+                            value={sess.transport === "HOME_WORKER" ? sess.homeWorkerDeviceId ?? "" : "PROXY"}
+                            onValueChange={(value) => {
+                              const next = value === "PROXY"
+                                ? setSessionTransport(sess.id, "PROXY")
+                                : setSessionTransport(sess.id, "HOME_WORKER", value);
+                              next.catch((err) => toast.error(friendlyError(err, "Couldn't change transport.")));
+                            }}
+                          >
+                            <SelectTrigger className="h-7 w-38 text-xs">
+                              <SelectValue placeholder="Transport" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="PROXY">Webshare proxy</SelectItem>
+                              {homeWorkerDevices?.filter((d) => d.status === "ACTIVE").map((d) => (
+                                <SelectItem key={d.id} value={d.id}>{d.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {sess.status === "FLAGGED" && (
+                            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => resetSession(sess.id).catch((err) => toast.error(friendlyError(err, "Couldn't reset that session.")))}>
+                              Reset
+                            </Button>
+                          )}
+                          {sess.status !== "FLAGGED" && (
+                            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() =>
                               setSessionStatus(sess.id, sess.status === "ACTIVE" ? "PAUSED" : "ACTIVE").catch((err) =>
                                 toast.error(friendlyError(err, "Couldn't update that session.")),
                               )
                             }>
-                            {sess.status === "ACTIVE" ? "Pause" : "Resume"}
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
-                          disabled={testingSessionId === sess.id}
-                          onClick={() => handleTestSession(sess.id)}
-                        >
-                          {testingSessionId === sess.id ? (
-                            <Loader2 className="size-3 animate-spin mr-1" />
-                          ) : (
-                            <Activity className="size-3 mr-1" />
+                              {sess.status === "ACTIVE" ? "Pause" : "Resume"}
+                            </Button>
                           )}
-                          Test
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteSession(sess.id)}
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            disabled={testingSessionId === sess.id}
+                            onClick={() => handleTestSession(sess.id)}
+                          >
+                            {testingSessionId === sess.id ? (
+                              <Loader2 className="size-3 animate-spin mr-1" />
+                            ) : (
+                              <Activity className="size-3 mr-1" />
+                            )}
+                            Test
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteSession(sess.id)}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
                     );
                   })}
                 </div>
               )}
             </CardContent>
           </Card>
+
+          <AIKeysCard className="pb-16!" />
         </TabsContent>
 
         <TabsContent value="advanced" className="flex flex-col gap-4">

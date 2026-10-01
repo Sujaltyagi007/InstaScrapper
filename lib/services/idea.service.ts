@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api-helpers";
-import { generateJson, isGeminiConfigured } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
 import { getTrendCandidates, type TrendCandidate } from "@/lib/services/trend.service";
 
 /** How many top trends Gemini sees per generation, and how many ideas it may return. */
@@ -48,7 +48,7 @@ async function noTrendsError(userId: string): Promise<ApiError> {
 }
 
 export async function generateIdeas(userId: string) {
-  if (!isGeminiConfigured()) throw new ApiError(400, "GEMINI_API_KEY is not set on the server.", "GEMINI_NOT_CONFIGURED");
+  if (!(await ai.isConfigured(userId))) throw new ApiError(400, "No AI provider is configured on the server.", "GEMINI_NOT_CONFIGURED");
   const niche = await prisma.niche.findFirst({ where: { userId }, orderBy: { createdAt: "asc" } });
   if (!niche) throw new ApiError(400, "Set up your niche first.", "NICHE_REQUIRED");
 
@@ -70,7 +70,7 @@ export async function generateIdeas(userId: string) {
     throw await noTrendsError(userId);
   }
 
-  const result = await generateJson<{
+  const result = await ai.generateJson<{
     ideas: { title: string; angle: string; hook: string; whyTrending: string; sources: number[] }[];
   }>({
     prompt: [

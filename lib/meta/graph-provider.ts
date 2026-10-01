@@ -1,27 +1,6 @@
-import { Capability, type CapabilityCheck, type GraphAccountConfig, type MetaProvider, type NormalizedMediaItem, type NormalizedProfile, type ResolvedAccountType, type TargetFetchResult, type TargetResolution } from "./types";
 import { GraphApiError, graphGet } from "./graph-client";
+import { Capability, type CapabilityCheck, type GraphAccountConfig, type MetaProvider, type NormalizedMediaItem, type NormalizedProfile, type ResolvedAccountType, type TargetFetchResult, type TargetResolution } from "./types";
 
-/**
- * Official Meta Graph API provider — the sanctioned replacement for the
- * stealth scraper. Reads other accounts' public data via **Business Discovery**
- * (`business_discovery.username(<target>)`) using the user's OWN connected
- * Instagram professional account as the caller.
- *
- * Hard limits of this API, which are product limits now (not bugs to route
- * around):
- *  - Targets must be **public Business/Creator** accounts. Personal and private
- *    accounts return an error and resolve as UNSUPPORTED.
- *  - **No stories** for accounts you don't own. Ever.
- *  - **No follower/following identity lists** — counts only, never who.
- *  - **No target following count** — not a Business Discovery field.
- *  - New posts are detected by **polling + diffing**, not webhooks (webhooks
- *    require the target to authorize your app).
- *
- * Call budget: ~200 calls/hour per Instagram account, so each check is exactly
- * ONE request. Don't add per-target extra calls here without re-checking that.
- */
-
-/** Fields requested on the nested media edge. Keep in sync with NormalizedMediaItem. */
 const MEDIA_FIELDS = [
   "id",
   "caption",
@@ -79,11 +58,6 @@ interface BusinessDiscoveryResponse {
   id?: string;
 }
 
-/**
- * Graph error codes that mean "the token is bad", vs "slow down", vs "this
- * target isn't reachable through this API". Mapping these correctly is what
- * keeps a token problem from being reported to the user as a missing account.
- */
 function classifyGraphError(err: GraphApiError): {
   authError?: boolean;
   rateLimited?: boolean;
@@ -92,17 +66,12 @@ function classifyGraphError(err: GraphApiError): {
   message: string;
 } {
   const msg = err.message || "Graph API request failed.";
-  // 190 = invalid/expired access token; 102 = session invalid; 10/200 = missing permission
   if (err.code === 190 || err.code === 102 || err.code === 10 || err.code === 200) {
     return { authError: true, message: `Instagram connection needs to be re-authorized: ${msg}` };
   }
-  // 4 = app-level throttle, 17 = user-level throttle, 32 = page-level, 613 = custom rate limit
   if (err.code === 4 || err.code === 17 || err.code === 32 || err.code === 613) {
     return { rateLimited: true, message: `Graph API rate limit reached: ${msg}` };
   }
-  // Business Discovery reports an unreachable target as a generic bad-request.
-  // "does not exist" covers a wrong username; the rest mean "not a professional
-  // account" or "private", which are UNSUPPORTED rather than NOT_FOUND.
   const lowered = msg.toLowerCase();
   if (lowered.includes("does not exist") || lowered.includes("cannot be found") || lowered.includes("not found")) {
     return { notFound: true, message: "That Instagram username doesn't exist." };
@@ -122,11 +91,6 @@ function classifyGraphError(err: GraphApiError): {
   return { message: msg };
 }
 
-/**
- * Business Discovery doesn't return `media_product_type`, so a reel can't be
- * read off a field — but a reel's permalink is always /reel/<code>/, which is
- * a reliable signal.
- */
 function normalizeMediaType(item: BusinessDiscoveryMedia): NormalizedMediaItem["mediaType"] {
   const permalink = item.permalink ?? "";
   if (/\/reels?\//i.test(permalink)) return "REEL";
@@ -211,15 +175,8 @@ export class GraphMetaProvider implements MetaProvider {
     }
   }
 
-  /** One Business Discovery request, shared by resolve and fetch. */
-  private async businessDiscovery(
-    username: string,
-    account: GraphAccountConfig,
-    withMedia: boolean,
-  ): Promise<BusinessDiscoveryNode> {
-    const inner = withMedia
-      ? `${PROFILE_FIELDS},media.limit(${MEDIA_LIMIT}){${MEDIA_FIELDS}}`
-      : PROFILE_FIELDS;
+  private async businessDiscovery(username: string, account: GraphAccountConfig, withMedia: boolean): Promise<BusinessDiscoveryNode> {
+    const inner = withMedia ? `${PROFILE_FIELDS},media.limit(${MEDIA_LIMIT}){${MEDIA_FIELDS}}` : PROFILE_FIELDS;
     const res = await graphGet<BusinessDiscoveryResponse>(`/${account.igUserId}`, {
       fields: `business_discovery.username(${username}){${inner}}`,
       access_token: account.accessToken,
@@ -234,11 +191,7 @@ export class GraphMetaProvider implements MetaProvider {
     return node;
   }
 
-  async resolveTarget(
-    username: string,
-    _session?: unknown,
-    graphAccount?: GraphAccountConfig | null,
-  ): Promise<TargetResolution> {
+  async resolveTarget(username: string, _session?: unknown, graphAccount?: GraphAccountConfig | null): Promise<TargetResolution> {
     if (!graphAccount) {
       return {
         username,
@@ -253,8 +206,6 @@ export class GraphMetaProvider implements MetaProvider {
 
     try {
       const node = await this.businessDiscovery(username, graphAccount, false);
-      // Business Discovery only ever answers for professional accounts, so a
-      // successful response is itself the proof the target is eligible.
       const accountType: ResolvedAccountType = "BUSINESS";
       return {
         username: node.username ?? username,

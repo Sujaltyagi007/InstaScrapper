@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { friendlyError } from "@/lib/friendly-error";
-import Link from "next/link";
+import { AppLink } from "@/features/shell/navigation";
 import type { NichePostRow } from "../hooks/use-niche";
 import { ExternalLink, Loader2, Save } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +23,7 @@ function ManualMetricsRow({ post, onSaved }: { post: NichePostRow; onSaved: () =
   const [saving, setSaving] = useState(false);
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSaving(true);
+    event.preventDefault(); setSaving(true);
     try {
       await apiFetch("/api/niche/metrics", {
         method: "POST",
@@ -140,7 +139,7 @@ export function ManualMetricsCard({
         <div className="flex flex-col gap-3">
           {!automaticMetricsAvailable && (
             <p className="text-sm text-muted-foreground">
-              Connect the official Meta Graph API in <Link href="/settings" className="underline underline-offset-4">Settings</Link> to sync supported accounts automatically. Only public Business/Creator targets are eligible; no Instagram login session is used for trend checks.
+              Connect the official Meta Graph API in <AppLink to={{ tab: "settings", section: "advanced" }} className="underline underline-offset-4">Settings</AppLink> to sync supported accounts automatically. Only public Business/Creator targets are eligible; no Instagram login session is used for trend checks.
             </p>
           )}
           {posts.length === 0 ? (

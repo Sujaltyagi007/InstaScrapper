@@ -2,7 +2,7 @@
 import { friendlyError } from "@/lib/friendly-error";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { AppLink } from "@/features/shell/navigation";
 import { toast } from "sonner";
 import { Loader2, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/fetcher";
@@ -144,9 +144,9 @@ export function DeleteTargetDialog({
         </div>
         <p className="text-xs text-muted-foreground">
           See everything you store on the{" "}
-          <Link href="/storage" className="underline">
+          <AppLink to={{ tab: "storage" }} className="underline" onClick={() => onOpenChange(false)}>
             Storage page
-          </Link>
+          </AppLink>
           .
         </p>
         <DialogFooter>

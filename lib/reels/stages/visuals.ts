@@ -40,6 +40,7 @@ export async function runVisualsStage({ project, idea }: StageContext): Promise<
         niche: idea.niche,
         direction,
         needSec,
+        userId: project.userId,
         exclude: new Set([...used, ...pool.map(clipKey)]),
       });
       if (found.length && firstQuery === null) firstQuery = q;

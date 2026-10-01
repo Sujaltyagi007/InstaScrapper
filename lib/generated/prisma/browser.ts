@@ -152,3 +152,10 @@ export type ScrapeThrottle = Prisma.ScrapeThrottleModel
  * 
  */
 export type Repost = Prisma.RepostModel
+/**
+ * Model AIKey
+ * A user's API key for an AI or media provider (see lib/ai/keys.ts).
+ * The key itself is encrypted: `key` holds ciphertext, `keyIv` its IV. Only
+ * lib/ai/keys.ts may read or write it; the browser only ever sees `last4`.
+ */
+export type AIKey = Prisma.AIKeyModel

@@ -27,10 +27,12 @@ export type AggregateReelProject = {
 }
 
 export type ReelProjectAvgAggregateOutputType = {
+  qualityScore: number | null
   attempts: number | null
 }
 
 export type ReelProjectSumAggregateOutputType = {
+  qualityScore: number | null
   attempts: number | null
 }
 
@@ -48,6 +50,7 @@ export type ReelProjectMinAggregateOutputType = {
   renderFileId: string | null
   coverUrl: string | null
   coverFileId: string | null
+  qualityScore: number | null
   caption: string | null
   scheduledFor: Date | null
   sentAt: Date | null
@@ -75,6 +78,7 @@ export type ReelProjectMaxAggregateOutputType = {
   renderFileId: string | null
   coverUrl: string | null
   coverFileId: string | null
+  qualityScore: number | null
   caption: string | null
   scheduledFor: Date | null
   sentAt: Date | null
@@ -106,6 +110,9 @@ export type ReelProjectCountAggregateOutputType = {
   renderFileId: number
   coverUrl: number
   coverFileId: number
+  qualityScore: number
+  qualityReport: number
+  claimsReport: number
   caption: number
   hashtags: number
   scheduledFor: number
@@ -123,10 +130,12 @@ export type ReelProjectCountAggregateOutputType = {
 
 
 export type ReelProjectAvgAggregateInputType = {
+  qualityScore?: true
   attempts?: true
 }
 
 export type ReelProjectSumAggregateInputType = {
+  qualityScore?: true
   attempts?: true
 }
 
@@ -144,6 +153,7 @@ export type ReelProjectMinAggregateInputType = {
   renderFileId?: true
   coverUrl?: true
   coverFileId?: true
+  qualityScore?: true
   caption?: true
   scheduledFor?: true
   sentAt?: true
@@ -171,6 +181,7 @@ export type ReelProjectMaxAggregateInputType = {
   renderFileId?: true
   coverUrl?: true
   coverFileId?: true
+  qualityScore?: true
   caption?: true
   scheduledFor?: true
   sentAt?: true
@@ -202,6 +213,9 @@ export type ReelProjectCountAggregateInputType = {
   renderFileId?: true
   coverUrl?: true
   coverFileId?: true
+  qualityScore?: true
+  qualityReport?: true
+  claimsReport?: true
   caption?: true
   hashtags?: true
   scheduledFor?: true
@@ -321,6 +335,9 @@ export type ReelProjectGroupByOutputType = {
   renderFileId: string | null
   coverUrl: string | null
   coverFileId: string | null
+  qualityScore: number | null
+  qualityReport: runtime.JsonValue | null
+  claimsReport: runtime.JsonValue | null
   caption: string | null
   hashtags: string[]
   scheduledFor: Date | null
@@ -376,6 +393,9 @@ export type ReelProjectWhereInput = {
   renderFileId?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   coverUrl?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   coverFileId?: Prisma.StringNullableFilter<"ReelProject"> | string | null
+  qualityScore?: Prisma.IntNullableFilter<"ReelProject"> | number | null
+  qualityReport?: Prisma.JsonNullableFilter<"ReelProject">
+  claimsReport?: Prisma.JsonNullableFilter<"ReelProject">
   caption?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   hashtags?: Prisma.StringNullableListFilter<"ReelProject">
   scheduledFor?: Prisma.DateTimeNullableFilter<"ReelProject"> | Date | string | null
@@ -410,6 +430,9 @@ export type ReelProjectOrderByWithRelationInput = {
   renderFileId?: Prisma.SortOrderInput | Prisma.SortOrder
   coverUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   coverFileId?: Prisma.SortOrderInput | Prisma.SortOrder
+  qualityScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  qualityReport?: Prisma.SortOrderInput | Prisma.SortOrder
+  claimsReport?: Prisma.SortOrderInput | Prisma.SortOrder
   caption?: Prisma.SortOrderInput | Prisma.SortOrder
   hashtags?: Prisma.SortOrder
   scheduledFor?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -447,6 +470,9 @@ export type ReelProjectWhereUniqueInput = Prisma.AtLeast<{
   renderFileId?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   coverUrl?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   coverFileId?: Prisma.StringNullableFilter<"ReelProject"> | string | null
+  qualityScore?: Prisma.IntNullableFilter<"ReelProject"> | number | null
+  qualityReport?: Prisma.JsonNullableFilter<"ReelProject">
+  claimsReport?: Prisma.JsonNullableFilter<"ReelProject">
   caption?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   hashtags?: Prisma.StringNullableListFilter<"ReelProject">
   scheduledFor?: Prisma.DateTimeNullableFilter<"ReelProject"> | Date | string | null
@@ -481,6 +507,9 @@ export type ReelProjectOrderByWithAggregationInput = {
   renderFileId?: Prisma.SortOrderInput | Prisma.SortOrder
   coverUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   coverFileId?: Prisma.SortOrderInput | Prisma.SortOrder
+  qualityScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  qualityReport?: Prisma.SortOrderInput | Prisma.SortOrder
+  claimsReport?: Prisma.SortOrderInput | Prisma.SortOrder
   caption?: Prisma.SortOrderInput | Prisma.SortOrder
   hashtags?: Prisma.SortOrder
   scheduledFor?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -521,6 +550,9 @@ export type ReelProjectScalarWhereWithAggregatesInput = {
   renderFileId?: Prisma.StringNullableWithAggregatesFilter<"ReelProject"> | string | null
   coverUrl?: Prisma.StringNullableWithAggregatesFilter<"ReelProject"> | string | null
   coverFileId?: Prisma.StringNullableWithAggregatesFilter<"ReelProject"> | string | null
+  qualityScore?: Prisma.IntNullableWithAggregatesFilter<"ReelProject"> | number | null
+  qualityReport?: Prisma.JsonNullableWithAggregatesFilter<"ReelProject">
+  claimsReport?: Prisma.JsonNullableWithAggregatesFilter<"ReelProject">
   caption?: Prisma.StringNullableWithAggregatesFilter<"ReelProject"> | string | null
   hashtags?: Prisma.StringNullableListFilter<"ReelProject">
   scheduledFor?: Prisma.DateTimeNullableWithAggregatesFilter<"ReelProject"> | Date | string | null
@@ -551,6 +583,9 @@ export type ReelProjectCreateInput = {
   renderFileId?: string | null
   coverUrl?: string | null
   coverFileId?: string | null
+  qualityScore?: number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: string | null
   hashtags?: Prisma.ReelProjectCreatehashtagsInput | string[]
   scheduledFor?: Date | string | null
@@ -585,6 +620,9 @@ export type ReelProjectUncheckedCreateInput = {
   renderFileId?: string | null
   coverUrl?: string | null
   coverFileId?: string | null
+  qualityScore?: number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: string | null
   hashtags?: Prisma.ReelProjectCreatehashtagsInput | string[]
   scheduledFor?: Date | string | null
@@ -615,6 +653,9 @@ export type ReelProjectUpdateInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -649,6 +690,9 @@ export type ReelProjectUncheckedUpdateInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -681,6 +725,9 @@ export type ReelProjectCreateManyInput = {
   renderFileId?: string | null
   coverUrl?: string | null
   coverFileId?: string | null
+  qualityScore?: number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: string | null
   hashtags?: Prisma.ReelProjectCreatehashtagsInput | string[]
   scheduledFor?: Date | string | null
@@ -711,6 +758,9 @@ export type ReelProjectUpdateManyMutationInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -743,6 +793,9 @@ export type ReelProjectUncheckedUpdateManyInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -790,6 +843,9 @@ export type ReelProjectCountOrderByAggregateInput = {
   renderFileId?: Prisma.SortOrder
   coverUrl?: Prisma.SortOrder
   coverFileId?: Prisma.SortOrder
+  qualityScore?: Prisma.SortOrder
+  qualityReport?: Prisma.SortOrder
+  claimsReport?: Prisma.SortOrder
   caption?: Prisma.SortOrder
   hashtags?: Prisma.SortOrder
   scheduledFor?: Prisma.SortOrder
@@ -805,6 +861,7 @@ export type ReelProjectCountOrderByAggregateInput = {
 }
 
 export type ReelProjectAvgOrderByAggregateInput = {
+  qualityScore?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
 }
 
@@ -822,6 +879,7 @@ export type ReelProjectMaxOrderByAggregateInput = {
   renderFileId?: Prisma.SortOrder
   coverUrl?: Prisma.SortOrder
   coverFileId?: Prisma.SortOrder
+  qualityScore?: Prisma.SortOrder
   caption?: Prisma.SortOrder
   scheduledFor?: Prisma.SortOrder
   sentAt?: Prisma.SortOrder
@@ -849,6 +907,7 @@ export type ReelProjectMinOrderByAggregateInput = {
   renderFileId?: Prisma.SortOrder
   coverUrl?: Prisma.SortOrder
   coverFileId?: Prisma.SortOrder
+  qualityScore?: Prisma.SortOrder
   caption?: Prisma.SortOrder
   scheduledFor?: Prisma.SortOrder
   sentAt?: Prisma.SortOrder
@@ -863,6 +922,7 @@ export type ReelProjectMinOrderByAggregateInput = {
 }
 
 export type ReelProjectSumOrderByAggregateInput = {
+  qualityScore?: Prisma.SortOrder
   attempts?: Prisma.SortOrder
 }
 
@@ -965,6 +1025,9 @@ export type ReelProjectCreateWithoutUserInput = {
   renderFileId?: string | null
   coverUrl?: string | null
   coverFileId?: string | null
+  qualityScore?: number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: string | null
   hashtags?: Prisma.ReelProjectCreatehashtagsInput | string[]
   scheduledFor?: Date | string | null
@@ -997,6 +1060,9 @@ export type ReelProjectUncheckedCreateWithoutUserInput = {
   renderFileId?: string | null
   coverUrl?: string | null
   coverFileId?: string | null
+  qualityScore?: number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: string | null
   hashtags?: Prisma.ReelProjectCreatehashtagsInput | string[]
   scheduledFor?: Date | string | null
@@ -1058,6 +1124,9 @@ export type ReelProjectScalarWhereInput = {
   renderFileId?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   coverUrl?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   coverFileId?: Prisma.StringNullableFilter<"ReelProject"> | string | null
+  qualityScore?: Prisma.IntNullableFilter<"ReelProject"> | number | null
+  qualityReport?: Prisma.JsonNullableFilter<"ReelProject">
+  claimsReport?: Prisma.JsonNullableFilter<"ReelProject">
   caption?: Prisma.StringNullableFilter<"ReelProject"> | string | null
   hashtags?: Prisma.StringNullableListFilter<"ReelProject">
   scheduledFor?: Prisma.DateTimeNullableFilter<"ReelProject"> | Date | string | null
@@ -1088,6 +1157,9 @@ export type ReelProjectCreateWithoutIdeaInput = {
   renderFileId?: string | null
   coverUrl?: string | null
   coverFileId?: string | null
+  qualityScore?: number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: string | null
   hashtags?: Prisma.ReelProjectCreatehashtagsInput | string[]
   scheduledFor?: Date | string | null
@@ -1120,6 +1192,9 @@ export type ReelProjectUncheckedCreateWithoutIdeaInput = {
   renderFileId?: string | null
   coverUrl?: string | null
   coverFileId?: string | null
+  qualityScore?: number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: string | null
   hashtags?: Prisma.ReelProjectCreatehashtagsInput | string[]
   scheduledFor?: Date | string | null
@@ -1166,6 +1241,9 @@ export type ReelProjectUpdateWithoutIdeaInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1198,6 +1276,9 @@ export type ReelProjectUncheckedUpdateWithoutIdeaInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1229,6 +1310,9 @@ export type ReelProjectCreateManyUserInput = {
   renderFileId?: string | null
   coverUrl?: string | null
   coverFileId?: string | null
+  qualityScore?: number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: string | null
   hashtags?: Prisma.ReelProjectCreatehashtagsInput | string[]
   scheduledFor?: Date | string | null
@@ -1259,6 +1343,9 @@ export type ReelProjectUpdateWithoutUserInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1291,6 +1378,9 @@ export type ReelProjectUncheckedUpdateWithoutUserInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1322,6 +1412,9 @@ export type ReelProjectUncheckedUpdateManyWithoutUserInput = {
   renderFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   coverFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  qualityReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  claimsReport?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hashtags?: Prisma.ReelProjectUpdatehashtagsInput | string[]
   scheduledFor?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1356,6 +1449,9 @@ export type ReelProjectSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   renderFileId?: boolean
   coverUrl?: boolean
   coverFileId?: boolean
+  qualityScore?: boolean
+  qualityReport?: boolean
+  claimsReport?: boolean
   caption?: boolean
   hashtags?: boolean
   scheduledFor?: boolean
@@ -1390,6 +1486,9 @@ export type ReelProjectSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   renderFileId?: boolean
   coverUrl?: boolean
   coverFileId?: boolean
+  qualityScore?: boolean
+  qualityReport?: boolean
+  claimsReport?: boolean
   caption?: boolean
   hashtags?: boolean
   scheduledFor?: boolean
@@ -1424,6 +1523,9 @@ export type ReelProjectSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   renderFileId?: boolean
   coverUrl?: boolean
   coverFileId?: boolean
+  qualityScore?: boolean
+  qualityReport?: boolean
+  claimsReport?: boolean
   caption?: boolean
   hashtags?: boolean
   scheduledFor?: boolean
@@ -1458,6 +1560,9 @@ export type ReelProjectSelectScalar = {
   renderFileId?: boolean
   coverUrl?: boolean
   coverFileId?: boolean
+  qualityScore?: boolean
+  qualityReport?: boolean
+  claimsReport?: boolean
   caption?: boolean
   hashtags?: boolean
   scheduledFor?: boolean
@@ -1472,7 +1577,7 @@ export type ReelProjectSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ReelProjectOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "ideaId" | "stage" | "failedStage" | "script" | "voiceUrl" | "voiceFileId" | "voiceTiming" | "audioBlueprint" | "mixUrl" | "mixFileId" | "clips" | "renderUrl" | "renderFileId" | "coverUrl" | "coverFileId" | "caption" | "hashtags" | "scheduledFor" | "sentAt" | "postedAt" | "postedUrl" | "attempts" | "nextAttemptAt" | "lockedUntil" | "error" | "createdAt" | "updatedAt", ExtArgs["result"]["reelProject"]>
+export type ReelProjectOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "ideaId" | "stage" | "failedStage" | "script" | "voiceUrl" | "voiceFileId" | "voiceTiming" | "audioBlueprint" | "mixUrl" | "mixFileId" | "clips" | "renderUrl" | "renderFileId" | "coverUrl" | "coverFileId" | "qualityScore" | "qualityReport" | "claimsReport" | "caption" | "hashtags" | "scheduledFor" | "sentAt" | "postedAt" | "postedUrl" | "attempts" | "nextAttemptAt" | "lockedUntil" | "error" | "createdAt" | "updatedAt", ExtArgs["result"]["reelProject"]>
 export type ReelProjectInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   idea?: boolean | Prisma.ReelIdeaDefaultArgs<ExtArgs>
@@ -1510,6 +1615,9 @@ export type $ReelProjectPayload<ExtArgs extends runtime.Types.Extensions.Interna
     renderFileId: string | null
     coverUrl: string | null
     coverFileId: string | null
+    qualityScore: number | null
+    qualityReport: runtime.JsonValue | null
+    claimsReport: runtime.JsonValue | null
     caption: string | null
     hashtags: string[]
     scheduledFor: Date | null
@@ -1964,6 +2072,9 @@ export interface ReelProjectFieldRefs {
   readonly renderFileId: Prisma.FieldRef<"ReelProject", 'String'>
   readonly coverUrl: Prisma.FieldRef<"ReelProject", 'String'>
   readonly coverFileId: Prisma.FieldRef<"ReelProject", 'String'>
+  readonly qualityScore: Prisma.FieldRef<"ReelProject", 'Int'>
+  readonly qualityReport: Prisma.FieldRef<"ReelProject", 'Json'>
+  readonly claimsReport: Prisma.FieldRef<"ReelProject", 'Json'>
   readonly caption: Prisma.FieldRef<"ReelProject", 'String'>
   readonly hashtags: Prisma.FieldRef<"ReelProject", 'String[]'>
   readonly scheduledFor: Prisma.FieldRef<"ReelProject", 'DateTime'>

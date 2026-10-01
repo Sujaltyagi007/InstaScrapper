@@ -35,8 +35,8 @@ async function withinSizeLimit(url: string): Promise<boolean> {
   }
 }
 
-export async function searchEuropeanaClips(query: string, limit = 5): Promise<StockClip[]> {
-  const key = process.env.EUROPEANA_API_KEY?.trim();
+export async function searchEuropeanaClips(query: string, limit = 5, apiKey?: string): Promise<StockClip[]> {
+  const key = (apiKey ?? process.env.EUROPEANA_API_KEY)?.trim();
   if (!key) throw new Error("EUROPEANA_API_KEY is not set.");
   const params = new URLSearchParams({
     wskey: key,

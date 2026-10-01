@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api-helpers";
-import { generateJson, isGeminiConfigured } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
 import { runFfmpeg } from "@/lib/render/ffmpeg";
 import { parseDurationSec } from "@/lib/render/mix";
 import { FetchLimitError, fetchPublicBytes, UnsafeUrlError } from "@/lib/security/fetch-public";
@@ -29,9 +29,9 @@ interface SoundTags {
 
 /** Gemini listens to an excerpt and tags it, so the audio stage can match sounds to a mood. */
 async function tagSound(kind: SoundKind, excerpt: Buffer, fileTitle: string): Promise<SoundTags | null> {
-  if (!isGeminiConfigured()) return null;
+  if (!(await ai.isConfigured())) return null;
   try {
-    return await generateJson<SoundTags>({
+    return await ai.generateJson<SoundTags>({
       prompt:
         kind === "MUSIC"
           ? `Tag this music track (file name "${fileTitle}") for a reel sound library. "title": a short readable title (keep the file's title if it's meaningful). "moodTags": 3-6 mood/genre words (e.g. "uplifting", "lofi", "cinematic", "tense"). "bpm": tempo, 0 if no clear beat. "energy": low, medium or high. "description": one short sentence on what kind of video it suits.`

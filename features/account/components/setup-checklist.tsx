@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { AppLink, type Screen } from "@/features/shell/navigation";
 import useSWR from "swr";
 import { useSyncExternalStore } from "react";
 import { CheckCircle2, Circle, X } from "lucide-react";
@@ -40,7 +40,7 @@ interface Step {
   hint: string;
   done: boolean;
   optional?: boolean;
-  action: { label: string; href: string } | { label: string; tab: SettingsTab };
+  action: { label: string; to: Screen } | { label: string; tab: SettingsTab };
 }
 
 /**
@@ -62,13 +62,13 @@ export function SetupChecklist({ onOpenTab }: { onOpenTab: (tab: SettingsTab) =>
       title: "Add an Instagram account to watch",
       hint: "Paste a username and the app starts checking it for new posts.",
       done: quota.used > 0,
-      action: { label: "Add account", href: "/targets/new" },
+      action: { label: "Add account", to: { tab: "targets", view: { kind: "new" } } },
     },
     {
       title: "Get notified",
       hint: "Turn on phone or browser notifications so you hear about new posts.",
       done: channels.length > 0,
-      action: { label: "Set up", href: "/notifications" },
+      action: { label: "Set up", to: { tab: "notifications" } },
     },
     {
       title: "Connect the account your reels are posted to",
@@ -115,9 +115,9 @@ export function SetupChecklist({ onOpenTab }: { onOpenTab: (tab: SettingsTab) =>
               </div>
             </div>
             {!step.done &&
-              ("href" in step.action ? (
+              ("to" in step.action ? (
                 <Button asChild size="sm" variant="outline" className="h-7 shrink-0 text-xs">
-                  <Link href={step.action.href}>{step.action.label}</Link>
+                  <AppLink to={step.action.to}>{step.action.label}</AppLink>
                 </Button>
               ) : (
                 <Button

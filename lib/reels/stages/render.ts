@@ -1,4 +1,7 @@
 import path from "node:path";
+import { Prisma } from "@prisma/client";
+import { evaluateRender } from "@/lib/reels/quality/evaluate";
+import { extractClaims } from "@/lib/reels/quality/claims";
 import { captionCues } from "@/lib/render/timing";
 import { readFile, writeFile } from "node:fs/promises";
 import { buildAssSubtitles } from "@/lib/render/captions";
@@ -8,7 +11,7 @@ import { fetchPublicToFile } from "@/lib/security/fetch-public";
 import { START_FRACTION, downloadHeaders } from "@/lib/visuals/types";
 import { parseDurationSec } from "@/lib/render/mix";
 import { downloadStoredObject, uploadBuffer } from "@/lib/storage";
-import { buildReelRenderArgs, segmentsForSentences } from "@/lib/render/reel";
+import { buildReelRenderArgs, segmentsForSentences, splitIntoShots } from "@/lib/render/reel";
 import type { AudioBlueprint, ClipPick, ReelScript, VoiceTiming } from "@/lib/reels/types";
 
 const CLIP_MAX_BYTES = 150 * 1024 * 1024;
@@ -63,7 +66,8 @@ export async function runRenderStage({ project, idea, workDir }: StageContext): 
   const segments = segmentsForSentences(timing.spans, blueprint.durationSec, bpm ? 60 / bpm : null);
   const fontsDir = await stageFonts(workDir);
   const sentences = script.sentences.map((s) => s.text);
-  await writeFile(path.join(workDir, "captions.ass"), buildAssSubtitles(captionCues(sentences, timing.spans)));
+  const cues = captionCues(sentences, timing.spans);
+  await writeFile(path.join(workDir, "captions.ass"), buildAssSubtitles(cues));
 
   await runFfmpeg(
     buildReelRenderArgs({
@@ -89,6 +93,43 @@ export async function runRenderStage({ project, idea, workDir }: StageContext): 
     timeoutMs: 20_000,
   });
 
+  // Scoring and claim extraction are advice for the reviewer; a failure must never lose a finished render.
+  const [report, claimsReport] = await Promise.all([
+    evaluateRender({
+      projectId: project.id,
+      userId: project.userId,
+      workDir,
+      file: "reel.mp4",
+      script,
+      picks: ordered,
+      spans: timing.spans,
+      segments: splitIntoShots(segments),
+      cues,
+      durationSec: blueprint.durationSec,
+    }).catch((err) => {
+      console.error(`[reels] quality scoring failed for ${project.id}:`, err);
+      return null;
+    }),
+    extractClaims(script).catch((err) => {
+      console.error(`[reels] claim extraction failed for ${project.id}:`, err);
+      return null;
+    }),
+  ]);
+
+  // Patch the claims gate into the quality report so the reviewer sees it.
+  if (report && claimsReport) {
+    const gate = report.gates.find((g) => g.id === "claims-signed-off");
+    if (gate) {
+      if (claimsReport.claims.length === 0) {
+        gate.passed = true;
+        gate.detail = "No verifiable factual claims found in the script.";
+      } else {
+        gate.passed = false;
+        gate.detail = `${claimsReport.claims.length} claim(s) need sign-off before posting.`;
+      }
+    }
+  }
+
   const folder = `reels/${project.id}`;
   const video = await uploadBuffer({
     buffer: await readFile(path.join(workDir, "reel.mp4")),
@@ -111,5 +152,8 @@ export async function runRenderStage({ project, idea, workDir }: StageContext): 
     renderFileId: video.fileId,
     coverUrl: cover?.url ?? null,
     coverFileId: cover?.fileId ?? null,
+    qualityScore: report?.score ?? null,
+    qualityReport: report ? (report as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
+    claimsReport: claimsReport ? (claimsReport as unknown as Prisma.InputJsonValue) : Prisma.DbNull,
   };
 }

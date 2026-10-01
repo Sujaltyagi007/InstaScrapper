@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { GEMINI_DEFAULT_VOICE, GeminiError, speak } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
+import { GEMINI_DEFAULT_VOICE, GeminiError } from "@/lib/ai/gemini";
 import { runFfmpeg } from "@/lib/render/ffmpeg";
 import { parseSilences, sentenceSpans, tightenPauses, wavDurationSec } from "@/lib/render/timing";
 import { uploadBuffer } from "@/lib/storage";
@@ -14,11 +15,11 @@ async function speakWithFallback(script: ReelScript): Promise<Buffer> {
   // they're cut down to reel pacing afterwards.
   const text = script.sentences.map((s) => s.text).join(" <long pause> ");
   try {
-    return (await speak({ text, style: script.voiceStyle, voice: script.voice })).wav;
+    return (await ai.speak({ text, style: script.voiceStyle, voice: script.voice })).wav;
   } catch (err) {
     // A voice name the model doesn't know is a 400; the default voice is known good.
     if (err instanceof GeminiError && err.status === 400 && script.voice !== GEMINI_DEFAULT_VOICE) {
-      return (await speak({ text, style: script.voiceStyle, voice: GEMINI_DEFAULT_VOICE })).wav;
+      return (await ai.speak({ text, style: script.voiceStyle, voice: GEMINI_DEFAULT_VOICE })).wav;
     }
     throw err;
   }

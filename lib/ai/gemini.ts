@@ -1,3 +1,6 @@
+import type { AIProvider } from "./provider";
+import { looksLikeInvalidKey } from "./key-verify";
+import { alertKeysExhausted, getKeyEntries, hasProviderKey, nextPacificMidnight, reportKeyOutcome } from "./keys";
 
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions";
 
@@ -40,9 +43,9 @@ export interface MediaInput {
   mimeType: string;
 }
 
-export function isGeminiConfigured(): boolean {
-  const key = process.env.GEMINI_API_KEY?.trim() ?? "";
-  return key.length > 0 && !key.startsWith("your_");
+
+export async function isGeminiConfigured(userId?: string): Promise<boolean> {
+  return hasProviderKey("gemini", userId);
 }
 
 const RETRY_DELAYS_MS = [2_000, 5_000];
@@ -63,9 +66,8 @@ function perMinuteRetryMs(message: string): number | null {
   return hint ? Math.ceil(Number(hint[1]) * 1000) : 60_000;
 }
 
-async function interact(body: Record<string, unknown>): Promise<unknown> {
-  const key = process.env.GEMINI_API_KEY?.trim();
-  if (!key) throw new GeminiError("GEMINI_API_KEY is not set.", 0, false);
+
+async function interactWithKey(body: Record<string, unknown>, key: string): Promise<unknown> {
 
   let res: Response;
   let text: string;
@@ -109,6 +111,47 @@ async function interact(body: Record<string, unknown>): Promise<unknown> {
   return JSON.parse(text);
 }
 
+/**
+ * Tries the user's keys, then the server's, in order. Gemini's daily quotas are
+ * per model, so a key out of quota rests for that model only (until midnight
+ * Pacific) and a rejected key is marked invalid; both are stored in the DB
+ * (lib/ai/keys.ts), so every server instance skips them, and the next key is
+ * tried at once. When every key is resting for this model, no request is spent:
+ * the model fallback moves straight on to the next model.
+ */
+async function interact(body: Record<string, unknown>, userId?: string): Promise<unknown> {
+  const model = typeof body.model === "string" ? body.model : undefined;
+  const entries = await getKeyEntries("gemini", userId, { scope: model });
+  if (entries.length === 0) {
+    if (await hasProviderKey("gemini", userId)) {
+      throw new GeminiError(`Every Gemini key is out of quota for ${model ?? "this model"} until it resets.`, 429, true);
+    }
+    throw new GeminiError("No Gemini API key is set. Add one in Settings → Connections.", 0, false);
+  }
+
+  let lastError: unknown = null;
+  for (const entry of entries) {
+    try {
+      const result = await interactWithKey(body, entry.key);
+      void reportKeyOutcome(entry, { kind: "ok" });
+      return result;
+    } catch (err) {
+      if (err instanceof GeminiError && err.quotaExceeded) {
+        await reportKeyOutcome(entry, { kind: "exhausted", scope: model, until: nextPacificMidnight(), message: err.message });
+        lastError = err;
+        continue;
+      }
+      if (err instanceof GeminiError && looksLikeInvalidKey(err.status, err.message)) {
+        await reportKeyOutcome(entry, { kind: "invalid", message: err.message });
+        lastError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
 interface ContentBlock {
   type?: string;
   text?: string;
@@ -139,15 +182,15 @@ function buildInput(prompt: string, media: MediaInput[]): unknown {
   ];
 }
 
-const exhaustedUntil = new Map<string, number>();
-const EXHAUSTED_SKIP_MS = 60 * 60_000;
-
-async function withModelFallback<T>(models: string[], call: (model: string) => Promise<T>): Promise<T> {
-  const now = Date.now();
-  const available = models.filter((m) => (exhaustedUntil.get(m) ?? 0) <= now);
+/**
+ * Tries each model in the chain. Which keys are out of quota for which model is
+ * tracked per key in the DB (see interact), so it never leaks between users.
+ * When the whole chain fails for lack of quota or valid keys, the user is alerted.
+ */
+async function withModelFallback<T>(models: string[], call: (model: string) => Promise<T>, userId?: string): Promise<T> {
   let lastError: unknown = null;
   let timedOutFallbackUsed = false;
-  for (const model of available.length ? available : models) {
+  for (const model of models) {
     try {
       return await call(model);
     } catch (err) {
@@ -155,18 +198,25 @@ async function withModelFallback<T>(models: string[], call: (model: string) => P
       // 504 = our own request timeout: a slow model shouldn't stop the chain.
       const transientServerError = err instanceof GeminiError && err.status >= 500 && err.status <= 504;
       const timedOut = err instanceof GeminiError && err.status === 504;
+      if (err instanceof GeminiError && looksLikeInvalidKey(err.status, err.message)) {
+        void alertKeysExhausted(userId, "gemini");
+        throw err;
+      }
       if (!limited && !transientServerError && !timedOut && !(err instanceof GeminiError && err.status === 404)) throw err;
       if (timedOut && timedOutFallbackUsed) throw err;
       if (timedOut) timedOutFallbackUsed = true;
-      if (err instanceof GeminiError && err.quotaExceeded) exhaustedUntil.set(model, now + EXHAUSTED_SKIP_MS);
       console.warn(`[gemini] ${model} unavailable, trying the next model:`, (err as Error).message.slice(0, 160));
       lastError = err;
     }
+  }
+  if (lastError instanceof GeminiError && (lastError.quotaExceeded || looksLikeInvalidKey(lastError.status, lastError.message))) {
+    void alertKeysExhausted(userId, "gemini");
   }
   throw lastError;
 }
 
 export async function generateJson<T>(params: {
+  userId?: string;
   prompt: string;
   schema: Record<string, unknown>;
   media?: MediaInput[];
@@ -174,11 +224,15 @@ export async function generateJson<T>(params: {
 }): Promise<T> {
   const input = buildInput(params.prompt, params.media ?? []);
   const res = await withModelFallback(params.model ? [params.model] : GEMINI_TEXT_MODELS, (model) =>
-    interact({
-      model,
-      input,
-      response_format: { type: "text", mime_type: "application/json", schema: params.schema },
-    }),
+    interact(
+      {
+        model,
+        input,
+        response_format: { type: "text", mime_type: "application/json", schema: params.schema },
+      },
+      params.userId
+    ),
+    params.userId,
   );
   const text = outputText(res);
   try {
@@ -190,6 +244,7 @@ export async function generateJson<T>(params: {
 
 
 export async function speak(params: {
+  userId?: string;
   text: string;
   style?: string;
   voice?: string;
@@ -204,24 +259,21 @@ export async function speak(params: {
       input: [{ type: "user_input", content: [content] }],
       response_format: { type: "audio" },
       generation_config: { speech_config: [{ voice: params.voice ?? GEMINI_DEFAULT_VOICE }] },
-    }),
+    }, params.userId),
+    params.userId,
   );
-
   return audioFromResponse(res);
 }
 
 export interface DialogueTurn {
   speaker: string;
-  /** May contain inline performance tags such as <short pause> or <sigh>. */
   text: string;
   style?: string;
 }
 
-/**
- * Two speakers performed in one call ("conversational" mode), so the voices
- * react to each other with natural timing instead of being stitched together.
- */
+
 export async function speakDialogue(params: {
+  userId?: string;
   turns: DialogueTurn[];
   speakers: { speaker: string; voice: string }[];
   model?: string;
@@ -232,12 +284,16 @@ export async function speakDialogue(params: {
     annotations: [{ type: "speech_metadata", speaker: t.speaker, ...(t.style ? { style: t.style } : {}) }],
   }));
   const res = await withModelFallback(params.model ? [params.model] : GEMINI_TTS_MODELS, (model) =>
-    interact({
-      model,
-      input: [{ type: "user_input", content }],
-      response_format: { type: "audio" },
-      generation_config: { speech_config: { mode: "conversational", speakers: params.speakers } },
-    }),
+    interact(
+      {
+        model,
+        input: [{ type: "user_input", content }],
+        response_format: { type: "audio" },
+        generation_config: { speech_config: { mode: "conversational", speakers: params.speakers } },
+      },
+      params.userId
+    ),
+    params.userId,
   );
   return audioFromResponse(res);
 }
@@ -263,7 +319,14 @@ function pcm16ToWav(pcm: Buffer, sampleRate: number): Buffer {
   header.writeUInt32LE(sampleRate * 2, 28);
   header.writeUInt16LE(2, 32);
   header.writeUInt16LE(16, 34);
-  header.write("data", 36);
   header.writeUInt32LE(pcm.length, 40);
   return Buffer.concat([header, pcm]);
 }
+
+export const GeminiProvider: AIProvider = {
+  id: "gemini",
+  name: "Google Gemini",
+  isConfigured: isGeminiConfigured,
+  generateJson,
+  speak,
+};

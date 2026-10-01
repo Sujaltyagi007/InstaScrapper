@@ -4,7 +4,7 @@
  * sounds belong to the moment. Everything downstream (voice, lip sync, cuts,
  * sound) reads from this one plan, so the pieces stay in sync.
  */
-import { generateJson } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
 import { NARRATOR_VOICES } from "@/lib/reels/types";
 import {
   ACCESSORIES,
@@ -44,7 +44,7 @@ export async function writeSkit(params: {
     .map(([name, feel]) => `${name} (${feel})`)
     .join(", ");
 
-  const raw = await generateJson<{
+  const raw = await ai.generateJson<{
     title: string;
     location: { name: string; photoQuery: string; ambience: string };
     characters: { name: string; voice: string; personality: string; look: Record<string, string> }[];

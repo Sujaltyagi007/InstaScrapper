@@ -1,4 +1,4 @@
-import { generateJson } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
 import type { ReelScript } from "@/lib/reels/types";
 import type { StageContext, StageResult } from "./context";
 
@@ -14,7 +14,7 @@ export async function runCaptionStage({ project, idea }: StageContext): Promise<
   if (!script) throw new Error("The project has no script.");
   const niche = idea.niche;
 
-  const result = await generateJson<{ hook: string; body: string; cta: string; hashtags: string[] }>({
+  const result = await ai.generateJson<{ hook: string; body: string; cta: string; hashtags: string[] }>({
     prompt: [
       `Write the Instagram caption for this original reel in the niche "${niche.name}". Language code "${niche.language}".`,
       `Reel title: ${idea.title}`,

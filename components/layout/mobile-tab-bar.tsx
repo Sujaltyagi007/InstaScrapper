@@ -1,21 +1,15 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS, isNavActive } from "@/components/layout/sidebar-nav";
+import { useNavState } from "@/features/shell/navigation";
+import { NAV_ITEMS } from "@/features/shell/tab-registry";
+import { TabLink } from "@/features/shell/tab-link";
 
 const COUNT = NAV_ITEMS.length;
 
 export function MobileTabBar() {
-  const pathname = usePathname();
-  // The pill moves on tap, before the next page has loaded. Once the route changes,
-  // `from` no longer matches and the real route takes over again.
-  const [tapped, setTapped] = useState<{ href: string; from: string } | null>(null);
-
-  const routeIndex = NAV_ITEMS.findIndex((item) => isNavActive(item.href, pathname));
-  const tappedIndex = tapped && tapped.from === pathname ? NAV_ITEMS.findIndex((item) => item.href === tapped.href) : -1;
-  const index = tappedIndex >= 0 ? tappedIndex : routeIndex;
+  // Tabs switch in place, so the pill simply follows the current tab.
+  const { screen } = useNavState();
+  const index = NAV_ITEMS.findIndex((item) => item.tab === screen.tab);
 
   return (
     <nav
@@ -46,20 +40,18 @@ export function MobileTabBar() {
           const Icon = item.icon;
           const active = i === index;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
+            <TabLink
+              key={item.tab}
+              tab={item.tab}
               aria-label={item.label}
               title={item.label}
-              aria-current={i === routeIndex ? "page" : undefined}
-              onClick={() => setTapped({ href: item.href, from: pathname })}
               className={cn(
                 "relative z-10 flex h-10 items-center justify-center rounded-full outline-none transition-[color,transform] duration-300 active:scale-90 focus-visible:ring-2 focus-visible:ring-ring",
                 active ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="size-4.5" strokeWidth={active ? 2.25 : 2} />
-            </Link>
+            </TabLink>
           );
         })}
       </div>

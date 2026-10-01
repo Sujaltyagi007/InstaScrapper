@@ -52,8 +52,10 @@ export async function searchPexelsClips(
   query: string,
   limit = 5,
   orientation: "portrait" | "landscape" = "portrait",
+  /** The user's saved key (lib/ai/keys.ts); the server's PEXELS_API_KEY otherwise. */
+  apiKey?: string,
 ): Promise<StockClip[]> {
-  const key = process.env.PEXELS_API_KEY?.trim();
+  const key = (apiKey ?? process.env.PEXELS_API_KEY)?.trim();
   if (!key) throw new Error("PEXELS_API_KEY is not set.");
 
   const size = orientation === "portrait" ? "large" : "medium";

@@ -1,13 +1,5 @@
 import type { MediaChild, MediaMetrics, NormalizedMediaItem } from "./types";
 
-/**
- * Parses feed items from Instagram's logged-in mobile or web GraphQL response.
- * The web profile JSON and logged-out HTML page don't carry engagement counts.
- *
- * Field names come from the private API and can change without notice, so
- * every read is defensive and a missing field just leaves that metric null.
- */
-
 interface FeedCandidate {
   url?: string;
   width?: number;
@@ -86,8 +78,6 @@ export function parseFeedItems(body: unknown): FeedEntry[] {
 
   const entries: FeedEntry[] = [];
   for (const raw of items) {
-    // `pk` arrives as a JSON number that can exceed 2^53 and lose precision;
-    // the string `id` ("<pk>_<ownerId>") is exact.
     const pk = typeof raw.id === "string" ? raw.id.split("_")[0] : null;
     if (!pk || !/^\d+$/.test(pk) || !raw.code) continue;
 
@@ -125,12 +115,7 @@ export function parseFeedItems(body: unknown): FeedEntry[] {
   return entries;
 }
 
-/**
- * Attaches feed metrics to items already found on the profile, and appends feed
- * items the profile didn't include (the web JSON often omits reels). Existing
- * items keep their own fields; only missing video URLs and carousel items are
- * filled in.
- */
+
 export function mergeFeedMetrics(media: NormalizedMediaItem[], feed: FeedEntry[]): NormalizedMediaItem[] {
   const byId = new Map(media.map((m) => [m.externalMediaId, m]));
   const merged = [...media];

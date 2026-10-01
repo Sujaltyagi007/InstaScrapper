@@ -1,13 +1,12 @@
 "use client";
 import { friendlyError } from "@/lib/friendly-error";
-import Link from "next/link";
+import { AppLink, navigate } from "@/features/shell/navigation";
 import { mutate } from "swr";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Fragment } from "react";
 import { apiFetch } from "@/lib/fetcher";
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -111,7 +110,6 @@ function removeOptimistically(ids: Set<string>) {
 
 /** All the interactivity for /targets. Rendered by the server page below, inside an SWRConfig that already has the first paint's data. */
 export function TargetsPageClient() {
-  const router = useRouter();
   const { targets, loading, error, refresh } = useTargets();
   const { quota, loading: quotaLoading, refresh: refreshQuota } = useTargetQuota();
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -230,7 +228,7 @@ export function TargetsPageClient() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuItem onSelect={() => router.push(`/targets/${target.id}`)}>
+          <DropdownMenuItem onSelect={() => navigate({ tab: "targets", view: { kind: "target", id: target.id } })}>
             <ExternalLink /> Open
           </DropdownMenuItem>
           {target.monitor?.active ? (
@@ -284,12 +282,12 @@ export function TargetsPageClient() {
           </Button>
         ) : (
           <Button size="sm" asChild>
-            <Link href="/targets/new">
+            <AppLink to={{ tab: "targets", view: { kind: "new" } }}>
               <Plus />
               <span>
                 Add<span className="hidden sm:inline"> target</span>
               </span>
-            </Link>
+            </AppLink>
           </Button>
         )}
       </div>
@@ -365,7 +363,7 @@ export function TargetsPageClient() {
         <div className="rounded-xl border">
           <EmptyState icon={Radar} title="No targets yet"
             description="Add a public Instagram account to start monitoring it for changes."
-            actionLabel="Add target" onAction={() => router.push("/targets/new")}
+            actionLabel="Add target" onAction={() => navigate({ tab: "targets", view: { kind: "new" } })}
           />
         </div>
       ) : filteredTargets.length === 0 ? (
@@ -400,8 +398,8 @@ export function TargetsPageClient() {
                     <Checkbox checked={isSelected} onCheckedChange={() => toggleOne(target.id)}
                       aria-label={`Select @${target.username}`}
                     />
-                    <Link
-                      href={`/targets/${target.id}`}
+                    <AppLink
+                      to={{ tab: "targets", view: { kind: "target", id: target.id } }}
                       onMouseEnter={() => prefetchTargetDetail(target.id)}
                       className="flex min-w-0 flex-1 items-center gap-3"
                     >
@@ -425,7 +423,7 @@ export function TargetsPageClient() {
                           {followers && ` · ${followers} followers`}
                         </span>
                       </span>
-                    </Link>
+                    </AppLink>
                     {rowMenu(target)}
                   </li>
                 );
@@ -456,7 +454,7 @@ export function TargetsPageClient() {
                 const subline = [snap?.name, followers && `${followers} followers`].filter(Boolean).join(" · ");
                 return (
                   <tr key={target.id} data-state={isSelected ? "selected" : undefined}
-                    onClick={() => router.push(`/targets/${target.id}`)}
+                    onClick={() => navigate({ tab: "targets", view: { kind: "target", id: target.id } })}
                     onMouseEnter={() => prefetchTargetDetail(target.id)}
                     className="group h-12 cursor-pointer transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted/60"
                   >
@@ -471,11 +469,11 @@ export function TargetsPageClient() {
                         <TargetAvatar username={target.username} src={snap?.profilePictureStorageUrl} />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <Link href={`/targets/${target.id}`}
+                            <AppLink to={{ tab: "targets", view: { kind: "target", id: target.id } }}
                               onClick={(e) => e.stopPropagation()}
                               className="truncate font-medium hover:underline" >
                               @{target.username}
-                            </Link>
+                            </AppLink>
                             {target.monitor?.purpose === "TREND" && <TrendTag />}
                           </div>
                           {/* Contains the locale-formatted follower count — see the mobile row's note above. */}

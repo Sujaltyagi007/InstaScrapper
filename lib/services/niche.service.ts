@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/api-helpers";
 import { getProviderMode } from "@/lib/meta/provider-mode";
-import { generateJson, isGeminiConfigured } from "@/lib/ai/gemini";
+import { ai } from "@/lib/ai/router";
 import { assertCanAddTarget } from "@/lib/services/quota.service";
 import { eligibilityMessage, isMonitorable } from "@/lib/meta/capability.service";
 import {
@@ -102,7 +102,7 @@ export interface AccountSuggestion {
  * user adds it, rather than spending a profile request on every suggestion.
  */
 export async function suggestNicheAccounts(userId: string): Promise<AccountSuggestion[]> {
-  if (!isGeminiConfigured()) throw new ApiError(400, "GEMINI_API_KEY is not set on the server.", "GEMINI_NOT_CONFIGURED");
+  if (!(await ai.isConfigured(userId))) throw new ApiError(400, "No AI provider is configured on the server.", "GEMINI_NOT_CONFIGURED");
   const niche = await requireNiche(userId);
   const current = await prisma.nicheAccount.findMany({
     where: { nicheId: niche.id },
@@ -110,7 +110,7 @@ export async function suggestNicheAccounts(userId: string): Promise<AccountSugge
   });
   const exclude = current.map((a) => a.target.normalizedUsername);
 
-  const result = await generateJson<{ accounts: AccountSuggestion[] }>({
+  const result = await ai.generateJson<{ accounts: AccountSuggestion[] }>({
     prompt: [
       `Suggest 10 public Instagram accounts that post popular reels in this niche.`,
       `Niche: ${niche.name}`,

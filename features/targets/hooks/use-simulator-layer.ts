@@ -1,5 +1,6 @@
 "use client";
 import { useSyncExternalStore } from "react";
+import { currentHistoryEntry } from "@/features/shell/navigation";
 
 // The full-screen simulator keeps its state in the browser history, like Instagram:
 // opening the sheet or a post pushes an entry, so the phone's Back button closes the
@@ -37,7 +38,8 @@ function subscribe(onChange: () => void) {
 }
 
 function push(layer: SimulatorLayer) {
-  window.history.pushState({ [KEY]: layer }, "");
+  // Keep the app's current screen on the entry, so Back lands on the same tab.
+  window.history.pushState({ ...currentHistoryEntry(), [KEY]: layer }, "");
   listeners.forEach((l) => l());
 }
 

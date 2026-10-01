@@ -25,7 +25,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   WEBPUSH: "Browser push",
 };
 
-export default function NotificationsPage() {
+export function NotificationsView() {
   const { channels, loading, error, refresh, mutate } = useNotificationChannels();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);

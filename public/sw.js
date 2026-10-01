@@ -89,10 +89,16 @@ self.addEventListener("notificationclick", (event) => {
       const existing = windows.find((c) => new URL(c.url).origin === self.location.origin);
       if (existing) {
         await existing.focus();
+        // The app is one page at "/": it opens the screen in place (no reload, open
+        // tabs keep their state). Anywhere else (e.g. the login page) navigate there;
+        // old-style paths are handed to "/" by the server.
+        if (new URL(existing.url).pathname === "/") {
+          existing.postMessage({ type: "navigate", url });
+          return;
+        }
         try {
           await existing.navigate(url);
         } catch {
-          // Not controlled by this worker yet: ask the page to route itself.
           existing.postMessage({ type: "navigate", url });
         }
         return;

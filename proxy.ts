@@ -1,10 +1,25 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { SCREEN_COOKIE, isScreenPath } from "@/lib/spa/screens";
 
 const PUBLIC_PATHS = ["/login", "/register"];
 
 export default withAuth(
-  function middleware() {
+  function middleware(req) {
+    const { pathname, search, hash } = req.nextUrl;
+    // The app is one page at "/". Old page links (bookmarks, push notifications, the
+    // phone's "open reel" link, OAuth returns) are handed to it through a cookie, so
+    // the address bar stays "/" and the app opens the right screen.
+    if (isScreenPath(pathname)) {
+      const res = NextResponse.redirect(new URL("/", req.url));
+      res.cookies.set(SCREEN_COOKIE, `${pathname}${search}${hash}`, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+        secure: req.nextUrl.protocol === "https:",
+      });
+      return res;
+    }
     return NextResponse.next();
   }, {
   callbacks: {

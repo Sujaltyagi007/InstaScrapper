@@ -24,6 +24,7 @@ export const JOBS_KEY = "/api/jobs";
 export const STORAGE_KEY = "/api/storage";
 export const PUSH_KEY = "/api/push/subscriptions";
 export const HOME_WORKER_DEVICES_KEY = "/api/worker/devices";
+export const AI_KEYS_KEY = "/api/account/ai-keys";
 
 export function targetDetailKey(targetId: string) {
   return `/api/targets/${targetId}`;

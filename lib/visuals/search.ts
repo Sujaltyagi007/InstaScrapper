@@ -5,12 +5,13 @@
  * ready as replacements. No AI request is spent on ranking; Gemini only
  * checks the winner (safety stage).
  */
-import { searchEuropeanaClips, isEuropeanaConfigured } from "./europeana";
+import { getServiceKey, reportKeyOutcome, type KeyEntry, type KeyProvider } from "@/lib/ai/keys";
+import { searchEuropeanaClips } from "./europeana";
 import { searchArchiveClips } from "./internet-archive";
 import { sourcesForNiche, type NicheLike } from "./niche-sources";
 import { searchNasaClips } from "./nasa";
-import { isPexelsConfigured, searchPexelsClips } from "./pexels";
-import { isPixabayConfigured, searchPixabayClips } from "./pixabay";
+import { searchPexelsClips } from "./pexels";
+import { searchPixabayClips } from "./pixabay";
 import { clipKey, type ClipSource, type StockClip } from "./types";
 import { searchWikimediaClips } from "./wikimedia";
 
@@ -26,27 +27,40 @@ const STOP = new Set([
   "his", "her", "its", "are", "was", "while", "through", "across", "showing", "shows", "shot", "close", "wide",
 ]);
 
-export function isSourceConfigured(source: ClipSource): boolean {
-  switch (source) {
-    case "pexels":
-      return isPexelsConfigured();
-    case "pixabay":
-      return isPixabayConfigured();
-    case "europeana":
-      return isEuropeanaConfigured();
-    default:
-      return true; // NASA, Wikimedia and the Internet Archive need no key.
-  }
+/** Libraries that need a key, and which saved key (Settings → Connections) they use. NASA, Wikimedia and the Internet Archive need none. */
+const KEYED: Partial<Record<ClipSource, KeyProvider>> = { pexels: "pexels", pixabay: "pixabay", europeana: "europeana" };
+
+/** The key each keyed library will use for this user: their own first, then the server's. */
+async function sourceKeys(sources: ClipSource[], userId?: string): Promise<Map<ClipSource, KeyEntry>> {
+  const keys = new Map<ClipSource, KeyEntry>();
+  await Promise.all(
+    sources.map(async (source) => {
+      const provider = KEYED[source];
+      if (!provider) return;
+      const entry = await getServiceKey(provider, userId);
+      if (entry) keys.set(source, entry);
+    }),
+  );
+  return keys;
 }
 
-async function searchPexelsBoth(query: string, limit: number): Promise<StockClip[]> {
-  const portrait = await searchPexelsClips(query, limit, "portrait");
+/** A library refusing the key (401/403) or out of quota (429) is recorded, so rotation skips it. */
+function reportLibraryFailure(entry: KeyEntry | undefined, err: unknown) {
+  if (!entry) return;
+  const message = (err as Error)?.message ?? "";
+  const status = Number(message.match(/(?:Pexels|HTTP) (\d{3})/)?.[1] ?? 0);
+  if (status === 401 || status === 403) void reportKeyOutcome(entry, { kind: "invalid", message });
+  else if (status === 429) void reportKeyOutcome(entry, { kind: "exhausted", message });
+}
+
+async function searchPexelsBoth(query: string, limit: number, key?: string): Promise<StockClip[]> {
+  const portrait = await searchPexelsClips(query, limit, "portrait", key);
   if (portrait.length >= MIN_PORTRAIT) return portrait;
-  const landscape = await searchPexelsClips(query, limit - portrait.length, "landscape").catch(() => []);
+  const landscape = await searchPexelsClips(query, limit - portrait.length, "landscape", key).catch(() => []);
   return [...portrait, ...landscape];
 }
 
-const SEARCHERS: Record<ClipSource, (query: string, limit: number) => Promise<StockClip[]>> = {
+const SEARCHERS: Record<ClipSource, (query: string, limit: number, key?: string) => Promise<StockClip[]>> = {
   pexels: searchPexelsBoth,
   pixabay: searchPixabayClips,
   nasa: searchNasaClips,
@@ -59,12 +73,12 @@ const SEARCHERS: Record<ClipSource, (query: string, limit: number) => Promise<St
 // In-memory, so each server instance keeps its own.
 const cache = new Map<string, { at: number; clips: StockClip[] }>();
 
-async function cachedSearch(source: ClipSource, query: string, limit: number): Promise<StockClip[]> {
+async function cachedSearch(source: ClipSource, query: string, limit: number, apiKey?: string): Promise<StockClip[]> {
   const key = `${source}|${limit}|${query.toLowerCase()}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.clips;
   const clips = await Promise.race([
-    SEARCHERS[source](query, limit),
+    SEARCHERS[source](query, limit, apiKey),
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${source} timed out`)), SOURCE_TIMEOUT_MS)),
   ]);
   if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value as string);
@@ -106,17 +120,23 @@ export interface ClipSearch {
   /** Clips already used or rejected, as clipKey() strings. */
   exclude?: Set<string>;
   limit?: number;
+  /** Whose saved library keys to use (falls back to the server's). */
+  userId?: string;
 }
 
 /** Searches every library for the niche in parallel, best match first. */
 export async function searchClips(query: string, opts: ClipSearch): Promise<StockClip[]> {
   const { sources, specialists } = sourcesForNiche(opts.niche);
-  const active = sources.filter(isSourceConfigured);
+  const keys = await sourceKeys(sources, opts.userId);
+  const active = sources.filter((s) => !KEYED[s] || keys.has(s));
   if (active.length === 0) {
-    throw new Error("No footage library is configured. Set PEXELS_API_KEY (and optionally PIXABAY_API_KEY).");
+    throw new Error("No footage library is set up. Add a Pexels key in Settings → Connections.");
   }
 
-  const settled = await Promise.allSettled(active.map((s) => cachedSearch(s, query, PER_SOURCE)));
+  const settled = await Promise.allSettled(active.map((s) => cachedSearch(s, query, PER_SOURCE, keys.get(s)?.key)));
+  settled.forEach((r, i) => {
+    if (r.status === "rejected") reportLibraryFailure(keys.get(active[i]), r.reason);
+  });
   const failures = settled.flatMap((r, i) => (r.status === "rejected" ? [`${active[i]}: ${(r.reason as Error).message}`] : []));
   if (failures.length) console.warn(`[footage] "${query}": ${failures.join(" | ").slice(0, 400)}`);
   if (failures.length === active.length) throw new Error(`Footage search failed everywhere. ${failures[0]}`);

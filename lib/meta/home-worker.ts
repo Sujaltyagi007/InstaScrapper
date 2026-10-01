@@ -1,20 +1,6 @@
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
-/**
- * Home worker: lets a burner's requests be executed by a small script running
- * on the user's own PC (worker/home-worker.mjs) instead of from this server.
- * The server never talks to the worker directly — it drops a job row, the
- * worker polls for it, executes the raw HTTP request itself (its own IP, its
- * own TLS stack) and posts the result back. See docs/home-worker-setup.md and
- * the "Home worker" section of brain.md.
- *
- * This module owns device-token issuance/verification and the job
- * create-then-poll flow. It knows nothing about Instagram — requestPayload is
- * an opaque {method, url, headers, body} the caller (stealth-engine-bridge.ts)
- * already assembled exactly as it would for the direct-from-server path.
- */
-
 const JOB_TTL_MS = 90_000;
 const POLL_INTERVAL_MS = 700;
 
@@ -34,7 +20,6 @@ function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-/** A new device token, shown to the user once. Only its hash is ever stored. */
 export function generateDeviceToken(): string {
   return `hw_${crypto.randomBytes(32).toString("base64url")}`;
 }
@@ -61,13 +46,6 @@ export async function authenticateDevice(token: string | null): Promise<{ id: st
 
 export class HomeWorkerUnavailableError extends Error {}
 
-/**
- * Creates a job for the session's paired device and waits (short DB polls,
- * bounded by the caller's own deadline) for the worker to post a result.
- * Throws HomeWorkerUnavailableError — never PROXY_AUTH_FAILED-style errors —
- * when the worker never claims or answers the job, so callers treat an
- * offline PC as a temporary failure (BACKOFF), not a flagged session.
- */
 export async function executeViaHomeWorker(
   deviceId: string,
   sessionId: string,

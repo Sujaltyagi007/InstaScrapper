@@ -423,7 +423,8 @@ export const ModelName = {
   AuthRateLimit: 'AuthRateLimit',
   R2UsageCounter: 'R2UsageCounter',
   ScrapeThrottle: 'ScrapeThrottle',
-  Repost: 'Repost'
+  Repost: 'Repost',
+  AIKey: 'AIKey'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -439,7 +440,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "pushSubscription" | "metaConnection" | "igAccount" | "mediaMetricSnapshot" | "niche" | "reelIdea" | "reelProject" | "storedFile" | "soundAsset" | "nicheAccount" | "target" | "instagramSession" | "homeWorkerDevice" | "homeWorkerJob" | "monitor" | "targetSnapshot" | "media" | "mediaAsset" | "event" | "notificationChannel" | "notification" | "job" | "authRateLimit" | "r2UsageCounter" | "scrapeThrottle" | "repost"
+    modelProps: "user" | "pushSubscription" | "metaConnection" | "igAccount" | "mediaMetricSnapshot" | "niche" | "reelIdea" | "reelProject" | "storedFile" | "soundAsset" | "nicheAccount" | "target" | "instagramSession" | "homeWorkerDevice" | "homeWorkerJob" | "monitor" | "targetSnapshot" | "media" | "mediaAsset" | "event" | "notificationChannel" | "notification" | "job" | "authRateLimit" | "r2UsageCounter" | "scrapeThrottle" | "repost" | "aIKey"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2441,6 +2442,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AIKey: {
+      payload: Prisma.$AIKeyPayload<ExtArgs>
+      fields: Prisma.AIKeyFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AIKeyFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AIKeyFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>
+        }
+        findFirst: {
+          args: Prisma.AIKeyFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AIKeyFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>
+        }
+        findMany: {
+          args: Prisma.AIKeyFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>[]
+        }
+        create: {
+          args: Prisma.AIKeyCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>
+        }
+        createMany: {
+          args: Prisma.AIKeyCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AIKeyCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>[]
+        }
+        delete: {
+          args: Prisma.AIKeyDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>
+        }
+        update: {
+          args: Prisma.AIKeyUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>
+        }
+        deleteMany: {
+          args: Prisma.AIKeyDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AIKeyUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AIKeyUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>[]
+        }
+        upsert: {
+          args: Prisma.AIKeyUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AIKeyPayload>
+        }
+        aggregate: {
+          args: Prisma.AIKeyAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAIKey>
+        }
+        groupBy: {
+          args: Prisma.AIKeyGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AIKeyGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AIKeyCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AIKeyCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2621,6 +2696,9 @@ export const ReelProjectScalarFieldEnum = {
   renderFileId: 'renderFileId',
   coverUrl: 'coverUrl',
   coverFileId: 'coverFileId',
+  qualityScore: 'qualityScore',
+  qualityReport: 'qualityReport',
+  claimsReport: 'claimsReport',
   caption: 'caption',
   hashtags: 'hashtags',
   scheduledFor: 'scheduledFor',
@@ -3000,6 +3078,25 @@ export const RepostScalarFieldEnum = {
 } as const
 
 export type RepostScalarFieldEnum = (typeof RepostScalarFieldEnum)[keyof typeof RepostScalarFieldEnum]
+
+
+export const AIKeyScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  key: 'key',
+  keyIv: 'keyIv',
+  fingerprint: 'fingerprint',
+  last4: 'last4',
+  status: 'status',
+  exhaustedUntil: 'exhaustedUntil',
+  exhaustedScopes: 'exhaustedScopes',
+  lastError: 'lastError',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AIKeyScalarFieldEnum = (typeof AIKeyScalarFieldEnum)[keyof typeof AIKeyScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3464,6 +3561,7 @@ export type GlobalOmitConfig = {
   r2UsageCounter?: Prisma.R2UsageCounterOmit
   scrapeThrottle?: Prisma.ScrapeThrottleOmit
   repost?: Prisma.RepostOmit
+  aIKey?: Prisma.AIKeyOmit
 }
 
 /* Types for Logging */

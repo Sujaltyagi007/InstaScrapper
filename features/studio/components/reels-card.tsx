@@ -1,6 +1,6 @@
 "use client";
 import useSWR from "swr";
-import Link from "next/link";
+import { AppLink } from "@/features/shell/navigation";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/fetcher";
 import { formatDistanceToNow } from "date-fns";
@@ -105,8 +105,8 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
         <ul className="flex flex-col gap-3">
           {reels.map((reel) => (
             <li key={reel.id} className="flex gap-3 rounded-lg border p-3">
-              <Link
-                href={`/studio/reels/${reel.id}`}
+              <AppLink
+                to={{ tab: "studio", reelId: reel.id }}
                 className="flex aspect-9/16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted"
               >
                 {reel.coverUrl ? (
@@ -115,13 +115,13 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
                 ) : (
                   <Film className="size-5 text-muted-foreground" />
                 )}
-              </Link>
+              </AppLink>
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="flex min-w-0 flex-col gap-1">
-                    <Link href={`/studio/reels/${reel.id}`} className="font-medium hover:underline">
+                    <AppLink to={{ tab: "studio", reelId: reel.id }} className="font-medium hover:underline">
                       {reel.idea.title}
-                    </Link>
+                    </AppLink>
                     <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       <ReelStageBadge reel={reel} retryQueued={retryQueuedId === reel.id} />
                       <ReelElapsedTimer reel={reel} retryQueued={retryQueuedId === reel.id} />
@@ -144,7 +144,7 @@ export function ReelsCard({ refreshKey }: { refreshKey: number }) {
                       </Button>
                     )}
                     <Button size="sm" variant="outline" asChild>
-                      <Link href={`/studio/reels/${reel.id}`}>Open</Link>
+                      <AppLink to={{ tab: "studio", reelId: reel.id }}>Open</AppLink>
                     </Button>
                     <Button
                       size="sm"

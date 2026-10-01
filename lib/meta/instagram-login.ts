@@ -1,23 +1,6 @@
 import { tlsRequestRaw } from "./tls-transport";
 
-/**
- * Server-side Instagram web login → genuine session cookies.
- * ---------------------------------------------------------------------------
- * Mirrors what a browser does: bootstrap for a csrftoken, then POST the login
- * with the encrypted-password envelope and the right headers/fingerprint, and
- * read `sessionid` out of the response cookie jar (why this needs the
- * cookie-aware `tls-transport`, not the scraping axios client).
- *
- * This is the highest ban-risk path in the app; it is burner-only by policy
- * and the password is used once here and never stored.
- *
- * Not every account can be logged in this way: 2FA needs a second step, and a
- * checkpoint challenge can't be solved headlessly (caller falls back to the
- * manual cookie-paste flow).
- */
-
-const CHROME_UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 const WEB_APP_ID = "936619743392459";
 const LOGIN_URL = "https://www.instagram.com/api/v1/web/accounts/login/ajax/";
 const TWO_FACTOR_URL = "https://www.instagram.com/api/v1/web/accounts/login/two_factor/";
@@ -34,7 +17,6 @@ export type LoginResult =
   | { status: "bad_credentials"; message: string }
   | { status: "error"; message: string };
 
-/** Instagram's logged-out password envelope. Version 0 = no client-side encryption. */
 function encodePassword(password: string): string {
   return `#PWD_INSTAGRAM_BROWSER:0:${Math.floor(Date.now() / 1000)}:${password}`;
 }
@@ -58,7 +40,6 @@ function loginHeaders(bootstrap: LoginBootstrap, userAgent: string): Record<stri
   };
 }
 
-/** Interprets a login/2FA response body + resulting cookie jar. */
 function interpretLogin(
   body: string,
   cookies: Record<string, string>,
@@ -85,8 +66,6 @@ function interpretLogin(
       status: "two_factor_required",
       twoFactorIdentifier: String(info.two_factor_identifier ?? ""),
       username,
-      // Carried forward because the in-memory cookie jar won't survive to the
-      // next stateless request; the 2FA submit re-sends these explicitly.
       bootstrap,
     };
   }
@@ -107,11 +86,6 @@ function interpretLogin(
   return { status: "error", message: message || "Login failed for an unknown reason." };
 }
 
-/**
- * Step 1: bootstrap + submit username/password.
- * `sessionId` pins the cookie jar so the bootstrap's csrftoken/mid ride along
- * on the submit within this call.
- */
 export async function instagramLogin(params: {
   username: string;
   password: string;
@@ -122,8 +96,6 @@ export async function instagramLogin(params: {
   const jar = `login-${params.username.toLowerCase()}-${Date.now()}`;
 
   try {
-    // Bootstrap: a real browser loads the login page first; this yields the
-    // csrftoken (and mid) the POST must echo back.
     const boot = await tlsRequestRaw({
       url: "https://www.instagram.com/accounts/login/",
       headers: {

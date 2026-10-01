@@ -53,7 +53,7 @@ const KEEP_OPTIONS = [
   { value: "forever", label: "Until I delete them" },
 ];
 
-export default function StoragePage() {
+export function StorageView() {
   // No refetch on tab focus: this call also reconciles the file register with the bucket.
   const { data: overview, error, mutate } = useSWR<Overview>(STORAGE_KEY, { revalidateOnFocus: false });
   const [open, setOpen] = useState<string | null>(null);

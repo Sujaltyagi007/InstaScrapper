@@ -1,5 +1,6 @@
 "use client";
 import { toast } from "sonner";
+import { takeFlash } from "@/features/shell/navigation";
 import { apiFetch } from "@/lib/fetcher";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
@@ -37,19 +38,13 @@ export function InstagramPostingCard() {
     refresh();
   }, [refresh]);
 
-  // The OAuth callback lands back here with the outcome in the query string;
-  // strip it so a page refresh doesn't replay the toast.
+  // The OAuth callback lands back on the app with its outcome; show it once.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const connected = params.get("ig_connected");
-    const error = params.get("ig_error");
+    const connected = takeFlash("ig_connected");
+    const error = takeFlash("ig_error");
     if (!connected && !error) return;
     if (connected) toast.success(connected === "1" ? "Instagram connected for posting." : `Connected @${connected} for posting.`);
     if (error) toast.error(error);
-    params.delete("ig_connected");
-    params.delete("ig_error");
-    const rest = params.toString();
-    window.history.replaceState({}, "", rest ? `${window.location.pathname}?${rest}` : window.location.pathname);
     refresh();
   }, [refresh]);
 

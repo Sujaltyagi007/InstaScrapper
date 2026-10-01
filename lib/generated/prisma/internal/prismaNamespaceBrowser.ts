@@ -77,7 +77,8 @@ export const ModelName = {
   AuthRateLimit: 'AuthRateLimit',
   R2UsageCounter: 'R2UsageCounter',
   ScrapeThrottle: 'ScrapeThrottle',
-  Repost: 'Repost'
+  Repost: 'Repost',
+  AIKey: 'AIKey'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -237,6 +238,9 @@ export const ReelProjectScalarFieldEnum = {
   renderFileId: 'renderFileId',
   coverUrl: 'coverUrl',
   coverFileId: 'coverFileId',
+  qualityScore: 'qualityScore',
+  qualityReport: 'qualityReport',
+  claimsReport: 'claimsReport',
   caption: 'caption',
   hashtags: 'hashtags',
   scheduledFor: 'scheduledFor',
@@ -616,6 +620,25 @@ export const RepostScalarFieldEnum = {
 } as const
 
 export type RepostScalarFieldEnum = (typeof RepostScalarFieldEnum)[keyof typeof RepostScalarFieldEnum]
+
+
+export const AIKeyScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  key: 'key',
+  keyIv: 'keyIv',
+  fingerprint: 'fingerprint',
+  last4: 'last4',
+  status: 'status',
+  exhaustedUntil: 'exhaustedUntil',
+  exhaustedScopes: 'exhaustedScopes',
+  lastError: 'lastError',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AIKeyScalarFieldEnum = (typeof AIKeyScalarFieldEnum)[keyof typeof AIKeyScalarFieldEnum]
 
 
 export const SortOrder = {

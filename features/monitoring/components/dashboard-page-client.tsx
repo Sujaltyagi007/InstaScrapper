@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { AppLink } from "@/features/shell/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/common/error-state";
@@ -57,9 +57,9 @@ export function DashboardPageClient() {
           </div>
         </div>
         <Button asChild>
-          <Link href="/targets/new">
+          <AppLink to={{ tab: "targets", view: { kind: "new" } }}>
             <Plus /> Add target
-          </Link>
+          </AppLink>
         </Button>
       </div>
 
@@ -115,9 +115,9 @@ export function DashboardPageClient() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5">
                         <EventTypeBadge type={event.type} />
-                        <Link href={`/targets/${event.target.id}`} className="text-sm font-semibold hover:underline">
+                        <AppLink to={{ tab: "targets", view: { kind: "target", id: event.target.id } }} className="text-sm font-semibold hover:underline">
                           @{event.target.username}
-                        </Link>
+                        </AppLink>
                       </div>
                       {/* Relative to "now" — differs by a beat between the server render and hydration; expected. */}
                       <span className="text-xs text-muted-foreground" suppressHydrationWarning>
@@ -165,9 +165,9 @@ export function DashboardPageClient() {
             <ul className="divide-y">
               {targets.slice(0, 6).map((target) => (
                 <li key={target.id} className="flex items-center justify-between gap-3 py-3">
-                  <Link href={`/targets/${target.id}`} className="text-sm font-medium hover:underline">
+                  <AppLink to={{ tab: "targets", view: { kind: "target", id: target.id } }} className="text-sm font-medium hover:underline">
                     @{target.username}
-                  </Link>
+                  </AppLink>
                   <TargetStatusBadge status={target.status} />
                 </li>
               ))}

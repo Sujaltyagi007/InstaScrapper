@@ -27,8 +27,8 @@ export function isPixabayConfigured(): boolean {
   return isConfigured(process.env.PIXABAY_API_KEY);
 }
 
-export async function searchPixabayClips(query: string, limit = 5): Promise<StockClip[]> {
-  const key = process.env.PIXABAY_API_KEY?.trim();
+export async function searchPixabayClips(query: string, limit = 5, apiKey?: string): Promise<StockClip[]> {
+  const key = (apiKey ?? process.env.PIXABAY_API_KEY)?.trim();
   if (!key) throw new Error("PIXABAY_API_KEY is not set.");
   const params = new URLSearchParams({
     key,

@@ -340,6 +340,7 @@ export type UserWhereInput = {
   notificationChannels?: Prisma.NotificationChannelListRelationFilter
   authRateLimits?: Prisma.AuthRateLimitListRelationFilter
   pushSubscriptions?: Prisma.PushSubscriptionListRelationFilter
+  aiKeys?: Prisma.AIKeyListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -372,6 +373,7 @@ export type UserOrderByWithRelationInput = {
   notificationChannels?: Prisma.NotificationChannelOrderByRelationAggregateInput
   authRateLimits?: Prisma.AuthRateLimitOrderByRelationAggregateInput
   pushSubscriptions?: Prisma.PushSubscriptionOrderByRelationAggregateInput
+  aiKeys?: Prisma.AIKeyOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -407,6 +409,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   notificationChannels?: Prisma.NotificationChannelListRelationFilter
   authRateLimits?: Prisma.AuthRateLimitListRelationFilter
   pushSubscriptions?: Prisma.PushSubscriptionListRelationFilter
+  aiKeys?: Prisma.AIKeyListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -487,6 +490,7 @@ export type UserCreateInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -519,6 +523,7 @@ export type UserUncheckedCreateInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -551,6 +556,7 @@ export type UserUpdateInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -583,6 +589,7 @@ export type UserUncheckedUpdateInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -937,6 +944,20 @@ export type UserUpdateOneWithoutAuthRateLimitsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAuthRateLimitsInput, Prisma.UserUpdateWithoutAuthRateLimitsInput>, Prisma.UserUncheckedUpdateWithoutAuthRateLimitsInput>
 }
 
+export type UserCreateNestedOneWithoutAiKeysInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAiKeysInput, Prisma.UserUncheckedCreateWithoutAiKeysInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAiKeysInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAiKeysNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAiKeysInput, Prisma.UserUncheckedCreateWithoutAiKeysInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAiKeysInput
+  upsert?: Prisma.UserUpsertWithoutAiKeysInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAiKeysInput, Prisma.UserUpdateWithoutAiKeysInput>, Prisma.UserUncheckedUpdateWithoutAiKeysInput>
+}
+
 export type UserCreateWithoutPushSubscriptionsInput = {
   id?: string
   email: string
@@ -966,6 +987,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
@@ -997,6 +1019,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPushSubscriptionsInput = {
@@ -1044,6 +1067,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
@@ -1075,6 +1099,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutMetaConnectionsInput = {
@@ -1106,6 +1131,7 @@ export type UserCreateWithoutMetaConnectionsInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMetaConnectionsInput = {
@@ -1137,6 +1163,7 @@ export type UserUncheckedCreateWithoutMetaConnectionsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMetaConnectionsInput = {
@@ -1184,6 +1211,7 @@ export type UserUpdateWithoutMetaConnectionsInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMetaConnectionsInput = {
@@ -1215,6 +1243,7 @@ export type UserUncheckedUpdateWithoutMetaConnectionsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutIgAccountsInput = {
@@ -1246,6 +1275,7 @@ export type UserCreateWithoutIgAccountsInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutIgAccountsInput = {
@@ -1277,6 +1307,7 @@ export type UserUncheckedCreateWithoutIgAccountsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutIgAccountsInput = {
@@ -1324,6 +1355,7 @@ export type UserUpdateWithoutIgAccountsInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutIgAccountsInput = {
@@ -1355,6 +1387,7 @@ export type UserUncheckedUpdateWithoutIgAccountsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNichesInput = {
@@ -1386,6 +1419,7 @@ export type UserCreateWithoutNichesInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNichesInput = {
@@ -1417,6 +1451,7 @@ export type UserUncheckedCreateWithoutNichesInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNichesInput = {
@@ -1464,6 +1499,7 @@ export type UserUpdateWithoutNichesInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNichesInput = {
@@ -1495,6 +1531,7 @@ export type UserUncheckedUpdateWithoutNichesInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReelProjectsInput = {
@@ -1526,6 +1563,7 @@ export type UserCreateWithoutReelProjectsInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReelProjectsInput = {
@@ -1557,6 +1595,7 @@ export type UserUncheckedCreateWithoutReelProjectsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReelProjectsInput = {
@@ -1604,6 +1643,7 @@ export type UserUpdateWithoutReelProjectsInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReelProjectsInput = {
@@ -1635,6 +1675,7 @@ export type UserUncheckedUpdateWithoutReelProjectsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutStoredFilesInput = {
@@ -1666,6 +1707,7 @@ export type UserCreateWithoutStoredFilesInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutStoredFilesInput = {
@@ -1697,6 +1739,7 @@ export type UserUncheckedCreateWithoutStoredFilesInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutStoredFilesInput = {
@@ -1744,6 +1787,7 @@ export type UserUpdateWithoutStoredFilesInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStoredFilesInput = {
@@ -1775,6 +1819,7 @@ export type UserUncheckedUpdateWithoutStoredFilesInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSoundAssetsInput = {
@@ -1806,6 +1851,7 @@ export type UserCreateWithoutSoundAssetsInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSoundAssetsInput = {
@@ -1837,6 +1883,7 @@ export type UserUncheckedCreateWithoutSoundAssetsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSoundAssetsInput = {
@@ -1884,6 +1931,7 @@ export type UserUpdateWithoutSoundAssetsInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSoundAssetsInput = {
@@ -1915,6 +1963,7 @@ export type UserUncheckedUpdateWithoutSoundAssetsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTargetsInput = {
@@ -1946,6 +1995,7 @@ export type UserCreateWithoutTargetsInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTargetsInput = {
@@ -1977,6 +2027,7 @@ export type UserUncheckedCreateWithoutTargetsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTargetsInput = {
@@ -2024,6 +2075,7 @@ export type UserUpdateWithoutTargetsInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTargetsInput = {
@@ -2055,6 +2107,7 @@ export type UserUncheckedUpdateWithoutTargetsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutInstagramSessionsInput = {
@@ -2086,6 +2139,7 @@ export type UserCreateWithoutInstagramSessionsInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutInstagramSessionsInput = {
@@ -2117,6 +2171,7 @@ export type UserUncheckedCreateWithoutInstagramSessionsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInstagramSessionsInput = {
@@ -2164,6 +2219,7 @@ export type UserUpdateWithoutInstagramSessionsInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInstagramSessionsInput = {
@@ -2195,6 +2251,7 @@ export type UserUncheckedUpdateWithoutInstagramSessionsInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutHomeWorkerDevicesInput = {
@@ -2226,6 +2283,7 @@ export type UserCreateWithoutHomeWorkerDevicesInput = {
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutHomeWorkerDevicesInput = {
@@ -2257,6 +2315,7 @@ export type UserUncheckedCreateWithoutHomeWorkerDevicesInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutHomeWorkerDevicesInput = {
@@ -2304,6 +2363,7 @@ export type UserUpdateWithoutHomeWorkerDevicesInput = {
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutHomeWorkerDevicesInput = {
@@ -2335,6 +2395,7 @@ export type UserUncheckedUpdateWithoutHomeWorkerDevicesInput = {
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationChannelsInput = {
@@ -2366,6 +2427,7 @@ export type UserCreateWithoutNotificationChannelsInput = {
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationChannelsInput = {
@@ -2397,6 +2459,7 @@ export type UserUncheckedCreateWithoutNotificationChannelsInput = {
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationChannelsInput = {
@@ -2444,6 +2507,7 @@ export type UserUpdateWithoutNotificationChannelsInput = {
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationChannelsInput = {
@@ -2475,6 +2539,7 @@ export type UserUncheckedUpdateWithoutNotificationChannelsInput = {
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAuthRateLimitsInput = {
@@ -2506,6 +2571,7 @@ export type UserCreateWithoutAuthRateLimitsInput = {
   targets?: Prisma.TargetCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAuthRateLimitsInput = {
@@ -2537,6 +2603,7 @@ export type UserUncheckedCreateWithoutAuthRateLimitsInput = {
   targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
   notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  aiKeys?: Prisma.AIKeyUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAuthRateLimitsInput = {
@@ -2584,6 +2651,7 @@ export type UserUpdateWithoutAuthRateLimitsInput = {
   targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuthRateLimitsInput = {
@@ -2615,6 +2683,151 @@ export type UserUncheckedUpdateWithoutAuthRateLimitsInput = {
   targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
   notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
   pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  aiKeys?: Prisma.AIKeyUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutAiKeysInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name?: string | null
+  timezone?: string
+  retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
+  accentColor?: string | null
+  mediaKeepHours?: number | null
+  emailVerified?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  metaConnections?: Prisma.MetaConnectionCreateNestedManyWithoutUserInput
+  igAccounts?: Prisma.IgAccountCreateNestedManyWithoutUserInput
+  niches?: Prisma.NicheCreateNestedManyWithoutUserInput
+  reelProjects?: Prisma.ReelProjectCreateNestedManyWithoutUserInput
+  soundAssets?: Prisma.SoundAssetCreateNestedManyWithoutUserInput
+  storedFiles?: Prisma.StoredFileCreateNestedManyWithoutUserInput
+  instagramSessions?: Prisma.InstagramSessionCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceCreateNestedManyWithoutUserInput
+  targets?: Prisma.TargetCreateNestedManyWithoutUserInput
+  notificationChannels?: Prisma.NotificationChannelCreateNestedManyWithoutUserInput
+  authRateLimits?: Prisma.AuthRateLimitCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAiKeysInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name?: string | null
+  timezone?: string
+  retentionDays?: number
+  role?: string
+  maxTargets?: number
+  targetQuotaAlertLevel?: string | null
+  sleepEnabled?: boolean
+  sleepStartHour?: number
+  sleepEndHour?: number
+  accentColor?: string | null
+  mediaKeepHours?: number | null
+  emailVerified?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  metaConnections?: Prisma.MetaConnectionUncheckedCreateNestedManyWithoutUserInput
+  igAccounts?: Prisma.IgAccountUncheckedCreateNestedManyWithoutUserInput
+  niches?: Prisma.NicheUncheckedCreateNestedManyWithoutUserInput
+  reelProjects?: Prisma.ReelProjectUncheckedCreateNestedManyWithoutUserInput
+  soundAssets?: Prisma.SoundAssetUncheckedCreateNestedManyWithoutUserInput
+  storedFiles?: Prisma.StoredFileUncheckedCreateNestedManyWithoutUserInput
+  instagramSessions?: Prisma.InstagramSessionUncheckedCreateNestedManyWithoutUserInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedCreateNestedManyWithoutUserInput
+  targets?: Prisma.TargetUncheckedCreateNestedManyWithoutUserInput
+  notificationChannels?: Prisma.NotificationChannelUncheckedCreateNestedManyWithoutUserInput
+  authRateLimits?: Prisma.AuthRateLimitUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAiKeysInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAiKeysInput, Prisma.UserUncheckedCreateWithoutAiKeysInput>
+}
+
+export type UserUpsertWithoutAiKeysInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAiKeysInput, Prisma.UserUncheckedUpdateWithoutAiKeysInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAiKeysInput, Prisma.UserUncheckedCreateWithoutAiKeysInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAiKeysInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAiKeysInput, Prisma.UserUncheckedUpdateWithoutAiKeysInput>
+}
+
+export type UserUpdateWithoutAiKeysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  metaConnections?: Prisma.MetaConnectionUpdateManyWithoutUserNestedInput
+  igAccounts?: Prisma.IgAccountUpdateManyWithoutUserNestedInput
+  niches?: Prisma.NicheUpdateManyWithoutUserNestedInput
+  reelProjects?: Prisma.ReelProjectUpdateManyWithoutUserNestedInput
+  soundAssets?: Prisma.SoundAssetUpdateManyWithoutUserNestedInput
+  storedFiles?: Prisma.StoredFileUpdateManyWithoutUserNestedInput
+  instagramSessions?: Prisma.InstagramSessionUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUpdateManyWithoutUserNestedInput
+  targets?: Prisma.TargetUpdateManyWithoutUserNestedInput
+  notificationChannels?: Prisma.NotificationChannelUpdateManyWithoutUserNestedInput
+  authRateLimits?: Prisma.AuthRateLimitUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAiKeysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  retentionDays?: Prisma.IntFieldUpdateOperationsInput | number
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  maxTargets?: Prisma.IntFieldUpdateOperationsInput | number
+  targetQuotaAlertLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sleepEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  sleepStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sleepEndHour?: Prisma.IntFieldUpdateOperationsInput | number
+  accentColor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mediaKeepHours?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  metaConnections?: Prisma.MetaConnectionUncheckedUpdateManyWithoutUserNestedInput
+  igAccounts?: Prisma.IgAccountUncheckedUpdateManyWithoutUserNestedInput
+  niches?: Prisma.NicheUncheckedUpdateManyWithoutUserNestedInput
+  reelProjects?: Prisma.ReelProjectUncheckedUpdateManyWithoutUserNestedInput
+  soundAssets?: Prisma.SoundAssetUncheckedUpdateManyWithoutUserNestedInput
+  storedFiles?: Prisma.StoredFileUncheckedUpdateManyWithoutUserNestedInput
+  instagramSessions?: Prisma.InstagramSessionUncheckedUpdateManyWithoutUserNestedInput
+  homeWorkerDevices?: Prisma.HomeWorkerDeviceUncheckedUpdateManyWithoutUserNestedInput
+  targets?: Prisma.TargetUncheckedUpdateManyWithoutUserNestedInput
+  notificationChannels?: Prisma.NotificationChannelUncheckedUpdateManyWithoutUserNestedInput
+  authRateLimits?: Prisma.AuthRateLimitUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -2635,6 +2848,7 @@ export type UserCountOutputType = {
   notificationChannels: number
   authRateLimits: number
   pushSubscriptions: number
+  aiKeys: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2650,6 +2864,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   notificationChannels?: boolean | UserCountOutputTypeCountNotificationChannelsArgs
   authRateLimits?: boolean | UserCountOutputTypeCountAuthRateLimitsArgs
   pushSubscriptions?: boolean | UserCountOutputTypeCountPushSubscriptionsArgs
+  aiKeys?: boolean | UserCountOutputTypeCountAiKeysArgs
 }
 
 /**
@@ -2746,6 +2961,13 @@ export type UserCountOutputTypeCountPushSubscriptionsArgs<ExtArgs extends runtim
   where?: Prisma.PushSubscriptionWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAiKeysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AIKeyWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2777,6 +2999,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   notificationChannels?: boolean | Prisma.User$notificationChannelsArgs<ExtArgs>
   authRateLimits?: boolean | Prisma.User$authRateLimitsArgs<ExtArgs>
   pushSubscriptions?: boolean | Prisma.User$pushSubscriptionsArgs<ExtArgs>
+  aiKeys?: boolean | Prisma.User$aiKeysArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2854,6 +3077,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   notificationChannels?: boolean | Prisma.User$notificationChannelsArgs<ExtArgs>
   authRateLimits?: boolean | Prisma.User$authRateLimitsArgs<ExtArgs>
   pushSubscriptions?: boolean | Prisma.User$pushSubscriptionsArgs<ExtArgs>
+  aiKeys?: boolean | Prisma.User$aiKeysArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -2874,6 +3098,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     notificationChannels: Prisma.$NotificationChannelPayload<ExtArgs>[]
     authRateLimits: Prisma.$AuthRateLimitPayload<ExtArgs>[]
     pushSubscriptions: Prisma.$PushSubscriptionPayload<ExtArgs>[]
+    aiKeys: Prisma.$AIKeyPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3299,6 +3524,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   notificationChannels<T extends Prisma.User$notificationChannelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationChannelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   authRateLimits<T extends Prisma.User$authRateLimitsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$authRateLimitsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuthRateLimitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   pushSubscriptions<T extends Prisma.User$pushSubscriptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pushSubscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PushSubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  aiKeys<T extends Prisma.User$aiKeysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$aiKeysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AIKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4023,6 +4249,30 @@ export type User$pushSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.PushSubscriptionScalarFieldEnum | Prisma.PushSubscriptionScalarFieldEnum[]
+}
+
+/**
+ * User.aiKeys
+ */
+export type User$aiKeysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AIKey
+   */
+  select?: Prisma.AIKeySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AIKey
+   */
+  omit?: Prisma.AIKeyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AIKeyInclude<ExtArgs> | null
+  where?: Prisma.AIKeyWhereInput
+  orderBy?: Prisma.AIKeyOrderByWithRelationInput | Prisma.AIKeyOrderByWithRelationInput[]
+  cursor?: Prisma.AIKeyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AIKeyScalarFieldEnum | Prisma.AIKeyScalarFieldEnum[]
 }
 
 /**

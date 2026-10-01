@@ -139,17 +139,11 @@ function toGraphqlNode(node: any): any {
     id: String(node.pk ?? node.id ?? ""),
     pk: String(node.pk ?? ""),
     shortcode: node.code ?? null,
-    // GraphSidecar is what the legacy API called a carousel; the bridge keys
-    // its CAROUSEL_ALBUM detection off this exact string.
     __typename:
       kind === "CAROUSEL_ALBUM" ? "GraphSidecar" : isVideo ? "GraphVideo" : "GraphImage",
     is_video: isVideo,
     display_url: node.display_uri ?? null,
-    display_resources: node.display_uri
-      ? [{ src: node.display_uri, config_width: 1080 }]
-      : [],
-    // The logged-out payload carries no media URL and no timestamp; the bridge
-    // already tolerates both being absent.
+    display_resources: node.display_uri ? [{ src: node.display_uri, config_width: 1080 }] : [],
     video_url: null,
     video_resources: [],
     taken_at_timestamp: null,
@@ -160,34 +154,16 @@ function toGraphqlNode(node: any): any {
   };
 }
 
-/**
- * Worst case for one more attempt: the retry delay plus a request that runs
- * to the transport's 10s timeout, plus a little parse/DB slack.
- */
+
 const ATTEMPT_RESERVE_MS = 11_000;
 
 export interface ScrapeOptions {
-  /** Epoch ms after which no new attempt may start (see StealthFetchOptions). */
   deadlineAt?: number;
-  /**
-   * Attempts in flight at once. Only for logged-out requests through a
-   * rotating proxy, where every attempt leaves from a different IP, so running
-   * them side by side doesn't concentrate load on any one IP. Requests carrying
-   * a logged-in session must stay at 1: one account firing parallel requests
-   * from several IPs is exactly what gets it flagged.
-   */
   concurrency?: number;
-  /**
-   * Stop at the first real profile page even if it's the lite variant. Enough
-   * to resolve an account (existence, type, id); checks that need exact counts,
-   * bio and posts leave this off and hold out for the full page.
-   */
   acceptLite?: boolean;
-  /** Overrides MAX_ATTEMPTS (logged-in checks use far fewer: their page rarely needs a retry). */
   maxAttempts?: number;
 }
 
-/** Spacing between parallel launches, so hedged attempts never leave as one burst. */
 const HEDGE_STAGGER_MS = 250;
 
 export async function scrapeProfileHtml(
@@ -217,21 +193,15 @@ export async function scrapeProfileHtml(
         `[html-scraper] @${cleanUser} attempt ${attempt + 1}: ${res ? `HTTP ${res.status}, ${Math.round(res.text.length / 1024)}KB` : "no response"} in ${Date.now() - attemptStarted}ms`,
       );
     }
-    // A sibling attempt already settled it; ignore late arrivals.
     if (done || !res) return;
     lastStatus = res.status;
 
-    // A genuine 404 is authoritative — stop retrying, report it upward so the
-    // caller can surface NOT_FOUND instead of a misleading rate-limit.
     if (res.status === 404) {
       early = { status: 404, text: res.text, data: { status: "fail", message: "not_found" } };
       done = true;
       return;
     }
 
-    // 429 means the egress IP is out of budget. Retrying only deepens the
-    // hole, so give it one more chance and then report the rate-limit upward
-    // rather than spending the whole attempt budget on it.
     if (res.status === 429) {
       rateLimits++;
       if (rateLimits >= 2) {
@@ -260,8 +230,6 @@ export async function scrapeProfileHtml(
     shells++;
   }
 
-  // Keeps up to `concurrency` attempts in flight; each finished attempt that
-  // didn't settle the result makes room for the next one.
   const inFlight = new Set<Promise<void>>();
   let launched = 0;
   while (!done) {
@@ -274,8 +242,6 @@ export async function scrapeProfileHtml(
             ? (RETRY_DELAY_MS[attempt - 1] ?? 6000)
             : 0;
 
-      // Out of time: stop cleanly rather than let the platform kill the
-      // function mid-request. The first attempt always runs.
       if (attempt > 0 && options.deadlineAt && Date.now() + delay + ATTEMPT_RESERVE_MS > options.deadlineAt) {
         stoppedForDeadline = true;
         break;

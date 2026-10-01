@@ -2,21 +2,6 @@ import { createHash, randomUUID } from "crypto";
 import sharp from "sharp";
 import { tlsRequestRaw } from "./tls-transport";
 
-/**
- * Publishes media to an Instagram account via the private mobile API, using
- * that account's session cookies (no official API).
- * ---------------------------------------------------------------------------
- * ⚠️ HIGHEST BAN-RISK PATH IN THE APP. Automated *posting* from a server is
- * the strongest signal Instagram acts on. Burner/consenting accounts only, and
- * human-paced (see the delays below and the caller's scheduling).
- *
- * `publishPhoto` posts an image; `publishVideo` posts an MP4 as a Reel
- * (upload video → upload cover → poll configure_to_clips while it transcodes).
- *
- * Cannot be end-to-end verified without a real logged-in session; `dryRun`
- * returns the exact planned requests so the shape can be checked offline.
- */
-
 const IG_ANDROID_APP_ID = "567067343352427";
 
 interface Device {
@@ -37,11 +22,6 @@ function toUuid(hex: string): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 
-/**
- * A STABLE device identity per account (seeded from ds_user_id): a real user
- * posts from the same phone every time, so the identifiers must not change
- * between posts. Falls back to a random device when no id is available.
- */
 function deviceFor(seed: string | undefined): Device {
   const h = createHash("sha256").update(seed || randomUUID()).digest("hex");
   const phones: Array<[string, string]> = [
@@ -298,24 +278,14 @@ export async function publishPhoto(input: PublishPhotoInput): Promise<PublishRes
 export interface PublishVideoInput {
   cookies: Record<string, string>;
   proxyUrl?: string | null;
-  /** The MP4 bytes to publish. */
   videoMp4: Buffer;
-  /** JPEG cover frame (we already store a thumbnail for every media row). */
   thumbnailJpeg: Buffer;
   caption: string;
   deviceSeed?: string;
   dryRun?: boolean;
 }
 
-/**
- * Publishes a video as a Reel via the private API. Three steps:
- *   1. rupload_igvideo  — upload the MP4 bytes
- *   2. rupload_igphoto  — upload the cover, reusing the same upload_id
- *   3. configure_to_clips — publish, POLLED because Instagram transcodes
- *      asynchronously and returns "not finished yet" until it's ready.
- *
- * Round 2. Even more version-sensitive than the photo flow; not live-verified.
- */
+
 export async function publishVideo(input: PublishVideoInput): Promise<PublishResult> {
   const { cookies, proxyUrl, videoMp4, thumbnailJpeg, caption } = input;
   if (!cookies.sessionid || !cookies.ds_user_id) {

@@ -13,7 +13,7 @@ import { IdeasCard } from "@/features/studio/components/ideas-card";
 import { ReelsCard } from "@/features/studio/components/reels-card";
 import { SoundBankCard } from "@/features/studio/components/sound-bank-card";
 
-export default function StudioPage() {
+export function StudioView() {
   const { data, loading, error, refresh } = useNiche();
   const { quota, refresh: refreshQuota } = useTargetQuota();
   const [reelsKey, setReelsKey] = useState(0);
